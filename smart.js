@@ -49,6 +49,9 @@
     const d = clamp(suggested - current, -150, 150);
     return Math.abs(d) < 50 ? current : Math.round((current + d) / 10) * 10;
   }
-  const api = { bmr, maint, weekFormula, smart, nextTarget };
+  /* extra daily burn from work and sports, from the setup answers (profile.intake.answers) */
+  const JOB_KCAL = { desk: 0, mixed: 150, feet: 300, physical: 500 };
+  function extraKcal(ans) { if (!ans) return 0; return (JOB_KCAL[ans.job] || 0) + (Number(ans.sportPerWeek) || 0) * 350 / 7; }
+  const api = { bmr, maint, weekFormula, smart, nextTarget, extraKcal };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FormaSmart = api;
 })(this);

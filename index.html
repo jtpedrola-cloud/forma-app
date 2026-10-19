@@ -55,6 +55,20 @@ input[type=range]{min-height:auto;padding:0;border:0;background:none;accent-colo
 #cam .shut{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18)}
 #cam .shut:active{background:rgba(255,255,255,.5)}
 #cam .cd{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:800;text-shadow:0 4px 30px rgba(0,0,0,.6);pointer-events:none}
+#intake{position:fixed;inset:0;z-index:65;background:var(--bg);display:flex;flex-direction:column}
+#intake .ih{padding:calc(12px + env(safe-area-inset-top)) 16px 8px;max-width:480px;width:100%;margin:0 auto}
+#intake .ib2{flex:1;overflow-y:auto;padding:4px 16px 16px;max-width:480px;width:100%;margin:0 auto}
+#intake .if{padding:10px 16px calc(14px + env(safe-area-inset-bottom));max-width:480px;width:100%;margin:0 auto;display:flex;gap:10px}
+#intake .prog{height:4px;border-radius:2px;background:var(--inset);overflow:hidden;margin:10px 0 2px}#intake .prog i{display:block;height:100%;background:var(--grad)}
+#intake h2{font-size:24px;margin:14px 0 4px}#intake .lead{color:var(--mut);font-size:14px;margin-bottom:14px}
+.opt{display:block;width:100%;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.opt.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card))}.opt b{display:block;font-size:15px}.opt span{font-size:13px;color:var(--mut)}
+.opt .tg{float:right;font-size:11px;font-weight:700;color:var(--acc)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}.pills button{min-height:40px;padding:0 14px;border-radius:20px;background:var(--card);border:2px solid var(--line);font-weight:600;font-size:14px;color:var(--soft)}
+.pills button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--card));color:var(--txt)}
+.qlabel{font-size:13px;font-weight:700;color:var(--soft);margin:14px 0 8px}
+.sumrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.sumrow:first-child{border:0}.sumrow span:last-child{text-align:right;font-weight:700;white-space:nowrap}
+.why{font-size:12px;color:var(--mut);margin-top:2px;font-weight:400}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -193,6 +207,7 @@ a{color:var(--acc)}
 <div class="wrap" id="root"></div>
 <div id="rest" hidden></div>
 <script src="smart.js"></script>
+<script src="plan.js"></script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -216,7 +231,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='ce401140d259005db64c870c6896e8d02e11adf0';let verChecked=0;
+const BUILD='9d033a8dfcec65fab3a6754996111e1368175e68';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -253,7 +268,8 @@ const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
 const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
 const P_CHK='data/checkins.json';const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
-const profile=()=>base(P_PROFILE),program=()=>base(P_PROG),exdb=()=>base(P_EX);
+const cur=p=>DB.pend[p]&&DB.pend[p].length?view(p):base(p);
+const profile=()=>cur(P_PROFILE),program=()=>cur(P_PROG),exdb=()=>cur(P_EX);
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
 const blank=p=>{const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
 
@@ -277,6 +293,8 @@ function applyOp(d,o){
   case 'wFinish':w().finishedAt=o.t;break;
   case 'wReopen':w().finishedAt=null;break;
   case 'wClear':d.workout=null;break;
+  case 'merge':Object.assign(d,clone(o.data));break;
+  case 'replace':d=clone(o.doc);break;
   case 'wMark':if(!d.workout)d.workout={dayId:o.dayId,startedAt:o.t,finishedAt:o.t,sets:{},swaps:{},marked:true};break;
   case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
   case 'actDel':d.activities=(d.activities||[]).filter(a=>a.id!==o.id);if(!d.activities.length)delete d.activities;break;
@@ -597,9 +615,10 @@ function todayView(){
  const sStk=streakOf(x=>dayFlags(x).hit);
  const needW=isT&&lg.weight==null;
  const chk=checklist(d);const nDone=chk.filter(x=>x.ok).length,allDone=nDone===chk.length;
+ const setupCard=isT&&(!pr.intake)&&!LS.get('forma.intakeSeen',0)?`<div class="card" style="border-color:var(--acc)"><h3>Finish your setup</h3><div class="mut sm" style="margin:2px 0 10px">${(pr.body||{}).assumed?'Your height and age are still guesses. ':''}2 minutes of questions sets your calories, macros and program.</div><div class="row"><button class="btn sp" data-act="inOpen">Start</button><button class="btn ghost" data-act="inDismiss">Later</button></div></div>`:'';
  const chkCard=`<div class="card ${allDone?'':''}" style="padding:12px 16px"><div class="row" style="margin-bottom:4px"><div class="sp"><h3 style="margin:0">${isT?'Today':fmtShort(d)}'s checklist</h3></div><span class="chip" style="${allDone?'background:var(--okbg);color:var(--oktx)':''}">${allDone?'All done':nDone+' / '+chk.length}</span></div>
  ${chk.map(x=>`<button class="cl ${x.ok?'ok':''}" data-act="${x.act}"><span class="ck">${ic('check',16)}</span><span class="n">${x.l}</span><span class="s">${x.s||''}</span></button>`).join('')}</div>`;
- return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>${chkCard}
+ return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>${setupCard}${chkCard}
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'var(--txt)':'var(--badtx)'}">${Math.abs(rnd(rem))}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
@@ -920,7 +939,7 @@ function smartNow(){
  const pr=profile(),T=today(),bf=latestBF(),days=[];
  for(let i=28;i>=1;i--){const d=addDays(T,-i),f=food(d).items;days.push({d,kcal:f.reduce((a,x)=>a+num(x.kcal),0),logged:f.length>0,weight:logOf(d).weight})}
  const liftDays=Object.values(program().weekdays).filter(x=>x!=='rest').length;
- const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays);
+ const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays)+FormaSmart.extraKcal(pr.intake&&pr.intake.answers);
  return FormaSmart.smart({days,formula,targetKcal:pr.targets.kcal,goalRate:pr.goalRate||0.7});
 }
 function maintCard(){
@@ -1002,6 +1021,107 @@ function stepsCalCard(){
  <div class="xs mut" style="margin-top:8px">Rest days and finished workouts keep the schedule streak going. Only a skipped training day breaks it.</div></div>`;
 }
 
+/* ---------- Setup questionnaire (works without Claude; maths in plan.js) ---------- */
+const INT={step:0,a:null};
+const IN_STEPS=['body','bf','goal','activity','training','equipment','food','summary'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function intakeDefaults(){
+ const pr=profile(),b=pr.body||{},ik=pr.intake||{},bf=latestBF(),P=program();
+ const trainDays=Object.entries(P.weekdays||{}).filter(([,v])=>v!=='rest').map(([k])=>+k);
+ return Object.assign({sex:b.sex||'male',age:b.assumed?'':b.age||'',heightCm:b.assumed?'':b.heightCm||'',weight:latestWeight(),
+  bfMode:bf?'photo':'',bf:bf?bf.pct:null,goal:'lose',rateShare:null,stepGoal:pr.stepGoal||10000,job:'desk',sportPerWeek:0,
+  experience:'under1',trainDays:trainDays.length?trainDays:[1,3,5],minutes:60,focus:[],injuries:'',equipPreset:'gym',equipment:FormaPlan.PRESETS.gym.slice(),
+  meals:3,habits:[],avoid:'',replaceProgram:!(P.days&&P.days.length)},ik.answers||{},{date:today()});
+}
+function intakeOpen(){INT.step=0;INT.a=intakeDefaults();let el=$('#intake');if(!el){el=document.createElement('div');el.id='intake';document.body.appendChild(el)}document.body.style.overflow='hidden';navPush({l:'intake'});intakeUI()}
+function intakeClose(fromPop){const el=$('#intake');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
+function intakeBF(){const a=INT.a;if(a.bfMode==='photo'&&latestBF())return latestBF().pct;if(a.bfMode==='unsure')return FormaPlan.bfFromBMI(a.sex,+a.age||30,+a.heightCm||170,+a.weight);return a.bf}
+function intakeCalc(){const a=INT.a;const x=Object.assign({},a,{age:+a.age,heightCm:+a.heightCm,weight:+a.weight,bf:intakeBF()});return {t:FormaPlan.targets(x),p:FormaPlan.program(x,exdb()),x}}
+const pill=(k,v,label,on)=>`<button data-act="inSet" data-k="${k}" data-v="${esc(String(v))}" class="${on?'on':''}">${label}</button>`;
+const mpill=(k,v,label,on)=>`<button data-act="inTog" data-k="${k}" data-v="${esc(String(v))}" class="${on?'on':''}">${label}</button>`;
+const opt=(k,v,title,sub,on,tag)=>`<button class="opt ${on?'on':''}" data-act="inSet" data-k="${k}" data-v="${esc(String(v))}">${tag?`<span class="tg">${tag}</span>`:''}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</button>`;
+function intakeStep(){
+ const a=INT.a,st=IN_STEPS[INT.step];
+ if(st==='body')return `<h2>About you</h2><div class="lead">Used to estimate how many calories you burn.</div>
+  <div class="qlabel">Sex</div><div class="pills">${pill('sex','male','Male',a.sex==='male')}${pill('sex','female','Female',a.sex==='female')}</div>
+  <div class="g2"><div class="fld"><label>Age</label><input id="in_age" inputmode="numeric" value="${esc(a.age)}" placeholder="30"></div><div class="fld"><label>Height (cm)</label><input id="in_heightCm" inputmode="decimal" value="${esc(a.heightCm)}" placeholder="170"></div></div>
+  <div class="fld"><label>Weight today (kg)</label><input id="in_weight" inputmode="decimal" value="${esc(a.weight)}" placeholder="80"></div>`;
+ if(st==='bf'){const lv=FormaPlan.BF_LEVELS,f=a.sex==='female',bf=latestBF();
+  return `<h2>Body fat</h2><div class="lead">Pick the one that looks most like you right now. A rough guess is fine.</div>
+  ${bf?opt('bfMode','photo','Use my photo estimate: ~'+bf.pct+'%','From '+fmtShort(bf.d),a.bfMode==='photo','Most accurate'):''}
+  ${lv.map(l=>{const v=f?l.f:l.m;return opt('bfPick',v,l.label+', about '+v+'%',l.desc,a.bfMode==='pick'&&a.bf===v)}).join('')}
+  ${opt('bfMode','unsure','Not sure','We will estimate from your height and weight (~'+FormaPlan.bfFromBMI(a.sex,+a.age||30,+a.heightCm||170,+a.weight||70)+'%)',a.bfMode==='unsure')}`}
+ if(st==='goal'){const bf=intakeBF()||25,sug=FormaPlan.suggestRate(a.goal,bf,a.experience),w=+a.weight;
+  const paces=a.goal==='lose'?[[0.004,'Gentle'],[0.006,'Steady'],[0.008,'Faster'],[0.01,'Aggressive']]:a.goal==='build'?[[-0.0025,'Lean gain'],[-0.004,'Faster gain']]:[];
+  const r=a.rateShare==null?sug:a.rateShare;
+  return `<h2>Your goal</h2><div class="lead">You can change this any time.</div>
+  ${opt('goal','lose','Lose fat','Get leaner while keeping muscle',a.goal==='lose')}${opt('goal','recomp','Lose fat and build muscle','Slow fat loss with hard training. Best for beginners and higher body fat',a.goal==='recomp')}
+  ${opt('goal','build','Build muscle','A small surplus for size and strength',a.goal==='build')}${opt('goal','maintain','Maintain','Stay at this weight, get fitter',a.goal==='maintain')}
+  ${paces.length?`<div class="qlabel">Pace</div>${paces.map(([v,l])=>opt('rateShare',v,l+': '+Math.abs(w*v).toFixed(2)+' kg a week',Math.abs(v*100).toFixed(1)+'% of body weight'+(v===0.01?'. Hard to keep up, more muscle loss':''),Math.abs(r-v)<1e-6,Math.abs(sug-v)<1e-6?'Recommended':'')).join('')}`:''}`}
+ if(st==='activity')return `<h2>Daily activity</h2><div class="lead">Movement outside the gym burns a lot of calories.</div>
+  <div class="qlabel">Daily step goal</div><div class="pills">${[6000,8000,10000,12000].map(v=>pill('stepGoal',v,(v/1000)+'k',+a.stepGoal===v)).join('')}</div>
+  <div class="qlabel">Your work</div>${opt('job','desk','Mostly sitting','Desk, school, driving',a.job==='desk')}${opt('job','mixed','Some walking','Retail, teaching, errands',a.job==='mixed')}${opt('job','feet','On my feet most of the day','Waiter, nurse, warehouse',a.job==='feet')}${opt('job','physical','Physical work','Construction, delivery on foot',a.job==='physical')}
+  <div class="qlabel">Sports or long runs per week</div><div class="pills">${[0,1,2,3].map(v=>pill('sportPerWeek',v,v===3?'3+':String(v),+a.sportPerWeek===v)).join('')}</div>`;
+ if(st==='training')return `<h2>Training</h2><div class="lead">Your program is built from these answers.</div>
+  <div class="qlabel">Experience</div><div class="pills">${[['new','New'],['under1','Under 1 year'],['1to3','1 to 3 years'],['3plus','3+ years']].map(([v,l])=>pill('experience',v,l,a.experience===v)).join('')}</div>
+  <div class="qlabel">Days you can train (${a.trainDays.length})</div><div class="pills">${WD.map((l,i)=>mpill('trainDays',i,l,a.trainDays.includes(i))).join('')}</div>
+  <div class="qlabel">Time per session</div><div class="pills">${[45,60,75,90].map(v=>pill('minutes',v,v+' min',+a.minutes===v)).join('')}</div>
+  <div class="qlabel">Focus (pick up to 2)</div><div class="pills">${['abs','shoulders','chest','arms','back','legs','glutes'].map(v=>mpill('focus',v,v[0].toUpperCase()+v.slice(1),a.focus.includes(v))).join('')}</div>
+  <div class="fld" style="margin-top:12px"><label>Injuries or limits (optional)</label><input id="in_injuries" value="${esc(a.injuries)}" placeholder="e.g. left shoulder clicks on overhead press"></div>`;
+ if(st==='equipment'){const all=[['barbell','Barbell and rack'],['dumbbells','Dumbbells'],['bench','Bench'],['cable','Cable machine'],['machines','Machines (leg press, chest press...)'],['bars','Pull-up or dip bars'],['bands','Bands'],['kettlebell','Kettlebell'],['abwheel','Ab wheel']];
+  return `<h2>Where you train</h2><div class="lead">Only exercises you can actually do will go in your program.</div>
+  ${opt('equipPreset','gym','Full gym','Barbells, dumbbells, cables and machines',a.equipPreset==='gym')}${opt('equipPreset','home','Home with dumbbells','Dumbbells, a bench, a pull-up bar',a.equipPreset==='home')}${opt('equipPreset','bodyweight','Bodyweight only','A pull-up bar or bands at most',a.equipPreset==='bodyweight')}
+  <div class="qlabel">Fine-tune what you have</div><div class="pills">${all.map(([v,l])=>mpill('equipment',v,l,a.equipment.includes(v))).join('')}</div>`}
+ if(st==='food')return `<h2>Food</h2><div class="lead">Helps your plan fit how you actually eat.</div>
+  <div class="qlabel">Meals a day</div><div class="pills">${[2,3,4,5].map(v=>pill('meals',v,v===5?'5+':String(v),+a.meals===v)).join('')}</div>
+  <div class="qlabel">Sounds like you</div><div class="pills">${[['rice','Rice every day'],['home','Mostly home cooking'],['eatout','Eat out often'],['fastfood','Fast food often'],['budget','On a budget'],['sweet','Sweet tooth']].map(([v,l])=>mpill('habits',v,l,a.habits.includes(v))).join('')}</div>
+  <div class="fld" style="margin-top:12px"><label>Foods you avoid or allergies (optional)</label><input id="in_avoid" value="${esc(a.avoid)}" placeholder="e.g. shrimp, pork"></div>`;
+ if(st==='summary'){const {t,p,x}=intakeCalc(),f=n=>Math.round(n).toLocaleString('en-US'),gl={lose:'Lose fat',recomp:'Lose fat and build muscle',build:'Build muscle',maintain:'Maintain'}[a.goal];
+  const has=program().days&&program().days.length;
+  const row=(l,v,why)=>`<div class="sumrow"><span>${l}${why?`<div class="why">${why}</div>`:''}</span><span>${v}</span></div>`;
+  return `<h2>Your plan</h2><div class="lead">${gl}, ${t.kgWk>0?'about '+t.kgWk.toFixed(2)+' kg a week down':t.kgWk<0?'about '+Math.abs(t.kgWk).toFixed(2)+' kg a week up':'holding weight'}.</div>
+  <div class="card" style="padding:6px 14px">
+  ${row('Maintenance','~'+f(t.maintenance)+' kcal','What you burn on an average day: your body, '+(x.stepGoal/1000)+'k steps, '+a.trainDays.length+' workouts a week'+(a.job!=='desk'?', your work':''))}
+  ${t.capped?`<div class="xs" style="color:var(--warn);padding:8px 0">The pace you picked needs a very steep deficit, so calories are set at the safe limit instead: about ${t.kgWk.toFixed(2)} kg a week.</div>`:''}
+  ${row('Daily calories',f(t.kcal)+' kcal',t.kgWk>0?f(t.maintenance-t.kcal)+' under maintenance. 7,700 kcal is about 1 kg of fat':t.kgWk<0?f(t.kcal-t.maintenance)+' over maintenance for slow muscle gain':'Matches maintenance')}
+  ${row('Protein',t.protein+' g','About '+(t.protein/x.weight).toFixed(1)+' g per kg. The most important number for keeping and building muscle')}
+  ${row('Fat',t.fat+' g','Enough for hormones and health')}
+  ${row('Carbs',t.carbs+' g','The rest of your calories. Fuel for training')}
+  ${row('Steps',(x.stepGoal/1000)+'k a day','Already counted in your maintenance')}
+  ${row('Body fat used','~'+Math.round(x.bf)+'%',a.bfMode==='unsure'?'Estimated from height and weight':'Lean mass '+t.lean+' kg')}</div>
+  <div class="qlabel">Program: ${esc(p.name)}</div><div class="card" style="padding:6px 14px">${p.days.map(d=>{const wd=Object.entries(p.weekdays).filter(([,v])=>v===d.id).map(([k])=>WD[+k]).join(', ');return row(esc(d.name)+' <span class="mut" style="font-weight:400">'+wd+'</span>',d.exercises.length+' exercises',d.exercises.map(e=>esc(exName(e.ex))).join(', '))}).join('')}</div>
+  <div class="qlabel">Save</div>
+  <div class="pills">${mpill('saveTargets',1,'Update my targets',a.saveTargets!==false)}${mpill('replaceProgram',1,has?'Replace my current program':'Use this program',!!a.replaceProgram)}</div>
+  ${has&&a.replaceProgram?'<div class="xs" style="color:var(--warn)">Your current program is kept as a backup in your data.</div>':''}
+  <div class="xs mut" style="margin-top:8px">Your calories will keep adjusting every week from your real weight trend.</div>`}
+ return '';
+}
+function intakeUI(){
+ const el=$('#intake');if(!el)return;const n=IN_STEPS.length,last=INT.step===n-1;
+ el.innerHTML=`<div class="ih"><div class="row"><button class="ib" data-act="inClose" aria-label="Close">${ic('x',22)}</button><div class="sp xs mut" style="text-align:center">Step ${INT.step+1} of ${n}</div><span style="width:44px"></span></div><div class="prog"><i style="width:${(INT.step+1)/n*100}%"></i></div></div>
+ <div class="ib2" id="in_body">${intakeStep()}</div>
+ <div class="if">${INT.step?'<button class="btn ghost" data-act="inBack">Back</button>':''}<button class="btn sp" data-act="${last?'inSave':'inNext'}">${last?'Save my plan':'Next'}</button></div>`;
+}
+function intakeRead(){['age','heightCm','weight','injuries','avoid'].forEach(k=>{const i=$('#in_'+k);if(i)INT.a[k]=i.value.trim()})}
+function intakeValid(){const a=INT.a,st=IN_STEPS[INT.step];
+ if(st==='body'){if(!(+a.age>=13&&+a.age<=90))return 'Add your age.';if(!(+a.heightCm>=120&&+a.heightCm<=230))return 'Add your height in cm.';if(!(+a.weight>=30&&+a.weight<=300))return 'Add your weight in kg.'}
+ if(st==='bf'&&!a.bfMode)return 'Pick the closest one, or Not sure.';
+ if(st==='training'&&(a.trainDays.length<2||a.trainDays.length>6))return 'Pick 2 to 6 training days.';
+ return ''}
+function intakeSave(){
+ const {t,p,x}=intakeCalc(),a=INT.a,T=today(),pr=profile();
+ const gl={lose:'Lose fat',recomp:'Lose fat and build muscle',build:'Build muscle',maintain:'Maintain'}[a.goal];
+ const answers=Object.assign({},a);delete answers.date;
+ const data={body:{sex:a.sex,age:+a.age,heightCm:+a.heightCm},intake:{date:T,answers}};
+ if(a.saveTargets!==false)Object.assign(data,{targets:{kcal:t.kcal,protein:t.protein,carbs:t.carbs,fat:t.fat},stepGoal:x.stepGoal,goalRate:t.kgWk,goal:gl+', about '+Math.abs(t.kgWk).toFixed(2)+' kg a week'+(a.focus.length?'. Focus: '+a.focus.join(', '):'')});
+ if(!pr.startWeight)data.startWeight=+a.weight;
+ mutate(P_PROFILE,{k:'merge',data},{quiet:true});
+ if(a.replaceProgram){const old=program();if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
+  p.version=fmtLong(T);mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null}
+ if(logOf(T).weight==null&&+a.weight)mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
+ LS.set('forma.intakeSeen',1);flushSoon(300);intakeClose();toast0('Your plan is saved.');
+}
+
 /* ---------- Setup + settings ---------- */
 function setupView(){
  const owner=esc((cfg.repo||'jtpedrola-cloud/forma').split('/')[0]);
@@ -1035,6 +1155,7 @@ function settingsSheet(){
  const pr=profile();
  const cur=document.documentElement.dataset.theme;
  return `<h2>Settings</h2>
+ <button class="btn full" style="margin-bottom:14px" data-act="inOpen">${ic('check',18)} ${pr&&pr.intake?'Redo setup questionnaire':'Set up my plan'}</button>
  <div class="fld"><label>Style</label><div class="thm">${THEMES.map(([id,n,d,bg,card,g])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}"><div class="sw" style="background:${bg};border:1px solid rgba(128,128,128,.25)"><i style="background:${g}"></i><i style="background:${card};bottom:20px;right:30%;height:8px"></i></div><b>${n}</b><span>${d}</span></button>`).join('')}</div></div>
  <div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -1045,7 +1166,7 @@ function settingsSheet(){
  <div class="xs mut" style="margin:8px 0 12px">Ask Claude to change targets, step goal or units. They live in profile.json.</div>`:''}
  <div class="row" style="flex-wrap:wrap"><button class="btn sp" data-act="cfgSave">Save repo</button><button class="btn ghost sp" data-act="force">Force refresh</button></div>
  <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
- <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.3.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.4.0${DEMO?' (demo mode)':''}</div>`;
 }
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
@@ -1076,6 +1197,7 @@ window.addEventListener('popstate',e=>{
  if(navPending){navPending--;if(!navPending)while(navQ.length){const [k,st]=navQ.shift();if(k==='push')history.pushState(st,'');else history.replaceState(st,'')}return}
  if($('#phv')){phvClose(true);return}
  if($('#cam')){camClose(true);return}
+ if($('#intake')){if(INT.step>0){INT.step--;navPush({l:'intake'});intakeUI()}else intakeClose(true);return}
  if(UI.sheet){closeSheet(true);return}
  const t=(e.state&&e.state.tab)||'today';if(t!==UI.tab){UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render()}
 });
@@ -1125,6 +1247,19 @@ document.addEventListener('click',async e=>{
   case 'phPick':$('#f_photo').click();break;
   case 'bodyAdd':$('#pp_in').click();break;
   case 'camOpen':camOpen();break;
+  case 'inOpen':closeSheet();intakeOpen();break;
+  case 'inClose':intakeClose();break;
+  case 'inDismiss':LS.set('forma.intakeSeen',1);render();break;
+  case 'inSet':{intakeRead();const a=INT.a,k=D.k,raw=D.v,v=/^-?[\d.]+$/.test(raw)?+raw:raw;
+   if(k==='bfPick'){a.bfMode='pick';a.bf=v}else if(k==='equipPreset'){a.equipPreset=v;a.equipment=FormaPlan.PRESETS[v].slice()}else{a[k]=v;if(k==='goal')a.rateShare=null}
+   const y=$('#in_body').scrollTop;intakeUI();$('#in_body').scrollTop=y;break}
+  case 'inTog':{intakeRead();const a=INT.a,k=D.k,v=/^-?[\d.]+$/.test(D.v)?+D.v:D.v;
+   if(k==='saveTargets')a.saveTargets=a.saveTargets===false;else if(k==='replaceProgram')a.replaceProgram=!a.replaceProgram;
+   else{const l=a[k]||(a[k]=[]),i=l.indexOf(v);if(i>=0)l.splice(i,1);else{if(k==='focus'&&l.length>=2)l.shift();l.push(v)}}
+   const y=$('#in_body').scrollTop;intakeUI();$('#in_body').scrollTop=y;break}
+  case 'inNext':{intakeRead();const er=intakeValid();if(er){toast(er);break}INT.step++;navPush({l:'intake'});intakeUI();$('#in_body').scrollTop=0;break}
+  case 'inBack':history.back();break;
+  case 'inSave':intakeRead();intakeSave();break;
   case 'camClose':camClose(false);break;
   case 'camPose':CAM.pose=D.p;camUI();break;
   case 'camGrid':CAM.grid=!CAM.grid;camUI();break;
