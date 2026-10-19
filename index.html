@@ -301,6 +301,7 @@ async function fetchFile(p,force){
 }
 let refreshing=false;
 async function refresh(force){
+ if(!DEMO&&!cfg.token)return;
  if(refreshing)return;refreshing=true;setSync('syncing');
  try{
   if(pendCount())await flush();
@@ -529,20 +530,27 @@ function progressView(){
 
 /* ---------- Setup + settings ---------- */
 function setupView(){
- return `<div class="setup"><h1>Forma</h1><div class="mut" style="margin-bottom:18px">Food, gym and steps in one place. Your data lives in your private GitHub repo. Connect it once.</div>
- <div class="card"><h3>Get a token</h3><ol class="sm"><li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">the new token page</a>.</li><li>Under repository access pick "Only select repositories" and choose <b>forma</b>.</li><li>Under permissions set <b>Contents</b> to "Read and write". Expiry: no expiry or 1 year. Generate and paste it below.</li></ol></div>
- <div class="fld"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div>
- <div class="fld"><label>Token</label><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off"></div>
- <div id="s_err" class="sm" style="color:#ff8a8a;min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Test and save</button></div>`;
+ const owner=esc((cfg.repo||'jtpedrola-cloud/forma').split('/')[0]);
+ const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=Forma&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
+ return `<div class="setup"><h1>Forma</h1><div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>
+ <div class="card"><h3>Step 1: make your key</h3>
+ <a class="btn full" style="text-decoration:none;margin:10px 0 14px" href="${keyUrl}" target="_blank" rel="noopener">Create my key on GitHub</a>
+ <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>forma</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
+ <div class="card"><h3>Step 2: paste it here</h3>
+ <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
+ <div id="s_err" class="sm" style="color:#ff8a8a;min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
+ <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details></div>`;
 }
 async function setupSave(){
  const repo=$('#s_repo').value.trim(),tok=$('#s_tok').value.trim(),err=$('#s_err');
  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){err.textContent='The repo should look like owner/name.';return}
- if(!tok){err.textContent='Paste the token first.';return}
+ if(!tok){err.textContent='Paste your key first.';return}
+ if(!/^(github_pat_|ghp_)\w{20,}$/.test(tok)){err.textContent='That is not a key yet. The key is a long code that starts with github_pat_. Tap "Create my key on GitHub" above to get one.';return}
  err.textContent='Testing...';const old=cfg;cfg={token:tok,repo};
  try{const r=await gh('GET','/contents/'+P_PROFILE+'?ref=main');
-  if(r.status===401||r.status===403){throw new Error('GitHub rejected this token. Check it has Contents read and write on the forma repo.')}
-  if(r.status===404)throw new Error('Token works but the repo or data/profile.json was not found. Check the repo name.');
+  if(r.status===401){throw new Error('GitHub says this key is wrong or expired. Copy it again, or make a new one.')}
+  if(r.status===403){throw new Error('This key is missing the "Contents: read and write" permission. Make a new one with the button above.')}
+  if(r.status===404)throw new Error('This key cannot see the forma repo. Make a new one and pick forma under Repository access.');
   if(!r.ok)throw new Error('GitHub answered '+r.status+'.');
  }catch(e){cfg=old;err.textContent=e instanceof TypeError?'No connection. Try again when you are online.':e.message;return}
  LS.set('forma.cfg',cfg);render();refresh(true);
