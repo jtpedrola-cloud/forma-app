@@ -269,7 +269,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='19554498898cad5769761b43e3b2c4faea1b7f49';let verChecked=0;
+const BUILD='45e288600f1f1f0ce05048e3fa4449c95f03dea1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1153,7 +1153,7 @@ const PROG_SUBS=[['overview','Overview'],['photos','Photos'],['weight','Weight']
 function spark(pts){if(pts.length<2)return '';const vs=pts.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs),r=hi-lo||1,n=pts[pts.length-1].i||1;
  return `<svg class="ovsp" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="${pts.map(p=>(p.i/n*100).toFixed(1)+','+(25-(p.v-lo)/r*22).toFixed(1)).join(' ')}"/></svg>`}
 function progOverview(o){
- const pr=profile(),bf=latestBF(),sm=smartNow(),ph=progPhotos(),last=ph.length?ph[ph.length-1]:null,thumb=last?dayLatest(last.ps)[0]:null,w=latestWeight();
+ const pr=profile(),bf=latestBF(),sm=smartNow(),ph=progPhotos(),last=ph.length?ph[ph.length-1]:null,w=latestWeight();
  const tile=(t,sk,label,val,subl,extra,cls)=>`<button class="ovt ${cls||''}" data-act="goto" data-t="${t}" data-s="${sk}"><span class="ovl">${label}</span><b>${val}</b><span class="ovs">${subl}</span>${extra||''}</button>`;
  const rate=sm.rate!=null&&sm.weighIns>=4?(sm.rate>0?'+':'')+sm.rate.toFixed(2)+' kg a week':'Weigh in daily for a trend';
  const goal=pr.goalRate||0;
@@ -1162,7 +1162,7 @@ function progOverview(o){
  ${tile('progress','weight','Since start',o.now==null?'-':(o.delta>0?'+':'')+o.delta.toFixed(1)+' kg','from '+pr.startWeight+' kg'+(pr.startDate?', '+fmtShort(pr.startDate):''))}
  ${tile('progress','weight','Body fat',bf?'~'+bf.pct+'%':'-',bf?'range '+bf.low+'-'+bf.high+'%, '+fmtShort(bf.d):'Send photos to Claude')}
  ${tile('progress','weight','Lean mass',bf?(w*(1-bf.pct/100)).toFixed(1)+' kg':'-',bf?(w*bf.pct/100).toFixed(1)+' kg fat':'Needs a body fat estimate')}
- ${thumb?`<button class="ovt ovph" data-act="goto" data-t="progress" data-s="photos"><img src="${esc(photoURL(thumb))}" alt=""><span class="ovl">Photos</span><span class="ovs">Last ${fmtShort(last.d)}</span></button>`:tile('progress','photos','Photos','None yet','Tap the camera above')}
+ ${tile('progress','photos','Photos',last?ph.length+'<small> session'+(ph.length===1?'':'s')+'</small>':'None yet',last?'Last '+fmtShort(last.d):'Tap the camera above')}
  ${modOn('food')?tile('food','insights','Maintenance',rnd(sm.tdee).toLocaleString('en-US'),'kcal a day, '+Math.round(sm.conf*100)+'% from your data'):tile('progress','weight','Goal',goal?(goal>0?'-':'+')+Math.abs(goal)+' kg':'-','a week')}
  </div>`;
 }
