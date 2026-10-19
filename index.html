@@ -169,7 +169,7 @@ svg{display:block}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--inset);flex:none}
 .phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:var(--inset);margin-bottom:8px;display:block}
-#ov.full{align-items:center;background:rgba(0,0,0,.92)}#ov.full img{max-width:100%;max-height:90vh;object-fit:contain}
+#phv{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92)}#phv img{max-width:100%;max-height:90vh;object-fit:contain}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--badbg);border:1px solid var(--badline);color:var(--badtx);padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
 .empty{text-align:center;color:var(--mut);padding:18px 8px;font-size:14px}
 .setup{padding-top:40px}.setup h1{font-size:30px;margin:0 0 6px}
@@ -206,7 +206,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='4360b54348905ddf9ac5d8bcdb00c6a195449bb4';let verChecked=0;
+const BUILD='9775244d1c7b5f8110dcdf3e0ffedbaf2733f825';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -781,7 +781,7 @@ async function camOpen(){
  let el=$('#cam');if(!el){el=document.createElement('div');el.id='cam';document.body.appendChild(el)}
  el.innerHTML=`<div class="vw"><video playsinline muted autoplay></video><img class="gh" alt=""><div class="gl"></div><img class="shot" alt="" hidden><div class="cd" hidden></div>
  <div class="top"><button class="cb" data-act="camClose" aria-label="Close">${ic('x',22)}</button><b id="cam_t"></b><button class="cb" data-act="camGrid" aria-label="Grid">#</button><button class="cb" data-act="camFlipG" aria-label="Mirror ghost">${ic('mirror',20)}</button><button class="cb" data-act="camSwitch" aria-label="Switch camera">${ic('flipc',20)}</button></div></div><div class="bot" id="cam_bot"></div>`;
- document.body.style.overflow='hidden';
+ document.body.style.overflow='hidden';navPush({l:'cam'});
  await camStart();camUI();
 }
 async function camStart(){
@@ -790,7 +790,7 @@ async function camStart(){
  catch(e){toast('Camera blocked. Allow camera access for this site in your browser settings, or use Upload.');camClose();return}
  const v=$('#cam video');if(!v)return;v.srcObject=CAM.stream;v.style.transform=CAM.facing==='user'?'scaleX(-1)':'';try{await v.play()}catch(e){}
 }
-function camClose(){if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(el)el.remove();document.body.style.overflow='';render()}
+function camClose(fromPop){if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
 function camUI(){
  const el=$('#cam');if(!el)return;
  const gp=camGhostPath(),g=el.querySelector('.gh'),src=gp?photoURL(gp):'';
@@ -971,12 +971,34 @@ function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2><div cl
 function weightSheet(){const w=logOf(UI.date).weight;return `<h2>Weight</h2><div class="fld"><label>Kilograms</label><input id="v_weight" inputmode="decimal" value="${w==null?'':w}" placeholder="85.0"></div><button class="btn full" data-act="weightSave">Save</button>`}
 
 /* ---------- sheet ---------- */
-function openSheet(html,fn){UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
-function closeSheet(){UI.sheet=null;UI.sheetFn=null;renderSheet()}
+/* ---------- phone back button ----------
+   Each overlay (sheet, camera, full-screen photo) adds a history entry, so Android's back closes it instead of
+   leaving the app. Closing from the UI pops that entry (navPop). Pushes made while a pop is still in flight are
+   queued, so close-then-open sequences keep the history in order. Tabs: Today is the base entry, any other tab
+   is one entry above it, so back from Food, Workout or Progress returns to Today and back on Today exits. */
+let navPending=0;const navQ=[];
+function navPush(st){if(navPending)navQ.push(['push',st]);else history.pushState(st,'')}
+function navReplace(st){if(navPending)navQ.push(['replace',st]);else history.replaceState(st,'')}
+function navPop(){navPending++;history.back()}
+function navTab(t){
+ const from=UI.tab;if(t===from)return;
+ if(from==='today')navPush({tab:t});else if(t==='today')navPop();else navReplace({tab:t});
+ UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});
+}
+function phvClose(fromPop){const v=$('#phv');if(!v)return;v.remove();if(!fromPop)navPop()}
+window.addEventListener('popstate',e=>{
+ if(navPending){navPending--;if(!navPending)while(navQ.length){const [k,st]=navQ.shift();if(k==='push')history.pushState(st,'');else history.replaceState(st,'')}return}
+ if($('#phv')){phvClose(true);return}
+ if($('#cam')){camClose(true);return}
+ if(UI.sheet){closeSheet(true);return}
+ const t=(e.state&&e.state.tab)||'today';if(t!==UI.tab){UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render()}
+});
+function openSheet(html,fn){if(!UI.sheet)navPush({l:'sheet'});UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
+function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop()}
 function renderSheet(){
  let ov=$('#ov');
  if(!UI.sheet){if(ov)ov.remove();return}
- if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog"></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeSheet()})}
+ if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog"></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeSheet(false)})}
  const sh=$('#sheet');if(sh.dataset.h!==UI.sheet){sh.innerHTML=UI.sheet;sh.dataset.h=UI.sheet}
 }
 
@@ -988,7 +1010,7 @@ document.addEventListener('click',async e=>{
  if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=+D.m;foodPhoto=null;openSheet(foodSheet(null,+D.m));return}
  const T=today();
  switch(a){
-  case 'tab':UI.tab=D.t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
+  case 'tab':navTab(D.t);window.scrollTo(0,0);render();break;
   case 'day':UI.date=D.d;loadDay(D.d);render();break;
   case 'dnav':UI.date=addDays(UI.date,+D.n);loadDay(UI.date);render();break;
   case 'mode':UI.mode=D.m;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();break;
@@ -1000,12 +1022,12 @@ document.addEventListener('click',async e=>{
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
   case 'force':closeSheet();refresh(true);break;
   case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
-  case 'gotoWorkout':UI.tab='workout';UI.wSel=T;UI.wWk=0;{const pd=progDay(T);if(pd)UI.wDay=pd.id}render();break;
+  case 'gotoWorkout':navTab('workout');UI.wSel=T;UI.wWk=0;{const pd=progDay(T);if(pd)UI.wDay=pd.id}render();break;
   case 'cal':UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
   case 'calNav':UI.calM=shiftMonth(UI.calM,+D.n);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
-  case 'calDay':UI.date=D.d;loadDay(D.d);closeSheet();if(UI.tab!=='today'&&UI.tab!=='food')UI.tab='today';render();break;
+  case 'calDay':UI.date=D.d;loadDay(D.d);closeSheet();if(UI.tab!=='today'&&UI.tab!=='food')navTab('today');render();break;
   case 'pNav':UI.pM=shiftMonth(UI.pM,+D.n);loadDays(monthDates(UI.pM));render();break;
-  case 'stepDay':UI.date=D.d;UI.tab='today';loadDay(D.d);render();window.scrollTo(0,0);break;
+  case 'stepDay':UI.date=D.d;navTab('today');loadDay(D.d);render();window.scrollTo(0,0);break;
   case 'wsel':UI.wSel=D.d;loadDay(D.d);render();break;
   case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
@@ -1017,7 +1039,7 @@ document.addEventListener('click',async e=>{
   case 'phPick':$('#f_photo').click();break;
   case 'bodyAdd':$('#pp_in').click();break;
   case 'camOpen':camOpen();break;
-  case 'camClose':camClose();break;
+  case 'camClose':camClose(false);break;
   case 'camPose':CAM.pose=D.p;camUI();break;
   case 'camGrid':CAM.grid=!CAM.grid;camUI();break;
   case 'camFlipG':CAM.flip=!CAM.flip;camUI();break;
@@ -1032,11 +1054,11 @@ document.addEventListener('click',async e=>{
   case 'actSave':{const m=Math.round(num($('#act_min').value));if(!m){toast('Add the minutes.');break}
    const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
-  case 'gotoFood':UI.tab='food';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
-  case 'gotoBody':UI.tab='progress';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
+  case 'gotoFood':navTab('food');window.scrollTo(0,0);render();break;
+  case 'gotoBody':navTab('progress');render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
   case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
-  case 'phView':{const src=t.getAttribute('src');if(!src)break;let ov=$('#ov');const full=document.createElement('div');full.id='ov';full.className='full';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>full.remove());document.body.appendChild(full);break}
+  case 'phView':{const src=t.getAttribute('src');if(!src||$('#phv'))break;const full=document.createElement('div');full.id='phv';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>phvClose());document.body.appendChild(full);navPush({l:'photo'});break}
   case 'foodSave':{
    const name=$('#f_name').value.trim();if(!name){toast('Give the food a name first.');return}
    const g=id=>num($('#f_'+id).value);
@@ -1098,6 +1120,7 @@ document.addEventListener('touchend',e=>{if(ty!=null&&e.changedTouches[0].client
 
 /* ---------- boot ---------- */
 (async function boot(){
+ history.replaceState({tab:'today'},'');if(UI.tab!=='today')history.pushState({tab:UI.tab},'');
  if(DEMO){await DEMOB.init();render();await refresh(true);return}
  render();
  checkVersion();
