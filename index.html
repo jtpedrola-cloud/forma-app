@@ -114,6 +114,13 @@ input,select{font:inherit;color:var(--txt);background:var(--inset);border:1px so
 input:focus{border-color:var(--acc)}
 .wrap{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:8px;padding:14px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px}
+header.hwrap{flex-wrap:wrap}header .psub{flex-basis:100%;order:9}header .psub .seg{margin:4px 0 0}
+.ovg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.ovt{position:relative;text-align:left;background:var(--card);border:1px solid var(--line,transparent);border-radius:16px;padding:12px 14px;min-height:96px;display:flex;flex-direction:column;gap:2px;overflow:hidden;color:var(--txt)}
+.ovt:active{transform:scale(.98)}.ovt b{font-size:22px;font-weight:800;line-height:1.2}.ovt b small{font-size:13px;font-weight:500;color:var(--mut)}
+.ovl{font-size:12px;color:var(--mut);font-weight:600}.ovs{font-size:11.5px;color:var(--mut);line-height:1.3}
+.ovsp{width:100%;height:24px;margin-top:auto}
+.ovph{padding:0;justify-content:flex-end}.ovph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.75}.ovph .ovl,.ovph .ovs{position:relative;color:#fff;padding:0 12px;text-shadow:0 1px 4px rgba(0,0,0,.8)}.ovph .ovs{padding-bottom:10px}
 header h1{font-size:20px;margin:0;flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--mut)}
 .ib:active{background:var(--card)}
@@ -262,7 +269,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='149d8cfcc573a09c4f7f19bc592c986e86d0b995';let verChecked=0;
+const BUILD='62b523b3b02da0ba0eeaba2d63e238ef200d98e1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -297,7 +304,7 @@ if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
 const delQ=()=>DB.delQ||(DB.delQ=[]);
 const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
-const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
+const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null,pSub:LS.get('forma.psub','overview')};
 const P_CHK='data/checkins.json';const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
 const cur=p=>DB.pend[p]&&DB.pend[p].length?view(p):base(p);
@@ -970,8 +977,8 @@ function bodyCard(){
  const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null,cmpP=x=>dayLatest(x.ps)[0];
  const gal=last?timelineHTML(ph):'';
  const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(cmpP(first)))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(cmpP(last)))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
- return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${chart}${gal}${cmp}
- <input type="file" id="pp_in" accept="image/*" multiple hidden><div class="row" style="margin-top:12px"><button class="btn sp" data-act="camOpen">${ic('camera',20)} Take photos</button><button class="btn ghost" data-act="bodyAdd">Upload</button></div>
+ return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>
+ <input type="file" id="pp_in" accept="image/*" multiple hidden><div class="row" style="margin:8px 0 14px"><button class="btn sp" data-act="camOpen">${ic('camera',20)} Take photos</button><button class="btn ghost" data-act="bodyAdd">Upload</button></div>${top}${chart}${gal}${cmp}
  <div class="xs mut" style="margin-top:8px">Best results: morning, same spot and light, relaxed, front, side and back. Estimates from photos are about plus or minus 3%.</div></div>`;
 }
 const poseOf=p=>{const m=p.match(/\/(front|side|back)-[^/]*$/);return m?m[1]:'other'};
@@ -1115,6 +1122,28 @@ function maintCard(){
  <details class="xs mut" style="margin-top:8px"><summary>How the formula works</summary><div style="margin-top:6px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg'+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}</div></details>
  ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${b.heightCm||175} cm. Tell Claude your real height and age.</div>`:''}</div>`;
 }
+/* Progress is split into an Overview dashboard and three sections (Body, Weight, Habits) on a segmented control pinned
+   under the header. Each Overview tile opens its section, so details are one tap away and nothing needs a long scroll.
+   The camera button in the header takes progress photos from any section. */
+const PSUBS=[['overview','Overview'],['body','Body'],['weight','Weight'],['habits','Habits']];
+function spark(pts){if(pts.length<2)return '';const vs=pts.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs),r=hi-lo||1,n=pts[pts.length-1].i||1;
+ return `<svg class="ovsp" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="${pts.map(p=>(p.i/n*100).toFixed(1)+','+(25-(p.v-lo)/r*22).toFixed(1)).join(' ')}"/></svg>`}
+function progOverview(o){
+ const pr=profile(),bf=latestBF(),sm=smartNow(),ph=progPhotos(),last=ph.length?ph[ph.length-1]:null,thumb=last?dayLatest(last.ps)[0]:null;
+ const tile=(s,label,val,subl,extra,cls)=>`<button class="ovt ${cls||''}" data-act="pSub" data-s="${s}"><span class="ovl">${label}</span><b>${val}</b><span class="ovs">${subl}</span>${extra||''}</button>`;
+ const ek=o.cv.filter(k=>k>0),avgK=ek.length?rnd(ek.reduce((a,b)=>a+b,0)/ek.length):0;
+ const rate=sm.rate!=null&&sm.weighIns>=4?(sm.rate>0?'+':'')+sm.rate.toFixed(2)+' kg a week':(o.now==null?'Weigh in on Today':(o.delta>0?'+':'')+o.delta.toFixed(1)+' kg since start');
+ return `<div class="ovg">
+ ${tile('weight','Weight',o.now==null?'-':o.now+' kg',rate,spark(o.wp))}
+ ${tile('body','Body fat',bf?'~'+bf.pct+'%':'-',bf?(latestWeight()*(1-bf.pct/100)).toFixed(1)+' kg lean, '+fmtShort(bf.d):'Send photos to Claude')}
+ ${thumb?`<button class="ovt ovph" data-act="pSub" data-s="body"><img src="${esc(photoURL(thumb))}" alt=""><span class="ovl">Photos</span><span class="ovs">Last ${fmtShort(last.d)}</span></button>`:tile('body','Photos','None yet','Tap the camera above')}
+ ${tile('weight','Calories',avgK?avgK.toLocaleString('en-US'):'-','avg vs '+pr.targets.kcal.toLocaleString('en-US')+', '+o.logged+'/7 days')}
+ ${tile('habits','Workouts',o.did+'<small> of '+o.planned+'</small>','this week, '+schedStreak()+' days on schedule')}
+ ${tile('habits','Steps',o.savg?o.savg.toLocaleString('en-US'):'-','14-day avg, goal '+(pr.stepGoal/1000)+'k')}
+ ${tile('weight','Maintenance',rnd(sm.tdee).toLocaleString('en-US'),'kcal a day, '+Math.round(sm.conf*100)+'% from your data')}
+ ${tile('habits','Logging streak',o.streak+'<small> day'+(o.streak===1?'':'s')+'</small>','food, weight or steps')}
+ </div>`;
+}
 function progressView(){
  const pr=profile(),T=today();
  /* weight */
@@ -1130,12 +1159,14 @@ function progressView(){
  const wk=weekDates(T);let planned=0,did=0;wk.forEach(d=>{if(progDay(d))planned++;const w=logOf(d).workout;if(w&&w.finishedAt)did++});
  /* streak */
  let streak=0,i=hasData(T)?0:1;for(;i<31;i++){if(hasData(addDays(T,-i)))streak++;else break}
- return header('Progress')+maintCard()+bodyCard()+`
- <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'var(--ok)':'var(--warn)'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
- <div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>
- <div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>
- ${stepsCalCard()}
- <div class="row"><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Workouts this week</div><div class="big">${did}<span class="mut sm" style="font-weight:400"> of ${planned}</span></div></div><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Logging streak</div><div class="big">${streak}<span class="mut sm" style="font-weight:400"> day${streak===1?'':'s'}</span></div></div></div>`;
+ const weightCard=`<div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'var(--ok)':'var(--warn)'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>`,stepsCard=`<div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>`,calCard=`<div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>`,woRow=`<div class="row"><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Workouts this week</div><div class="big">${did}<span class="mut sm" style="font-weight:400"> of ${planned}</span></div></div><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Logging streak</div><div class="big">${streak}<span class="mut sm" style="font-weight:400"> day${streak===1?'':'s'}</span></div></div></div>`;
+ const sub=PSUBS.some(x=>x[0]===UI.pSub)?UI.pSub:'overview';
+ const seg=`<div class="psub"><div class="seg">${PSUBS.map(([k,l])=>`<button data-act="pSub" data-s="${k}" class="${sub===k?'on':''}">${l}</button>`).join('')}</div></div>`;
+ const hdr=header('Progress',`<button class="ib" data-act="camOpen" aria-label="Take progress photos">${ic('camera',22)}</button>`).replace('<header>','<header class="hwrap">').replace('</header>',seg+'</header>');
+ if(sub==='body')return hdr+bodyCard();
+ if(sub==='weight')return hdr+weightCard+calCard+maintCard();
+ if(sub==='habits')return hdr+stepsCalCard()+stepsCard+woRow;
+ return hdr+progOverview({now,delta,wp,savg,cv,logged,did,planned,streak});
 }
 
 /* Consistency: a day is on schedule if its planned workout was finished, or it was a rest day.
@@ -1425,6 +1456,7 @@ document.addEventListener('click',async e=>{
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
   case 'gotoFood':navTab('food');window.scrollTo(0,0);render();break;
   case 'gotoBody':navTab('progress');render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
+  case 'pSub':UI.pSub=D.s;LS.set('forma.psub',UI.pSub);window.scrollTo(0,0);render();break;
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
   case 'phDel':if(!t.classList.contains('sure')){document.querySelectorAll('.pgdel.sure').forEach(b=>{b.classList.remove('sure');b.innerHTML=ic('trash',18)});t.classList.add('sure');t.textContent='Delete';break}
    {const p=D.p;if(DB.photos[p])delete DB.photos[p];else if(!delQ().includes(p))delQ().push(p);delete DB.tree[p];delete PHOTOS[p];UI.tlIdx=null;persist();flushSoon(300);openSheet(bodyAllSheet(),bodyAllSheet);render();toast0('Photo deleted.')}break;
