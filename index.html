@@ -131,7 +131,8 @@ svg{display:block}
 .sec summary .t::before{content:'';display:inline-block;width:4px;height:16px;border-radius:2px;background:var(--grad);margin-right:10px;vertical-align:-2px}
 .sec .item,.sec .empty{padding-left:16px;padding-right:16px}
 .sec .item:first-of-type{border-top:0}
-.sec.empty-meal{opacity:.75;border-style:dashed}
+.addmeal{width:100%;min-height:56px;border-radius:16px;background:var(--grad);color:var(--onacc);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-shadow:0 6px 20px -8px var(--acc)}
+.addmeal span{font-size:24px;line-height:1;font-weight:500}.addmeal:active{transform:scale(.99);opacity:.9}
 .sec summary::-webkit-details-marker{display:none}
 .sec summary .t{flex:1;font-weight:600}
 .add{width:32px;height:32px;border-radius:50%;background:var(--acc);display:grid;place-items:center;font-size:20px;line-height:1}
@@ -588,7 +589,8 @@ function todayView(){
 function foodView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),items=food(d).items,isCons=UI.mode==='consumed';
  const big=isCons?rnd(t.kcal):rnd(T.kcal-t.kcal);
- const secs=mealList(d).map(k=>{
+ const ml=mealList(d),nextMeal=ml[ml.length-1];
+ const secs=ml.filter(k=>items.some(i=>mealNo(i)===k)).map(k=>{
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec ${its.length?'':'empty-meal'}" data-m="${k}" ${open?'open':''}><summary><div class="hd"><span class="t">${l}</span><div class="mc"><span class="chip b">${rnd(mt.kcal)} cal</span><span class="chip p">${rnd(mt.protein)}g P</span><span class="chip c">${rnd(mt.carbs)}g C</span><span class="chip f">${rnd(mt.fat)}g F</span></div></div><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
   ${its.length?its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}${i.by==='claude'?'<span class="tag">Claude</span>':''}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r"><div>${rnd(num(i.kcal))} cal</div><div class="xs mut">${rnd(num(i.protein))}g protein</div></div></button>`).join(''):`<div class="empty" style="padding:8px">Nothing here yet. Tap + to add.</div>`}</details>`}).join('');
@@ -596,7 +598,7 @@ function foodView(){
  <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
- ${secs}`;
+ ${secs}<button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal ${nextMeal}</button>`;
 }
 function foodSheet(item,meal){
  const e=!!item,i=item||{name:'',amount:'',kcal:'',protein:'',carbs:'',fat:''};
