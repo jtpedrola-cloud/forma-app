@@ -139,7 +139,7 @@ svg{display:block}
 .btn.sm{min-height:36px;padding:0 12px;border-radius:10px;font-size:13px}
 .bar{height:10px;border-radius:6px;background:var(--inset);overflow:hidden;margin:10px 0}
 .bar>i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .3s}
-.bar.over>i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.bar.over>i{background:linear-gradient(90deg,var(--acc),#f59e0b)}
 .mac{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
 .mac>div{display:flex;flex-direction:column;align-items:center;text-align:center}
 .ring{position:relative;width:84px;height:84px;margin:6px 0 4px}
@@ -272,7 +272,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='157a04141c5ee5572183b853945da49a11f4a783';let verChecked=0;
+const BUILD='bf535e7269628d80241733d1a025db55760e661a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -618,7 +618,7 @@ function weekDates(d){const ws=(profile().weekStart||0);const dow=parseD(d).getD
 const hasData=d=>{const f=view(foodP(d)),l=view(logP(d));return !!((f&&f.items.length)||(l&&(l.steps!=null||l.weight!=null||l.workout)))};
 
 /* ---------- Macro rings ---------- */
-const RING_DEFS=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc2)"/></linearGradient><linearGradient id="ringOver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs></svg>`;
+const RING_DEFS=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc2)"/></linearGradient><linearGradient id="ringOver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs></svg>`;
 function ring(l,v,g,opt){
  opt=opt||{};const r=36,c=2*Math.PI*r,p=g>0?Math.min(1,v/g):0,over=opt.over!==false&&v>g,shown=opt.remaining?Math.max(0,g-v):v;
  return `<div><div class="ring ${over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/><circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div></div>`}
@@ -670,7 +670,7 @@ function checklist(d){
 /* ---------- Today ---------- */
 function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today();
- const rem=T.kcal-t.kcal,pct=Math.min(100,t.kcal/T.kcal*100);
+ const rem=T.kcal-t.kcal,pct=Math.min(100,t.kcal/T.kcal*100),kv=kcalVerdict(t.kcal,T.kcal);
  const wk=weekDates(d).map(x=>{const dw=parseD(x).getDay();return `<button class="wd ${x===today()?'today':''} ${x===d?'sel':''}" data-act="day" data-d="${x}"><span>${'SMTWTFS'[dw]}</span><b>${parseD(x).getDate()}${hasData(x)?'<i></i>':''}</b></button>`}).join('');
  const pd=progDay(d),wo=lg.workout;
  let wcard;
@@ -686,9 +686,10 @@ function todayView(){
  const chkCard=`<div class="card ${allDone?'':''}" style="padding:12px 16px"><div class="row" style="margin-bottom:4px"><div class="sp"><h3 style="margin:0">${isT?'Today':fmtShort(d)}'s checklist</h3></div><span class="chip" style="${allDone?'background:var(--okbg);color:var(--oktx)':''}">${allDone?'All done':nDone+' / '+chk.length}</span></div>
  ${chk.map(x=>`<button class="cl ${x.ok?'ok':''}" data-act="${x.act}"><span class="ck">${ic('check',16)}</span><span class="n">${x.l}</span><span class="s">${x.s||''}</span></button>`).join('')}</div>`;
  return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>${setupCard}${chkCard}
- ${modOn('food')?`<div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'var(--txt)':'var(--badtx)'}">${Math.abs(rnd(rem))}</div></div></div>
+ ${modOn('food')?`<div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${kv.l}</div><div style="font-size:20px;font-weight:700;color:${kv.c}">${kv.v}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
- ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
+ ${t.kcal>0?deficitRow(d,t.kcal):''}
+ ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{over:false})}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
  ${t.kcal===0?'<div class="xs mut" style="margin-top:10px">Nothing logged yet. Open the Food tab to add a meal or ask Claude.</div>':''}</div>`:''}
  ${modOn('workout')?wcard:''}
  ${modOn('activity')?stepsTodayCard(d):''}
@@ -707,6 +708,12 @@ function foodSticky(){if(fstIO){fstIO.disconnect();fstIO=null}
  const main=$('#fmain'),st=$('#fst');if(!main||!st||!window.IntersectionObserver)return;
  fstIO=new IntersectionObserver(([e])=>{const show=!e.isIntersecting&&e.boundingClientRect.top<0;if(show){const hd=document.querySelector('header');st.style.top=Math.max(0,hd?hd.getBoundingClientRect().bottom:0)+'px'}st.hidden=!show},{threshold:0});
  fstIO.observe(main)}
+/* Calories vs target, judged by the goal instead of painted red. Within about 5% (at least 100 kcal) is On target.
+   Cutting: going over is worth a look (amber). Gaining: leaving a lot uneaten is. Maintaining: only a big miss either way. */
+function kcalVerdict(eaten,target){const g=profile().goalRate||0,diff=eaten-target,band=Math.max(100,target*.05),ab=Math.abs(diff);
+ if(eaten>0&&ab<=band)return {l:'On target',v:(diff>=0?'+':'-')+rnd(ab),c:'var(--ok)'};
+ if(diff<0)return {l:'Left',v:rnd(ab),c:g<0&&eaten>0?'var(--warn)':'var(--txt)'};
+ return {l:'Over',v:rnd(ab),c:g>0||(g===0&&ab>band*3)?'var(--warn)':'var(--txt)'}}
 /* Deficit or surplus for a day: maintenance (the adaptive estimate) plus that day's sport, minus what was eaten. */
 function dayBurn(d){const sm=smartNow();return rnd(sm.tdee)+actsOf(d).reduce((a,x)=>a+(x.kcal||0),0)}
 function deficitRow(d,kcal){const burn=dayBurn(d),def=burn-kcal,sport=actsOf(d).reduce((a,x)=>a+(x.kcal||0),0);
@@ -734,7 +741,7 @@ function foodView(){
  <div class="card" id="fmain"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
  ${t.kcal>0?deficitRow(d,t.kcal):''}
- ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
+ ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:false})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
  ${secs}<button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button>`;
 }
 function foodSheet(item,meal){
