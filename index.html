@@ -731,10 +731,11 @@ function bodyCard(){
   <div class="stk" style="margin-top:20px"><div><b>${lean.toFixed(1)}</b><span>kg lean mass</span></div><div><b>${fat.toFixed(1)}</b><span>kg fat</span></div><div><b>${h.length}</b><span>estimate${h.length===1?'':'s'}</span></div></div>
   ${bf.note?`<div class="sm" style="padding:10px 12px;border-radius:12px;background:var(--inset);color:var(--soft)">${esc(bf.note)}</div>`:''}`;
  }else top=`<div class="sm mut" style="margin:6px 0 10px">No estimate yet. Send Claude front, side and back photos and ask for a body fat estimate.</div>`;
+ const chart=h.length>=2?`<div class="sm" style="margin:16px 0 4px"><b>Body fat over time</b></div>${bfChart(h)}`:'';
  const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null;
  const gal=last?timelineHTML(ph):'';
  const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(first.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(last.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
- return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${gal}${cmp}
+ return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${chart}${gal}${cmp}
  <input type="file" id="pp_in" accept="image/*" multiple hidden><div class="row" style="margin-top:12px"><button class="btn sp" data-act="camOpen">${ic('camera',20)} Take photos</button><button class="btn ghost" data-act="bodyAdd">Upload</button></div>
  <div class="xs mut" style="margin-top:8px">Best results: morning, same spot and light, relaxed, front, side and back. Estimates from photos are about plus or minus 3%.</div></div>`;
 }
@@ -802,6 +803,23 @@ function camUse(){
  const order=['front','side','back'],i=order.indexOf(CAM.pose);if(i<order.length-1){CAM.pose=order[i+1];camUI()}else{UI.tlIdx=null;camClose()}
 }
 
+function bfChart(h){
+ const W=340,H=170,pl=30,pr=12,pt=14,pb=22,goal=14;
+ const t=x=>parseD(x.d).getTime(),t0=t(h[0]),t1=Math.max(t(h[h.length-1]),t0+864e5*7);
+ const lo=Math.min(goal-2,...h.map(x=>x.low)),hi=Math.max(...h.map(x=>x.high))+3;
+ const X=x=>pl+(t(x)-t0)/(t1-t0)*(W-pl-pr),Y=v=>pt+(hi-v)/(hi-lo)*(H-pt-pb);
+ const band=h.map(x=>X(x).toFixed(1)+','+Y(x.high).toFixed(1)).join(' ')+' '+h.slice().reverse().map(x=>X(x).toFixed(1)+','+Y(x.low).toFixed(1)).join(' ');
+ const line=h.map((x,i)=>(i?'L':'M')+X(x).toFixed(1)+' '+Y(x.pct).toFixed(1)).join(' ');
+ const ticks=[];for(let v=Math.ceil(lo/5)*5;v<=hi;v+=5)ticks.push(v);
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Body fat estimates over time">
+ ${ticks.map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" style="stroke:var(--line)"/><text x="${pl-6}" y="${Y(v)+3}" font-size="9" text-anchor="end" style="fill:var(--mut)">${v}%</text>`).join('')}
+ <line x1="${pl}" x2="${W-pr}" y1="${Y(goal)}" y2="${Y(goal)}" stroke-dasharray="4 3" style="stroke:var(--ok)"/><text x="${W-pr}" y="${Y(goal)-4}" font-size="9" text-anchor="end" style="fill:var(--ok)">abs ~${goal}%</text>
+ <polygon points="${band}" style="fill:var(--acc);opacity:.18"/>
+ <path d="${line}" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--acc)"/>
+ ${h.map(x=>`<circle cx="${X(x).toFixed(1)}" cy="${Y(x.pct).toFixed(1)}" r="4" style="fill:var(--acc2)"/><text x="${X(x).toFixed(1)}" y="${(Y(x.pct)-8).toFixed(1)}" font-size="10" font-weight="700" text-anchor="middle" style="fill:var(--txt)">${x.pct}%</text>`).join('')}
+ <text x="${pl}" y="${H-5}" font-size="9" style="fill:var(--mut)">${fmtShort(h[0].d)}</text><text x="${W-pr}" y="${H-5}" font-size="9" text-anchor="end" style="fill:var(--mut)">${fmtShort(h[h.length-1].d)}</text></svg>
+ <div class="xs mut">Shaded band is the estimate range.</div>`;
+}
 function bodyAllSheet(){
  const ph=progPhotos().slice().reverse(),h=bfHistory();
  return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`}).join('')}
