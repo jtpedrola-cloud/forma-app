@@ -146,7 +146,7 @@ svg{display:block}
 .setup ol{padding-left:20px;color:var(--soft)}.setup li{margin:6px 0}
 a{color:var(--acc)}
 .lg{display:flex;gap:12px;font-size:12px;color:var(--mut);margin-top:6px}
-.kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.kv>span:last-child{white-space:nowrap;text-align:right}
 </style>
 </head>
 <body>
@@ -662,6 +662,42 @@ function lineChart(pts,startW){
  <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" style="fill:var(--acc2)"/>`).join('')}
  <text x="${px}" y="${H-3}" font-size="9" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">today</text></svg>`;
 }
+/* ---------- maintenance (TDEE) estimate ----------
+   BMR: Mifflin-St Jeor. Daily life + digestion: 15% of BMR (sedentary baseline, steps counted separately).
+   Walking: net 0.5 kcal per kg per km, stride 0.75 m, so about 0.000375 kcal per step per kg.
+   Lifting: net 0.05 kcal per kg per minute of a finished workout (planned days assume 60 minutes).
+   From data: average intake minus weight change (7,700 kcal per kg), once 14+ days are logged. */
+function latestWeight(){const T=today();for(let i=0;i<60;i++){const w=logOf(addDays(T,-i)).weight;if(w!=null)return w}return profile().startWeight}
+function bmrOf(w){const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
+function maintFor(steps,liftMin){const w=latestWeight(),bmr=bmrOf(w);const life=bmr*.15,walk=(steps||0)*w*.000375,lift=(liftMin||0)*w*.05;return {w,bmr,life,walk,lift,total:bmr+life+walk+lift}}
+function woMinutes(d){const wo=logOf(d).workout;if(!wo||!wo.finishedAt)return 0;return Math.min(150,Math.max(0,(new Date(wo.finishedAt)-new Date(wo.startedAt))/60000))}
+function adaptiveTDEE(){
+ const T=today();const days=[];for(let i=1;i<=28;i++){const d=addDays(T,-i);if(food(d).items.length)days.push(d)}
+ const ws=[];for(let i=1;i<=28;i++){const d=addDays(T,-i),w=logOf(d).weight;if(w!=null)ws.push({d,w})}
+ if(days.length<14||ws.length<4)return {ready:false,days:days.length};
+ const span=Math.max(1,(parseD(ws[0].d)-parseD(ws[ws.length-1].d))/864e5);if(span<14)return {ready:false,days:days.length};
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length,half=Math.ceil(ws.length/2);
+ const dW=avg(ws.slice(0,half).map(x=>x.w))-avg(ws.slice(half).map(x=>x.w)),dDays=span/2;
+ const intake=avg(days.map(d=>totals(d).kcal));
+ return {ready:true,days:days.length,tdee:intake-dW*7700/dDays,intake,rate:dW/dDays*7};
+}
+function maintCard(){
+ const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal;
+ const train=maintFor(sg,60),rest=maintFor(5000,0);
+ const perWeek=Object.values(program().weekdays).filter(x=>x!=='rest').length;
+ let sum=0,n=0;for(let i=1;i<=7;i++){const d=addDays(T,-i),l=logOf(d);if(l.steps==null&&!woMinutes(d))continue;sum+=maintFor(l.steps==null?5000:l.steps,woMinutes(d)).total;n++}
+ const wk=n?sum/n:null,typ=(train.total*perWeek+rest.total*(7-perWeek))/7;
+ const gap=typ-pr.targets.kcal,kgWk=gap*7/7700,ad=adaptiveTDEE();
+ const fmt=v=>rnd(v).toLocaleString('en-US');
+ const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--faint)">${sub}</div>`:''}</span><span>${v}</span></div>`;
+ return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance</h3><div class="mut sm">Calories you burn in a day (TDEE)</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(typ)}</b><div class="xs mut">per day, your week</div></div></div>
+ <div style="margin-top:8px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg')}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
+ ${row('<b style="color:var(--txt)">Training day, '+(sg/1000)+'k steps</b>','<b>'+fmt(train.total)+'</b>')}${row('Rest day, 5k steps',fmt(rest.total))}
+ ${wk?row('Last 7 days, from your logs',fmt(wk),n+' day'+(n===1?'':'s')+' with steps or a workout'):''}
+ ${row('From your weight trend',ad.ready?'<b>'+fmt(ad.tdee)+'</b>':'<span class="mut">'+ad.days+' / 14 days</span>',ad.ready?'eating '+fmt(ad.intake)+', weight '+(ad.rate>0?'+':'')+ad.rate.toFixed(2)+' kg a week':'most accurate once 14 days of food and weight are logged')}</div>
+ <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset)">Target ${fmt(pr.targets.kcal)} is ${gap>=0?'about <b>'+fmt(gap)+' below</b>':'about <b>'+fmt(-gap)+' above</b>'} maintenance: roughly ${gap>=0?'-':'+'}${Math.abs(kgWk).toFixed(1)} kg a week.</div>
+ ${b.assumed||!b.heightCm?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${b.heightCm||175} cm. Tell Claude your real height and age.</div>`:''}</div>`;
+}
 function progressView(){
  const pr=profile(),T=today();
  /* weight */
@@ -677,7 +713,7 @@ function progressView(){
  const wk=weekDates(T);let planned=0,did=0;wk.forEach(d=>{if(progDay(d))planned++;const w=logOf(d).workout;if(w&&w.finishedAt)did++});
  /* streak */
  let streak=0,i=hasData(T)?0:1;for(;i<31;i++){if(hasData(addDays(T,-i)))streak++;else break}
- return header('Progress')+`
+ return header('Progress')+maintCard()+`
  <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'var(--ok)':'var(--warn)'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>
