@@ -156,6 +156,16 @@ svg{display:block}
 .chk{width:44px;height:44px;border-radius:50%;border:2px solid var(--chk);display:grid;place-items:center;color:transparent}
 .chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .set.dn input{background:var(--okin);border-color:var(--okline)}
+.sx{display:flex;gap:6px;align-items:center;margin:6px 0 2px 42px;flex-wrap:wrap}
+.sx button{height:30px;padding:0 10px;border-radius:15px;background:var(--inset);color:var(--mut);font-size:12px;font-weight:600;border:1px solid var(--line)}
+.sx button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.sx button.on.f{background:var(--bad);border-color:var(--bad)}
+.sx .dp{margin-left:auto;color:var(--txt)}
+.set.drop{grid-template-columns:34px 1fr 74px 74px 46px;margin-top:4px}
+.set.drop .sn{font-size:11px;color:var(--acc)}
+.set.drop .x{width:44px;height:44px;border-radius:50%;color:var(--mut);display:grid;place-items:center}
+.rst{height:28px;padding:0 10px;border-radius:14px;background:var(--inset);border:1px solid var(--line);color:var(--soft);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.hint{font-size:12px;color:var(--ok);margin-top:4px}
 .cues{background:var(--inset);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--soft)}
 .cues li{margin:4px 0 4px 16px}
 #rest{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:25}
@@ -206,7 +216,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='53ec60d8e1d7e76c9541889ba2be0a82494cd24a';let verChecked=0;
+const BUILD='75c37d09c9f13b9be11053fec50d330c66b39f23';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -230,7 +240,7 @@ const IC={
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
- left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
+ left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
 };
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 
@@ -658,7 +668,7 @@ function workoutView(){
  if(swo){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
-   return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(x=>(x.w?x.w+' x ':'')+x.r).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
+   return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(setTxt).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
   body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:''}${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
   ${swo.marked?'':`<div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
@@ -676,14 +686,17 @@ function liveView(wo,lg){
  const cards=day.exercises.map(e=>{
   const ex=effEx(wo,e.ex),inf=exdb().exercises[ex]||{n:ex},sets=(wo.sets&&wo.sets[ex])||[],prev=prevFor(ex),u=unitOf(ex);
   const swapped=ex!==e.ex;
-  return `<div class="card" style="padding:12px 12px 14px"><div class="row"><div class="sp"><h3>${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.sets} sets - ${esc(e.reps)} ${u==='REPS'?'reps':u==='SEC'?'seconds':'meters'}</div></div>
+  const easy=prev&&prev.length&&prev.every(x=>x.rir===3);
+  return `<div class="card" style="padding:12px 12px 14px"><div class="row"><div class="sp"><h3>${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.sets} sets - ${esc(e.reps)} ${u==='REPS'?'reps':u==='SEC'?'seconds':'meters'} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
   <button class="btn ghost sm" data-act="cues" data-ex="${ex}">Notes</button>${(inf.a||[]).length||swapped?`<button class="btn ghost sm" data-act="swap" data-slot="${e.ex}">Swap</button>`:''}</div>
   ${UI.cues[ex]?`<ul class="cues">${(inf.c||['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}
   <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">KG</div><div style="text-align:center">${u}</div><div></div></div>
   ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]);return `<div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?pv.w+' x ':'')+pv.r:'-'}</div>
   <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?s.w:''}" placeholder="${pv&&pv.w?pv.w:'0'}" aria-label="Kilograms set ${i+1}">
   <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${pv?pv.r:'0'}" aria-label="${u} set ${i+1}">
-  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-label="Mark set ${i+1} done">${ic('check',20)}</button></div>`}).join('')}
+  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-label="Mark set ${i+1} done">${ic('check',20)}</button></div>
+  ${s.done&&u==='REPS'?`<div class="sx">${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
+  ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?d.w:''}" placeholder="0" aria-label="Drop kilograms"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="addSet" data-ex="${ex}">+ Add Set</button>${sets.length>1?`<button class="btn ghost" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">-</button>`:''}</div></div>`}).join('');
  return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><div class="sp"><div class="xs mut">Elapsed</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></div><button class="btn ghost sm" data-act="wCancel">Cancel</button><button class="btn" data-act="wFinish">Finish</button></div></div>${cards}<div style="height:50px"></div>`;
 }
@@ -697,15 +710,28 @@ function editSets(ex,fn,o){
  const sets=clone((wo.sets||{})[ex])||[];fn(sets);
  mutate(p,{k:'wSets',ex,sets},o);
 }
-function startRest(sec=120){UI.rest={end:Date.now()+sec*1000,total:sec};updateRest()}
+/* Rest per exercise: big compounds 2:30, jumps 2:00, everything else 1:30. A tap on the chip cycles presets and is
+   remembered per exercise on this phone (forma.rest). */
+const REST_PRESETS=[60,90,120,150,180];
+function restFor(ex){const o=LS.get('forma.rest',{});if(o[ex])return o[ex];const e=exdb().exercises[ex]||{};return e.big?150:/jump/.test(ex)?120:90}
+const RIR=[[3,'3+ left'],[2,'1-2 left'],[0,'Failure']];
+const rirTxt=x=>x.rir==null?'':x.rir===0?' F':x.rir===3?' (3+)':' (1-2)';
+const setTxt=x=>(x.w?x.w+' x ':'')+x.r+rirTxt(x)+((x.drops||[]).length?' + drop '+x.drops.map(d=>(d.w?d.w+' x ':'')+d.r).join(', '):'');
+let audioCtx=null;function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();[0,.25,.5].forEach(t=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,audioCtx.currentTime+t);g.gain.exponentialRampToValueAtTime(.3,audioCtx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+t+.18);o.connect(g).connect(audioCtx.destination);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.2)})}catch(e){}}
+document.addEventListener('pointerdown',()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}},{once:true});
+/* keep the screen on during a live workout so the rest timer can ring */
+let wakeLock=null;async function syncWake(){const wo=logOf(today()).workout,live=UI.tab==='workout'&&wo&&!wo.finishedAt&&!document.hidden;
+ try{if(live&&!wakeLock&&navigator.wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}else if(!live&&wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
+function startRest(sec=120,name){UI.rest={end:Date.now()+sec*1000,total:sec,name:name||''};updateRest()}
 function updateRest(){
  const el=$('#rest'),r=UI.rest;
  const live=UI.tab==='workout'&&r&&cfg.token;
- if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}el.hidden=true;el.innerHTML='';return}
+ if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;try{navigator.vibrate&&navigator.vibrate([300,120,300,120,300])}catch(e){}beep();if(live)toast0('Rest over. Next set.')}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
- if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><b id="rt" style="min-width:48px">0:00</b><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest30">+30s</button><button class="btn ghost sm" data-act="restSkip">Skip</button></div></div>`}
+ if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div style="min-width:54px"><b id="rt">0:00</b><div class="xs mut" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'Rest')}</div></div><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest15m">-15</button><button class="btn ghost sm" data-act="rest30">+30</button><button class="btn ghost sm" data-act="restSkip">Skip</button></div></div>`}
  $('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
 }
+setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
 setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest()},500);
 
 /* ---------- Progress ---------- */
@@ -1103,7 +1129,12 @@ document.addEventListener('click',async e=>{
    editSets(D.ex,s=>{const x=s[+D.i];x.done=!x.done;on=x.done;
     if(on&&!x.w&&!x.r){const pv=prevFor(D.ex),p=pv&&(pv[+D.i]||pv[pv.length-1]);if(p){x.w=p.w;x.r=p.r}else{const wo=logOf(T).workout,slot=program().days.find(d=>d.id===wo.dayId).exercises.find(q=>effEx(wo,q.ex)===D.ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
    },{delay:2000});
-   if(on)startRest(120);else{UI.rest=null;}render();break}
+   if(on)startRest(restFor(D.ex),(exdb().exercises[D.ex]||{}).n);else{UI.rest=null;}render();break}
+  case 'restSet':{const o=LS.get('forma.rest',{}),cur=restFor(D.ex),i=REST_PRESETS.indexOf(cur);o[D.ex]=REST_PRESETS[(i+1)%REST_PRESETS.length];LS.set('forma.rest',o);render();break}
+  case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
+  case 'rir':editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const v=+D.v;if(x.rir===v)delete x.rir;else x.rir=v},{delay:1500});render();break;
+  case 'dropAdd':{let w0=0;editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const base=(x.drops&&x.drops.length?x.drops[x.drops.length-1].w:x.w)||0;w0=base>=20?Math.round(base*.8/2.5)*2.5:Math.round(base*.8);(x.drops=x.drops||[]).push({w:w0,r:0})},{delay:1500});UI.rest=null;updateRest();render();break}
+  case 'dropRm':editSets(D.ex,s=>{const x=s[+D.i];if(!x||!x.drops)return;x.drops.splice(+D.j,1);if(!x.drops.length)delete x.drops},{delay:1500});render();break;
   case 'rest30':if(UI.rest){UI.rest.end+=30000;UI.rest.total+=30;updateRest()}break;
   case 'restSkip':UI.rest=null;updateRest();break;
   case 'swap':{
@@ -1133,6 +1164,7 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
  const v=t.value.trim()===''?0:num(t.value);
+ if(t.dataset.f==='dw'||t.dataset.f==='dr'){editSets(t.dataset.ex,s=>{const x=s[+t.dataset.i];if(x&&x.drops&&x.drops[+t.dataset.j])x.drops[+t.dataset.j][t.dataset.f==='dw'?'w':'r']=v},{quiet:true,delay:2000});return}
  editSets(t.dataset.ex,s=>{if(s[+t.dataset.i])s[+t.dataset.i][t.dataset.f]=v},{quiet:true,delay:2000});
 });
 let ty=null;
