@@ -55,6 +55,21 @@ svg{display:block}
 .wd.today b{border-color:var(--acc)}.wd.sel b{background:var(--acc);border-color:var(--acc)}
 .wd i{width:5px;height:5px;border-radius:50%;background:var(--mut);position:absolute;bottom:2px}
 .wd.sel i{background:#fff}
+.wd small{font-size:10px;color:var(--mut);max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
+.wd.done b{background:#14532d;border-color:#22c55e}.wd.done.sel b{background:var(--acc);border-color:var(--acc)}
+.wd.miss b{border-color:#3a1b24}.wd.rest b{color:var(--mut)}
+.week.w2 .wd{min-height:74px}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dh{font-size:11px;color:var(--mut);text-align:center;padding:2px 0 4px}
+.cal .c{aspect-ratio:1;border-radius:10px;background:#0f1829;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c8d2ec;border:2px solid transparent;width:100%;min-height:40px}
+.cal .c.fut{color:#4b5673}.cal .c.today{border-color:var(--acc)}.cal .c.sel{border-color:#fff}
+.cal .c.hit{background:#14532d;color:#bbf7d0}.cal .c.part{background:#1c3566;color:#c8d2ec}
+.cal .ds{display:flex;gap:3px;height:5px}.cal .ds i{width:5px;height:5px;border-radius:50%;display:block}
+.stk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 12px}
+.stk div{background:#0f1829;border-radius:12px;padding:10px 6px;text-align:center}.stk b{font-size:22px;display:block;line-height:1.1}.stk span{font-size:11px;color:var(--mut)}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-top:10px}.lg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.card.warn{border-color:#5a4210}
 .tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0b1120;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabs div{max-width:480px;margin:0 auto;display:flex}
 .tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;color:var(--mut);min-height:56px}
@@ -138,6 +153,7 @@ const IC={
  progress:'<path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/>',
  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
  left:'<path d="M15 5l-7 7 7 7"/>',right:'<path d="M9 5l7 7-7 7"/>'
 };
@@ -149,7 +165,7 @@ let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:
 if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
 const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
-const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
+const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
 const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
 const profile=()=>base(P_PROFILE),program=()=>base(P_PROG),exdb=()=>base(P_EX);
@@ -369,6 +385,11 @@ async function loadDay(d){
  if(!ps.length)return;
  try{await Promise.all(ps.map(p=>fetchFile(p)));persist();softRender()}catch(e){}
 }
+async function loadDays(ds){
+ const ps=[];ds.forEach(d=>{[foodP(d),logP(d)].forEach(p=>{if(DB.tree[p]&&!(DB.files[p]&&DB.files[p].sha===DB.tree[p]))ps.push(p)})});
+ if(!ps.length)return;
+ try{await Promise.all(ps.map(p=>fetchFile(p)));persist();softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn())}catch(e){}
+}
 window.addEventListener('online',()=>{flush();refresh()});
 window.addEventListener('offline',()=>setSync('offline','No connection.'));
 document.addEventListener('visibilitychange',()=>{if(document.hidden){KEEP=true;flush();setTimeout(()=>KEEP=false,1500)}else{if(UI.date<today()&&false)UI.date=today();refresh()}});
@@ -422,6 +443,34 @@ function ring(l,v,g,opt){
  opt=opt||{};const r=36,c=2*Math.PI*r,p=g>0?Math.min(1,v/g):0,over=opt.over!==false&&v>g,shown=opt.remaining?Math.max(0,g-v):v;
  return `<div><div class="ring ${over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/><circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div></div>`}
 
+/* ---------- calendars and streaks ---------- */
+const ym=d=>d.slice(0,7);
+const monthDates=m=>{const [y,mo]=m.split('-').map(Number);const n=new Date(y,mo,0).getDate();return Array.from({length:n},(_,i)=>y+'-'+pad(mo)+'-'+pad(i+1))};
+const shiftMonth=(m,n)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
+const monthName=m=>{const [y,mo]=m.split('-').map(Number);return MONTHS[mo-1]+' '+y};
+function dayFlags(d){const l=logOf(d),g=profile().stepGoal;return {food:food(d).items.length>0,wo:!!(l.workout&&l.workout.finishedAt),steps:l.steps!=null,hit:l.steps!=null&&l.steps>=g,weight:l.weight!=null}}
+function streakOf(fn){const T=today();let n=0,i=fn(T)?0:1;for(;i<400;i++){if(fn(addDays(T,-i)))n++;else break}return n}
+function bestStreak(fn,days){let b=0,c=0;for(let i=days-1;i>=0;i--){if(fn(addDays(today(),-i))){c++;if(c>b)b=c}else c=0}return b}
+function monthGrid(m,cell,act){
+ const ws=profile().weekStart||0,ds=monthDates(m),T=today();
+ const lead=(parseD(ds[0]).getDay()-ws+7)%7;
+ let h='<div class="cal">'+Array.from({length:7},(_,i)=>`<div class="dh">${'SMTWTFS'[(i+ws)%7]}</div>`).join('')+'<div></div>'.repeat(lead);
+ ds.forEach(d=>{const c=cell(d)||{};h+=`<button class="c ${d===T?'today':''} ${d>T?'fut':''} ${c.cls||''}" data-act="${act}" data-d="${d}" ${d>T?'disabled':''}>${parseD(d).getDate()}${c.inner||''}</button>`});
+ return h+'</div>';
+}
+function calSheet(){
+ const m=UI.calM,T=today();
+ const sF=streakOf(d=>dayFlags(d).food),sS=streakOf(d=>dayFlags(d).hit),sW=streakOf(d=>dayFlags(d).weight);
+ const dot=(on,col)=>on?`<i style="background:${col}"></i>`:'';
+ const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds">${dot(f.food,'#3B82F6')}${dot(f.wo,'#8B5CF6')}${dot(f.hit,'#22c55e')}${dot(f.weight,'#f59e0b')}</span>`:''}},'calDay');
+ return `<h2>Calendar</h2>
+ <div class="stk"><div><b>${sF}</b><span>day food streak</span></div><div><b>${sS}</b><span>day step streak</span></div><div><b>${sW}</b><span>day weigh-in streak</span></div></div>
+ <div class="mnav"><button class="ib" data-act="calNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="calNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>
+ ${grid}
+ <div class="lg"><span><i style="background:#3B82F6"></i>Food logged</span><span><i style="background:#8B5CF6"></i>Workout done</span><span><i style="background:#22c55e"></i>Step goal hit</span><span><i style="background:#f59e0b"></i>Weighed in</span></div>
+ <div class="xs mut" style="margin-top:10px">Tap a day to open it.</div>`;
+}
+
 /* ---------- Today ---------- */
 function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today();
@@ -436,15 +485,17 @@ function todayView(){
   <div style="margin-top:12px"><button class="btn full" data-act="gotoWorkout">${done?'View workout':live?'Continue workout':isT?'Start workout':'See workout'}</button></div></div>`;
  }
  const sg=pr.stepGoal,st=lg.steps;
- return header(fmtLong(d))+`<div class="week">${wk}</div>
+ const sStk=streakOf(x=>dayFlags(x).hit);
+ const needW=isT&&lg.weight==null;
+ return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'#fff':'#ff8a8a'}">${Math.abs(rnd(rem))}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
  ${t.kcal===0?'<div class="xs mut" style="margin-top:10px">Nothing logged yet. Open the Food tab to add a meal or ask Claude.</div>':''}</div>
  ${wcard}
- <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right"><div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
+ <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right">${sStk>0?`<div class="chip" style="background:#14532d;color:#bbf7d0;margin-bottom:4px">${sStk} day streak</div>`:''}<div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
  <div class="bar"><i style="width:${Math.min(100,(st||0)/sg*100)}%"></i></div></div>
- <button class="card" style="width:100%;text-align:left;display:block" data-act="weightEdit"><div class="row"><div class="sp"><div class="xs mut">Weight</div><div class="big">${lg.weight==null?'<span class="mut" style="font-size:18px;font-weight:600">Log weight</span>':lg.weight+' <span class="mut sm" style="font-weight:400">kg</span>'}</div></div><div class="mut sm">Start ${pr.startWeight} kg</div></div></button>`;
+ <button class="card ${needW?'warn':''}" style="width:100%;text-align:left;display:block" data-act="weightEdit"><div class="row"><div class="sp"><div class="xs ${needW?'':'mut'}" style="${needW?'color:#f59e0b':''}">${needW?'Weight: not logged yet today':'Weight'}</div><div class="big">${lg.weight==null?'<span class="mut" style="font-size:18px;font-weight:600">Log weight</span>':lg.weight+' <span class="mut sm" style="font-weight:400">kg</span>'}</div></div><div class="mut sm">Start ${pr.startWeight} kg</div></div></button>`;
 }
 
 /* ---------- Food ---------- */
@@ -492,19 +543,34 @@ function workoutView(){
  const T=today(),lg=logOf(T),wo=lg.workout,P=program();
  if(wo&&!wo.finishedAt)return liveView(wo,lg);
  const td=progDay(T);
- if(!UI.wDay)UI.wDay=(wo&&wo.dayId)||(td?td.id:P.days[0].id);
- const day=P.days.find(x=>x.id===UI.wDay)||P.days[0];
- const chips=P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${x.id===day.id?'on':''}">${esc(x.name)}${td&&td.id===x.id?' *':''}</button>`).join('');
- let done='';
- if(wo&&wo.finishedAt){
-  const ns=Object.values(wo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0);
-  done=`<div class="card"><div class="row"><div class="sp"><h3>Workout done today</h3><div class="mut sm">${esc((P.days.find(x=>x.id===wo.dayId)||{}).name||'')} - ${ns} sets - ${mmss((new Date(wo.finishedAt)-new Date(wo.startedAt))/1000)}</div></div><button class="btn ghost sm" data-act="wReopen">Reopen</button></div></div>`;
+ if(!UI.wSel)UI.wSel=T;
+ const sel=UI.wSel,isT=sel===T,slog=logOf(sel),swo=slog.workout&&slog.workout.finishedAt?slog.workout:null,pd=progDay(sel);
+ if(!UI.wDay||!isT)UI.wDay=(swo&&swo.dayId)||(pd?pd.id:null)||(td?td.id:P.days[0].id);
+ const day=P.days.find(x=>x.id===(isT?UI.wDay:(swo&&swo.dayId)||(pd&&pd.id)))||null;
+ const abbr=n=>n.split(/\s*\+\s*|\s+/).filter(Boolean).length>1?n.split(/\s*\+\s*|\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase():n;
+ const wkd=weekDates(addDays(T,7*UI.wWk));
+ const strip=wkd.map(x=>{const dw=parseD(x).getDay(),p=progDay(x),l=logOf(x),w=l.workout&&l.workout.finishedAt?l.workout:null;
+  const cls=[x===T?'today':'',x===sel?'sel':'',w?'done':'',!p?'rest':'',!w&&p&&x<T?'miss':''].join(' ');
+  const lab=w?abbr((P.days.find(q=>q.id===w.dayId)||{}).name||'Done'):p?abbr(p.name):'rest';
+  return `<button class="wd ${cls}" data-act="wsel" data-d="${x}"><span>${'SMTWTFS'[dw]}</span><b>${parseD(x).getDate()}${w?'':''}</b><small>${esc(lab)}</small></button>`}).join('');
+ let planned=0,did=0;wkd.forEach(x=>{if(progDay(x))planned++;const l=logOf(x);if(l.workout&&l.workout.finishedAt)did++});
+ const nav=`<div class="mnav" style="margin-bottom:2px"><button class="ib" data-act="wwk" data-n="-1" aria-label="Previous week">${ic('left')}</button><div style="text-align:center"><b>${UI.wWk===0?'This week':UI.wWk===-1?'Last week':UI.wWk===1?'Next week':fmtShort(wkd[0])+' to '+fmtShort(wkd[6])}</b><div class="xs mut">${did} of ${planned} workouts done</div></div><button class="ib" data-act="wwk" data-n="1" aria-label="Next week">${ic('right')}</button></div>`;
+ let body='';
+ if(swo){
+  const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
+  const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
+   return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(x=>(x.w?x.w+' x ':'')+x.r).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
+  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:#14532d;color:#bbf7d0;vertical-align:middle">Done</span></h3><div class="mut sm">${ns} sets - ${mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
+  <div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`;
+ }else if(!day){
+  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
+ }else{
+  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div></div>
+  <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?pv[0].w+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
  }
- return header('Workout')+done+`<div class="dchips">${chips}</div>
- <div class="mut sm" style="margin:-2px 0 8px">${!td?'Today is a rest day. Pick any day to preview or train anyway. ':'* marks today. '}</div>
- <div class="card"><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div></div>
- <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>`<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`).join('')}</div>
- ${wo&&wo.finishedAt?'':`<button class="btn full" data-act="wStart" data-id="${day.id}" style="position:sticky;bottom:calc(70px + env(safe-area-inset-bottom))">Start Workout</button>`}`;
+ const chips=isT&&!swo?`<div class="xs mut" style="margin:2px 0 8px">${td?'Not doing '+esc(td.name)+' today? Pick another day:':'Train anyway. Pick a day:'}</div><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}</button>`).join('')}</div>`:'';
+ return header('Workout')+nav+`<div class="week w2">${strip}</div>`+body+chips+
+ (isT&&!swo&&day?`<button class="btn full" data-act="wStart" data-id="${day.id}" style="position:sticky;bottom:calc(70px + env(safe-area-inset-bottom))">Start Workout</button>`:'');
 }
 function liveView(wo,lg){
  const day=program().days.find(x=>x.id===wo.dayId)||{name:'Workout',exercises:[]};
@@ -581,7 +647,19 @@ function progressView(){
  <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'#22c55e':'#f59e0b'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>
- <div class="row"><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Workouts this week</div><div class="big">${did}<span class="mut sm" style="font-weight:400"> of ${planned}</span></div></div><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Streak</div><div class="big">${streak}<span class="mut sm" style="font-weight:400"> day${streak===1?'':'s'}</span></div></div></div>`;
+ ${stepsCalCard()}
+ <div class="row"><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Workouts this week</div><div class="big">${did}<span class="mut sm" style="font-weight:400"> of ${planned}</span></div></div><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Logging streak</div><div class="big">${streak}<span class="mut sm" style="font-weight:400"> day${streak===1?'':'s'}</span></div></div></div>`;
+}
+
+function stepsCalCard(){
+ const T=today(),pr=profile();if(!UI.pM)UI.pM=ym(T);const m=UI.pM;
+ const cur=streakOf(d=>dayFlags(d).hit),best=bestStreak(d=>dayFlags(d).hit,90);
+ const hits=monthDates(m).filter(d=>d<=T&&dayFlags(d).hit).length;
+ const grid=monthGrid(m,d=>{const l=logOf(d);if(l.steps==null)return {};return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8">${(l.steps/1000).toFixed(1)}k</span>`}},'stepDay');
+ return `<div class="card"><div class="row"><div class="sp"><h3>Step streak</h3><div class="mut sm">Days at ${pr.stepGoal.toLocaleString('en-US')} or more</div></div></div>
+ <div class="stk"><div><b>${cur}</b><span>current streak</span></div><div><b>${best}</b><span>best (90 days)</span></div><div><b>${hits}</b><span>hit this month</span></div></div>
+ <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}
+ <div class="lg"><span><i style="background:#14532d"></i>Goal hit</span><span><i style="background:#1c3566"></i>Logged, under goal</span></div></div>`;
 }
 
 /* ---------- Setup + settings ---------- */
@@ -628,8 +706,8 @@ function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2><div cl
 function weightSheet(){const w=logOf(UI.date).weight;return `<h2>Weight</h2><div class="fld"><label>Kilograms</label><input id="v_weight" inputmode="decimal" value="${w==null?'':w}" placeholder="85.0"></div><button class="btn full" data-act="weightSave">Save</button>`}
 
 /* ---------- sheet ---------- */
-function openSheet(html){UI.sheet=html;renderSheet()}
-function closeSheet(){UI.sheet=null;renderSheet()}
+function openSheet(html,fn){UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
+function closeSheet(){UI.sheet=null;UI.sheetFn=null;renderSheet()}
 function renderSheet(){
  let ov=$('#ov');
  if(!UI.sheet){if(ov)ov.remove();return}
@@ -653,10 +731,17 @@ document.addEventListener('click',async e=>{
   case 'retry':if(UI.sync==='error'||UI.sync==='offline'){toast(UI.syncMsg||'Retrying...');await flush();refresh()}break;
   case 'settings':openSheet(settingsSheet());break;
   case 'setupSave':setupSave();break;
-  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
+  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
   case 'force':closeSheet();refresh(true);break;
-  case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{}};closeSheet();render();break;
-  case 'gotoWorkout':UI.tab='workout';{const lg=logOf(UI.date===T?T:T);const pd=progDay(UI.date);if(pd)UI.wDay=pd.id}render();break;
+  case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
+  case 'gotoWorkout':UI.tab='workout';UI.wSel=T;UI.wWk=0;{const pd=progDay(T);if(pd)UI.wDay=pd.id}render();break;
+  case 'cal':UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
+  case 'calNav':UI.calM=shiftMonth(UI.calM,+D.n);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
+  case 'calDay':UI.date=D.d;loadDay(D.d);closeSheet();if(UI.tab!=='today'&&UI.tab!=='food')UI.tab='today';render();break;
+  case 'pNav':UI.pM=shiftMonth(UI.pM,+D.n);loadDays(monthDates(UI.pM));render();break;
+  case 'stepDay':UI.date=D.d;UI.tab='today';loadDay(D.d);render();window.scrollTo(0,0);break;
+  case 'wsel':UI.wSel=D.d;loadDay(D.d);render();break;
+  case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
   case 'stepsSave':{const v=$('#v_steps').value.trim();mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
@@ -676,7 +761,7 @@ document.addEventListener('click',async e=>{
    else if(foodPhoto){const p='data/photos/'+UI.date+'/'+id+'.jpg';DB.photos[p]=foodPhoto.split(',')[1];item.photo=p}
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
-  case 'wday':UI.wDay=D.id;render();break;
+  case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
   case 'wStart':if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':mutate(logP(T),{k:'wFinish',t:new Date().toISOString()},{delay:0});UI.rest=null;break;
   case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});break;
