@@ -243,10 +243,10 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3ddd666913abc5842eb3907d6d92509b0f36dd94';let verChecked=0;
+const BUILD='2725fb4495495066ff2ccbefc88a7651a734c11f';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
- if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
+ if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
  try{const r=await fetch('version.txt?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
   if(v&&v!==BUILD){const u=new URL(location.href);if(u.searchParams.get('v')===v.slice(0,7))return;u.searchParams.set('v',v.slice(0,7));location.replace(u.toString())}}catch(e){}
 }
@@ -845,18 +845,30 @@ document.addEventListener('pointerdown',()=>{try{if(!audioCtx)audioCtx=new (wind
 /* keep the screen on during a live workout so the rest timer can ring */
 let wakeLock=null;async function syncWake(){const wo=logOf(today()).workout,live=UI.tab==='workout'&&wo&&!wo.finishedAt&&!document.hidden;
  try{if(live&&!wakeLock&&navigator.wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}else if(!live&&wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
-function startRest(sec=120,name){UI.rest={end:Date.now()+sec*1000,total:sec,name:name||''};updateRest()}
+/* The rest timer runs off its end time, so it keeps counting while the app is in the background, and it is saved
+   on this phone (forma.restT) so a reload or Android closing the tab does not lose it. When it ends while the app
+   is hidden, a notification (with the phone's notification sound and vibration) says the rest is over. */
+let swReg=null;if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
+function askNotify(){try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}catch(e){}}
+function notifyRest(r){try{if(!window.Notification||Notification.permission!=='granted')return;const o={body:(r.name?r.name+': ':'')+'time for your next set.',tag:'forma-rest',renotify:true,vibrate:[300,120,300,120,300],icon:'icon-192.png'};
+ (swReg?Promise.resolve(swReg):navigator.serviceWorker.ready).then(g=>g.showNotification('Rest over',o)).catch(()=>{})}catch(e){}}
+function restDone(r,live){try{navigator.vibrate&&navigator.vibrate([300,120,300,120,300])}catch(e){}beep();if(document.hidden)notifyRest(r);else if(live)toast0('Rest over. Next set.')}
+{const s=LS.get('forma.restT',null);if(s&&s.end>Date.now()-15000)UI.rest=s}
+let restSaved=UI.rest?UI.rest.end+'|'+UI.rest.total:'';
+function saveRest(){const k=UI.rest?UI.rest.end+'|'+UI.rest.total:'';if(k===restSaved)return;restSaved=k;if(UI.rest)LS.set('forma.restT',{end:UI.rest.end,total:UI.rest.total,name:UI.rest.name});else LS.del('forma.restT')}
+function startRest(sec=120,name){UI.rest={end:Date.now()+sec*1000,total:sec,name:name||''};askNotify();updateRest()}
 function updateRest(){
  const el=$('#rest'),r=UI.rest;
  const live=UI.tab==='workout'&&r&&cfg.token;
- if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;try{navigator.vibrate&&navigator.vibrate([300,120,300,120,300])}catch(e){}beep();if(live)toast0('Rest over. Next set.')}el.hidden=true;el.innerHTML='';return}
+ if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;restDone(r,live)}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
  if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div style="min-width:54px"><b id="rt">0:00</b><div class="xs mut" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'Rest')}</div></div><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest15m">-15</button><button class="btn ghost sm" data-act="rest30">+30</button><button class="btn ghost sm" data-act="restSkip">Skip</button><button class="btn ghost sm" data-act="soundTog" aria-label="Timer sound">${LS.get('forma.sound',1)===0?'Muted':'Sound'}</button></div></div>`}
  $('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
  const sec=Math.ceil(left);if(sec<=3&&sec>=1&&r.lastTick!==sec){r.lastTick=sec;restTick()}
 }
 setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
-setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest()},500);
+setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest();saveRest()},500);
+document.addEventListener('visibilitychange',()=>{saveRest();if(!document.hidden&&UI.rest)updateRest()});
 
 /* ---------- Progress ---------- */
 function barChart(vals,labels,target,fmt){
@@ -1358,7 +1370,7 @@ document.addEventListener('click',async e=>{
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
-  case 'wStart':askMotion();if(UI.wDay&&D.id)startWorkout(D.id);break;
+  case 'wStart':askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'finKeep':closeSheet();break;
