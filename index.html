@@ -13,15 +13,15 @@
 /* Themes. Every colour in the app comes from these tokens. Ember is the default (set by applyTheme); Midnight is the CSS fallback. */
 :root,:root[data-theme="midnight"]{--bg:#0E1525;--card:#172033;--card2:#1d2840;--line:#26324b;--txt:#fff;--mut:#8b97b3;--faint:#4b5673;--soft:#c8d2ec;--inset:#0f1829;--nav:#0b1120;
  --acc:#3B82F6;--acc2:#8B5CF6;--onacc:#fff;--grad:linear-gradient(90deg,#3B82F6,#8B5CF6);
- --chip:#22304f;--chiptx:#b9c6e6;--chipb:#1c3566;--chipbtx:#8fbaff;--chipp:#3a2a66;--chipptx:#c4a8ff;--chk:#3a4766;--restline:#2e5bb0;
+ --chip:#22304f;--chiptx:#b9c6e6;--chipb:#1c3566;--chipbtx:#8fbaff;--chipp:#3a2a66;--chipptx:#c4a8ff;--chipc:#153a3a;--chipctx:#7ee0d0;--chipf:#3d3011;--chipftx:#f5c96a;--chk:#3a4766;--restline:#2e5bb0;
  --ok:#22c55e;--okbg:#14532d;--oktx:#bbf7d0;--okin:#10301f;--okline:#1c5a37;--warn:#f59e0b;--warnline:#5a4210;--bad:#ef4444;--badbg:#3a1b24;--badtx:#ff8a8a;--badline:#6b2a3a}
 :root[data-theme="ember"]{--bg:#070605;--card:#121010;--card2:#1b1715;--line:#2a2320;--txt:#f7f2ed;--mut:#9c9088;--faint:#4d4440;--soft:#e6dbd2;--inset:#0b0908;--nav:#050404;
  --acc:#ff5a1f;--acc2:#e11d48;--onacc:#fff;--grad:linear-gradient(90deg,#ff9a1f,#ff5a1f 45%,#e11d48);
- --chip:#221b18;--chiptx:#e3cdbd;--chipb:#3a1a0b;--chipbtx:#ffb27a;--chipp:#3d0f19;--chipptx:#ff8fa3;--chk:#4a3a33;--restline:#a8401a;
+ --chip:#221b18;--chiptx:#e3cdbd;--chipb:#3a1a0b;--chipbtx:#ffb27a;--chipp:#3d0f19;--chipptx:#ff8fa3;--chipc:#2a2418;--chipctx:#e8d3a8;--chipf:#3a2a0a;--chipftx:#ffd166;--chk:#4a3a33;--restline:#a8401a;
  --ok:#22c55e;--okbg:#123d22;--oktx:#bbf7d0;--okin:#0f2717;--okline:#1c5a37;--warn:#fbbf24;--warnline:#6b4a0c;--bad:#ef4444;--badbg:#3a1416;--badtx:#ff8a8a;--badline:#6b2a2a}
 :root[data-theme="daylight"]{--bg:#f3f4f7;--card:#ffffff;--card2:#f1f3f8;--line:#e1e5ee;--txt:#0f172a;--mut:#64748b;--faint:#c0c8d6;--soft:#334155;--inset:#eef1f6;--nav:#ffffff;
  --acc:#4f46e5;--acc2:#0ea5e9;--onacc:#fff;--grad:linear-gradient(90deg,#4f46e5,#0ea5e9);
- --chip:#eef1f6;--chiptx:#334155;--chipb:#e0e7ff;--chipbtx:#3730a3;--chipp:#e0f2fe;--chipptx:#075985;--chk:#cbd5e1;--restline:#a5b4fc;
+ --chip:#eef1f6;--chiptx:#334155;--chipb:#e0e7ff;--chipbtx:#3730a3;--chipp:#e0f2fe;--chipptx:#075985;--chipc:#dcfce7;--chipctx:#166534;--chipf:#fef3c7;--chipftx:#92400e;--chk:#cbd5e1;--restline:#a5b4fc;
  --ok:#16a34a;--okbg:#dcfce7;--oktx:#166534;--okin:#f0fdf4;--okline:#86efac;--warn:#d97706;--warnline:#fcd34d;--bad:#dc2626;--badbg:#fee2e2;--badtx:#b91c1c;--badline:#fca5a5}
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -68,7 +68,8 @@ svg{display:block}
 .ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1}
 .ring .v small{display:block;font-size:10px;font-weight:500;color:var(--mut);margin-top:2px}
 .chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:var(--chip);color:var(--chiptx);font-size:12px;font-weight:600;white-space:nowrap}
-.chip.b{background:var(--chipb);color:var(--chipbtx)}.chip.p{background:var(--chipp);color:var(--chipptx)}
+.chip.b{background:var(--chipb);color:var(--chipbtx)}.chip.p{background:var(--chipp);color:var(--chipptx)}.chip.c{background:var(--chipc);color:var(--chipctx)}.chip.f{background:var(--chipf);color:var(--chipftx)}
+.sec summary .hd{flex:1;min-width:0;padding:10px 0}.sec summary .mc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.sec summary .mc .chip{height:22px;padding:0 8px;font-size:11.5px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .week{display:flex;justify-content:space-between;margin:2px 0 14px}
 .wd{width:12.5%;min-width:40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut);font-size:12px;min-height:60px}
@@ -464,7 +465,7 @@ function totals(d){const t={kcal:0,protein:0,carbs:0,fat:0};food(d).items.forEac
 const LEGACY_MEAL={breakfast:1,lunch:2,snacks:3,dinner:4};
 const mealNo=i=>typeof i.meal==='number'?i.meal:(LEGACY_MEAL[i.meal]||1);
 const mealList=d=>{const n=Math.max(0,...food(d).items.map(mealNo));return Array.from({length:n+1},(_,k)=>k+1)};
-const mealTot=(d,m)=>{const t={kcal:0,protein:0};food(d).items.filter(i=>mealNo(i)===m).forEach(i=>{t.kcal+=num(i.kcal);t.protein+=num(i.protein)});return t};
+const mealTot=(d,m)=>{const t={kcal:0,protein:0,carbs:0,fat:0};food(d).items.filter(i=>mealNo(i)===m).forEach(i=>{t.kcal+=num(i.kcal);t.protein+=num(i.protein);t.carbs+=num(i.carbs);t.fat+=num(i.fat)});return t};
 const progDay=d=>{const id=program().weekdays[String(parseD(d).getDay())];return id==='rest'||!id?null:program().days.find(x=>x.id===id)};
 const exName=id=>(exdb().exercises[id]||{n:id}).n;
 function weekDates(d){const ws=(profile().weekStart||0);const dow=parseD(d).getDay();const s=addDays(d,-((dow-ws+7)%7));return Array.from({length:7},(_,i)=>addDays(s,i))}
@@ -537,7 +538,7 @@ function foodView(){
  const big=isCons?rnd(t.kcal):rnd(T.kcal-t.kcal);
  const secs=mealList(d).map(k=>{
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
-  return `<details class="sec ${its.length?'':'empty-meal'}" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="chip b">${rnd(mt.kcal)} Cal</span><span class="chip p">${rnd(mt.protein)} P</span><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
+  return `<details class="sec ${its.length?'':'empty-meal'}" data-m="${k}" ${open?'open':''}><summary><div class="hd"><span class="t">${l}</span><div class="mc"><span class="chip b">${rnd(mt.kcal)} cal</span><span class="chip p">${rnd(mt.protein)}g P</span><span class="chip c">${rnd(mt.carbs)}g C</span><span class="chip f">${rnd(mt.fat)}g F</span></div></div><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
   ${its.length?its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}${i.by==='claude'?'<span class="tag">Claude</span>':''}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r"><div>${rnd(num(i.kcal))} cal</div><div class="xs mut">${rnd(num(i.protein))}g protein</div></div></button>`).join(''):`<div class="empty" style="padding:8px">Nothing here yet. Tap + to add.</div>`}</details>`}).join('');
  return header('Food Log')+`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="ib" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left')}</button><b>${d===today()?'Today, ':''}${fmtShort(d)}</b><button class="ib" data-act="dnav" data-n="1" aria-label="Next day">${ic('right')}</button></div>
  <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
