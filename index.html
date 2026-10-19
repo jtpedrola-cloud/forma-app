@@ -181,6 +181,7 @@ a{color:var(--acc)}
 <body>
 <div class="wrap" id="root"></div>
 <div id="rest" hidden></div>
+<script src="smart.js"></script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -229,7 +230,7 @@ if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
 const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
 const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
-const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
+const P_CHK='data/checkins.json';const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
 const profile=()=>base(P_PROFILE),program=()=>base(P_PROG),exdb=()=>base(P_EX);
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
@@ -435,7 +436,7 @@ async function refresh(force){
  try{
   if(pendCount())await flush();
   DB.tree=await B.tree();
-  const T=today(),want=[P_PROFILE,P_PROG,P_EX];
+  const T=today(),want=[P_PROFILE,P_PROG,P_EX,P_CHK];
   for(let i=0;i<=30;i++){const d=addDays(T,-i);want.push(foodP(d),logP(d))}
   const d0=UI.date;want.push(foodP(d0),logP(d0));
   await Promise.all([...new Set(want)].filter(p=>DB.tree[p]).map(p=>fetchFile(p,force)));
@@ -707,11 +708,14 @@ function lineChart(pts,startW){
  const W=340,H=150,px=8,py=18;
  const ys=pts.map(p=>p.v).concat([startW]),mn=Math.min(...ys)-.5,mx=Math.max(...ys)+.5;
  const X=i=>px+i/29*(W-px*2),Y=v=>H-py-(v-mn)/(mx-mn)*(H-py*2);
- const path=pts.map((p,i)=>(i?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
+ let t=null;const tr=pts.map(p=>{t=t==null?p.v:t+0.1*(p.v-t);return {i:p.i,v:t}});
+ const path=tr.map((p,i)=>(i?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
  const ys0=Y(startW);
  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><line x1="0" x2="${W}" y1="${ys0}" y2="${ys0}" style="stroke:var(--line)" stroke-dasharray="4 3"/><text x="${W-2}" y="${ys0-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">start ${startW}</text>
- <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" style="fill:var(--acc2)"/>`).join('')}
- <text x="${px}" y="${H-3}" font-size="9" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">today</text></svg>`;
+ ${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" style="fill:var(--mut);opacity:.7"/>`).join('')}
+ <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+ <text x="${px}" y="${H-3}" font-size="9" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">today</text></svg>
+ <div class="xs mut">Dots are daily weigh-ins, the line is the smoothed trend.</div>`;
 }
 /* ---------- body: progress photos (data/progress/<date>/<id>.jpg) and body fat estimates (log.bodyFat) ---------- */
 function progPhotos(){const m={};Object.keys(DB.tree).concat(Object.keys(DB.photos)).forEach(p=>{const x=p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\/[^/]+\.(jpe?g|png|webp)$/);if(x)(m[x[1]]=m[x[1]]||[]).includes(p)||m[x[1]].push(p)});
@@ -832,34 +836,39 @@ function bodyAllSheet(){
    Lifting: net 0.05 kcal per kg per minute of a finished workout (planned days assume 60 minutes).
    From data: average intake minus weight change (7,700 kcal per kg), once 14+ days are logged. */
 function latestWeight(){const T=today();for(let i=0;i<60;i++){const w=logOf(addDays(T,-i)).weight;if(w!=null)return w}return profile().startWeight}
-function bmrOf(w){const bf=latestBF();if(bf)return 370+21.6*w*(1-bf.pct/100);const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
-function maintFor(steps,liftMin){const w=latestWeight(),bmr=bmrOf(w);const life=bmr*.15,walk=(steps||0)*w*.000375,lift=(liftMin||0)*w*.05;return {w,bmr,life,walk,lift,total:bmr+life+walk+lift}}
+function bmrOf(w){const bf=latestBF();return FormaSmart.bmr(w,bf?bf.pct:null,profile().body);const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
+function maintFor(steps,liftMin){const bf=latestBF();return FormaSmart.maint(latestWeight(),bf?bf.pct:null,profile().body,steps,liftMin)}
 function woMinutes(d){const wo=logOf(d).workout;if(!wo||!wo.finishedAt)return 0;return Math.min(150,Math.max(0,(new Date(wo.finishedAt)-new Date(wo.startedAt))/60000))}
-function adaptiveTDEE(){
- const T=today();const days=[];for(let i=1;i<=28;i++){const d=addDays(T,-i);if(food(d).items.length)days.push(d)}
- const ws=[];for(let i=1;i<=28;i++){const d=addDays(T,-i),w=logOf(d).weight;if(w!=null)ws.push({d,w})}
- if(days.length<14||ws.length<4)return {ready:false,days:days.length};
- const span=Math.max(1,(parseD(ws[0].d)-parseD(ws[ws.length-1].d))/864e5);if(span<14)return {ready:false,days:days.length};
- const avg=a=>a.reduce((x,y)=>x+y,0)/a.length,half=Math.ceil(ws.length/2);
- const dW=avg(ws.slice(0,half).map(x=>x.w))-avg(ws.slice(half).map(x=>x.w)),dDays=span/2;
- const intake=avg(days.map(d=>totals(d).kcal));
- return {ready:true,days:days.length,tdee:intake-dW*7700/dDays,intake,rate:dW/dDays*7};
+function smartNow(){
+ const pr=profile(),T=today(),bf=latestBF(),days=[];
+ for(let i=28;i>=1;i--){const d=addDays(T,-i),f=food(d).items;days.push({d,kcal:f.reduce((a,x)=>a+num(x.kcal),0),logged:f.length>0,weight:logOf(d).weight})}
+ const liftDays=Object.values(program().weekdays).filter(x=>x!=='rest').length;
+ const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays);
+ return FormaSmart.smart({days,formula,targetKcal:pr.targets.kcal,goalRate:pr.goalRate||0.7});
 }
 function maintCard(){
- const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal;
+ const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7;
  const train=maintFor(sg,60),rest=maintFor(sg,0);
- const perWeek=Object.values(program().weekdays).filter(x=>x!=='rest').length;
- let sum=0,n=0;for(let i=1;i<=7;i++){const d=addDays(T,-i),l=logOf(d);if(l.steps==null&&!woMinutes(d)&&!dayActKcal(d))continue;sum+=maintFor(l.steps==null?5000:l.steps,woMinutes(d)).total+dayActKcal(d);n++}
- const wk=n?sum/n:null,typ=(train.total*perWeek+rest.total*(7-perWeek))/7;
- const gap=typ-pr.targets.kcal,kgWk=gap*7/7700,ad=adaptiveTDEE();
- const fmt=v=>rnd(v).toLocaleString('en-US');
+ const fmt=v=>rnd(v).toLocaleString('en-US'),pct=Math.round(sm.conf*100);
  const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--faint)">${sub}</div>`:''}</span><span>${v}</span></div>`;
- return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance</h3><div class="mut sm">Calories you burn in a day (TDEE)</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(typ)}</b><div class="xs mut">per day, your week</div></div></div>
- <div style="margin-top:8px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg'+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
- ${row('<b style="color:var(--txt)">Lifting day</b>','<b>'+fmt(train.total)+'</b>',(sg/1000)+'k steps + about 60 min lifting')}${row('Rest day',fmt(rest.total),(sg/1000)+'k steps, no lifting')}
- ${wk?row('Last 7 days, from your logs',fmt(wk),n+' day'+(n===1?'':'s')+' with steps or a workout'):''}
- ${row('From your weight trend',ad.ready?'<b>'+fmt(ad.tdee)+'</b>':'<span class="mut">'+ad.days+' / 14 days</span>',ad.ready?'eating '+fmt(ad.intake)+', weight '+(ad.rate>0?'+':'')+ad.rate.toFixed(2)+' kg a week':'most accurate once 14 days of food and weight are logged')}</div>
- <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset)">Target ${fmt(pr.targets.kcal)} is ${gap>=0?'about <b>'+fmt(gap)+' below</b>':'about <b>'+fmt(-gap)+' above</b>'} maintenance: roughly ${gap>=0?'-':'+'}${Math.abs(kgWk).toFixed(1)} kg a week.</div>
+ const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null;
+ const stTxt={collecting:['var(--mut)','Collecting data. Log food and weigh in daily; the estimate starts learning after about 7 logged days and 10 days of weigh-ins.'],
+  'on pace':['var(--ok)','On pace: losing about '+(sm.rate==null?'':Math.abs(sm.rate).toFixed(2))+' kg a week (goal '+goal+').'],
+  fast:['var(--warn)','Losing faster than planned ('+(sm.rate==null?'':Math.abs(sm.rate).toFixed(2))+' kg a week). Next check-in raises calories.'],
+  slow:['var(--warn)','Losing slower than planned ('+(sm.rate==null?'':Math.abs(sm.rate).toFixed(2))+' kg a week). Next check-in lowers calories.']}[sm.status];
+ const kgWk=(sm.tdee-pr.targets.kcal)*7/7700;
+ return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance</h3><div class="mut sm">${sm.conf>0?'Learned from your logs, '+pct+'% confident':'Formula estimate until your logs take over'}</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(sm.tdee)}</b><div class="xs mut">kcal a day</div></div></div>
+ <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset);border-left:3px solid ${stTxt[0]}">${stTxt[1]}</div>
+ <div style="margin-top:6px">
+ ${row('Weight trend',sm.trendNow?sm.trendNow.toFixed(1)+' kg':'-',sm.rate==null?sm.weighIns+' weigh-ins in 28 days':(sm.rate<=0?'-':'+')+Math.abs(sm.rate).toFixed(2)+' kg a week, smoothed')}
+ ${row('Average intake',sm.avgIn?fmt(sm.avgIn):'-',sm.eatDays+' logged day'+(sm.eatDays===1?'':'s')+' in 28')}
+ ${row('Measured from your data',sm.measured?fmt(sm.measured):'<span class="mut">not yet</span>',sm.measured?'intake + what your weight trend burned':'needs 7 logged days and 10 days of weigh-ins')}
+ ${row('Formula',fmt(sm.formula),'lifting '+fmt(train.total)+', rest '+fmt(rest.total))}
+ ${row('<b style="color:var(--txt)">Suggested target</b>','<b>'+fmt(sm.suggested)+'</b>','for '+goal+' kg a week; current '+fmt(pr.targets.kcal))}
+ ${lastCk?row('Last check-in',fmtShort(lastCk.date),lastCk.prevTarget===lastCk.target?'kept '+fmt(lastCk.target):fmt(lastCk.prevTarget)+' to '+fmt(lastCk.target)):''}
+ </div>
+ <div class="xs mut" style="margin-top:8px">At ${fmt(pr.targets.kcal)} you should lose about ${Math.abs(kgWk).toFixed(2)} kg a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion.</div>
+ <details class="xs mut" style="margin-top:8px"><summary>How the formula works</summary><div style="margin-top:6px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg'+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}</div></details>
  ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${b.heightCm||175} cm. Tell Claude your real height and age.</div>`:''}</div>`;
 }
 function progressView(){
