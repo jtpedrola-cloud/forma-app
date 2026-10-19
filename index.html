@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#070605">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.webmanifest?v=2">
-<link rel="icon" href="icon.svg?v=2">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="manifest" href="manifest.webmanifest?v=3">
+<link rel="icon" href="icon.svg?v=3">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <title>Forma</title>
 <style>
 /* Themes. Every colour in the app comes from these tokens. Ember is the default (set by applyTheme); Midnight is the CSS fallback. */
@@ -243,7 +243,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='2725fb4495495066ff2ccbefc88a7651a734c11f';let verChecked=0;
+const BUILD='686fad97a94e8bf629f55739e109d777e48b0f95';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
