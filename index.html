@@ -598,7 +598,7 @@ function foodView(){
  <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
- ${secs}<button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal ${nextMeal}</button>`;
+ ${secs}<button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button>`;
 }
 function foodSheet(item,meal){
  const e=!!item,i=item||{name:'',amount:'',kcal:'',protein:'',carbs:'',fat:''};
