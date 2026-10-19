@@ -81,6 +81,24 @@ body.live #rest{bottom:calc(128px + env(safe-area-inset-bottom))}
 #sdone .sd-t{font-size:28px;font-weight:800}#sdone .sd-s{font-size:17px;color:#ddd;margin-top:6px;line-height:1.4}#sdone .sd-r{font-size:14px;color:#aaa;margin-top:10px}
 #sdone .sd-undo{margin-top:26px;min-width:200px;min-height:60px;border-radius:30px;border:2px solid #fff;color:#fff;font-size:18px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,.08)}
 #sdone .sd-undo:active{background:rgba(255,255,255,.25)}
+#wdone{position:fixed;inset:0;z-index:90;background:radial-gradient(circle at 50% 38%,#3a1408 0,#120806 55%,#050403 100%);display:flex;align-items:center;justify-content:center;animation:sdin .25s ease-out;overflow:hidden}
+#wdone canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#wdone .wd-in{position:relative;text-align:center;color:#fff;padding:24px;max-width:420px;width:100%}
+#wdone .wd-ring{width:150px;height:150px;margin:0 auto 18px;position:relative}
+#wdone .wd-ring>svg{width:150px;height:150px;transform:rotate(-90deg)}
+#wdone .wd-ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+#wdone .wd-ring .arc{stroke:url(#wdg);stroke-dasharray:415;stroke-dashoffset:415;animation:wdarc .9s cubic-bezier(.6,0,.2,1) .1s forwards}
+#wdone .wd-ck{position:absolute;inset:0;display:grid;place-items:center;transform:scale(0);animation:wdpop .55s cubic-bezier(.3,1.6,.5,1) .85s forwards}
+#wdone .wd-ck>div{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#ff9a1f,#ff4d1f 55%,#d11a3f);display:grid;place-items:center;box-shadow:0 0 0 0 rgba(255,90,31,.6);animation:wdglow 1.6s ease-out 1.1s}
+#wdone .wd-t{font-size:30px;font-weight:800;opacity:0;animation:wdup .5s ease-out 1s forwards}
+#wdone .wd-d{font-size:16px;color:#d8c8c0;margin-top:4px;opacity:0;animation:wdup .5s ease-out 1.1s forwards}
+#wdone .wd-st{display:flex;gap:10px;margin-top:22px}
+#wdone .wd-st>div{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 6px;opacity:0;animation:wdup .5s ease-out forwards}
+#wdone .wd-st b{display:block;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}#wdone .wd-st span{font-size:12px;color:#bba}
+#wdone .wd-go{margin-top:26px;min-width:200px;min-height:56px;border-radius:28px;border:0;color:#fff;font-size:18px;font-weight:700;background:linear-gradient(90deg,#ff9a1f,#ff4d1f 50%,#d11a3f);opacity:0;animation:wdup .5s ease-out 1.6s forwards}
+@keyframes wdarc{to{stroke-dashoffset:0}}@keyframes wdpop{to{transform:scale(1)}}@keyframes wdup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes wdglow{0%{box-shadow:0 0 0 0 rgba(255,90,31,.7)}100%{box-shadow:0 0 0 40px rgba(255,90,31,0)}}
+@media (prefers-reduced-motion:reduce){#wdone *{animation-duration:.01s!important;animation-delay:0s!important}}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -243,7 +261,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='b083cf345e18b77ee2707b4a78d94fd5c0a375e4';let verChecked=0;
+const BUILD='9540d9384518d879c0c64b851f2644df432971a5';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -811,6 +829,31 @@ function doneNext(how){
  <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
  el._undo={ex:nx.ex,before};el.addEventListener('click',e=>{if(!e.target.closest('.sd-undo'))el.remove()});
  document.body.appendChild(el);clearTimeout(sdTimer);sdTimer=setTimeout(()=>{const z=$('#sdone');if(z)z.remove()},3000);
+}
+/* Workout complete: ring draws, check pops, stats count up, confetti in the theme colours, a victory sound and a buzz. */
+function winSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;
+ const o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(150,c.currentTime);o.frequency.exponentialRampToValueAtTime(45,c.currentTime+.35);g.gain.setValueAtTime(.9,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.4);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.45);
+ [[523,0],[659,.12],[784,.24],[1047,.36]].forEach(([f,t])=>tone(c,f,t,.18,.6,'triangle'));
+ [1047,1319,1568,2093].forEach((f,k)=>{tone(c,f,.86,1.4,k===3?.18:.38,'sine');tone(c,f*1.004,.86,1.4,.12,'sine')});
+ [2637,3136,3520,4186].forEach((f,k)=>tone(c,f,1.0+k*.07,.25,.12,'sine'))}
+function confetti(cv){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const d=devicePixelRatio||1,W=cv.width=innerWidth*d,H=cv.height=innerHeight*d,x=cv.getContext('2d');
+ const cols=['#ff9a1f','#ff4d1f','#d11a3f','#ffd166','#ffffff'],P=[];
+ const burst=(n,cx)=>{for(let i=0;i<n;i++){const a=-Math.PI/2+(Math.random()-.5)*1.9,v=(9+Math.random()*13)*d;P.push({x:cx,y:H*.42,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:Math.random()*6,s:(5+Math.random()*7)*d,c:cols[i%5],w:Math.random()*.3,life:1})}};
+ setTimeout(()=>burst(110,W/2),850);setTimeout(()=>{burst(45,W*.2);burst(45,W*.8)},1250);
+ const t0=performance.now();(function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.vy+=.32*d;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.w;if(t-t0>2600)p.life-=.02;
+  x.save();x.globalAlpha=Math.max(0,p.life);x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+  if(t-t0<4500&&cv.isConnected)requestAnimationFrame(f);else x.clearRect(0,0,W,H)})(t0)}
+function countUp(el,to,ms,fmt){const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=fmt(to*e);if(k<1&&el.isConnected)requestAnimationFrame(f)})(t0)}
+function workoutDone(name,st,secs){
+ let el=$('#wdone');if(el)el.remove();el=document.createElement('div');el.id='wdone';
+ el.innerHTML=`<canvas></canvas><div class="wd-in"><div class="wd-ring"><svg viewBox="0 0 150 150"><defs><linearGradient id="wdg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset=".5" stop-color="#ff4d1f"/><stop offset="1" stop-color="#d11a3f"/></linearGradient></defs><circle cx="75" cy="75" r="66" stroke="rgba(255,255,255,.1)"/><circle class="arc" cx="75" cy="75" r="66"/></svg><div class="wd-ck"><div>${ic('check',54)}</div></div></div>
+ <div class="wd-t">Workout complete</div><div class="wd-d">${esc(name)}</div>
+ <div class="wd-st"><div style="animation-delay:1.2s"><b id="wd_s">0</b><span>sets</span></div><div style="animation-delay:1.3s"><b id="wd_v">0</b><span>kg lifted</span></div><div style="animation-delay:1.4s"><b id="wd_t">0:00</b><span>time</span></div></div>
+ <button class="wd-go" data-act="wdClose">Done</button></div>`;
+ document.body.appendChild(el);confetti(el.querySelector('canvas'));winSound();
+ try{navigator.vibrate&&navigator.vibrate([40,50,40,50,40,120,320])}catch(e){}
+ setTimeout(()=>{if(!el.isConnected)return;countUp($('#wd_s'),st.done,700,v=>Math.round(v));countUp($('#wd_v'),st.vol,1100,v=>Math.round(v).toLocaleString('en-US'));
+  countUp($('#wd_t'),secs,1100,v=>{const m=Math.floor(v/60);return m>=60?Math.floor(m/60)+'h '+String(m%60).padStart(2,'0'):m+':'+String(Math.floor(v%60)).padStart(2,'0')})},1250);
 }
 function undoDone(){const el=$('#sdone');if(!el||!el._undo)return;const u=el._undo;editSets(u.ex,s=>{s.length=0;u.before.forEach(z=>s.push(z))},{delay:1500});UI.rest=null;updateRest();el.remove();render();toast0('Undone.')}
 /* Shake: 4 strong jolts within a second, only during a live workout with the app on screen. */
@@ -1383,7 +1426,9 @@ document.addEventListener('click',async e=>{
    if(f0-s0>6*3600000){toast('That is over 6 hours. Check the times.');break}
    const st=woStats(wo);if(st.all>st.done)mutate(logP(T),{k:'wFinalize',mode:finMode},{quiet:true});
    const n=$('#fin_n').value.trim();mutate(logP(T),{k:'wNote',v:n},{quiet:true});
-   mutate(logP(T),{k:'wTimes',s:s0.toISOString(),f:f0.toISOString()},{delay:0});UI.rest=null;closeSheet();toast0('Workout saved.');break}
+   mutate(logP(T),{k:'wTimes',s:s0.toISOString(),f:f0.toISOString()},{delay:0});UI.rest=null;closeSheet();
+   {const w2=logOf(T).workout,dn=(program().days.find(x=>x.id===(w2||wo).dayId)||{name:'Workout'}).name;workoutDone(dn,woStats(w2||wo),(f0-s0)/1000)}break}
+  case 'wdClose':{const z=$('#wdone');if(z)z.remove();break}
   case 'wStarted':openSheet(startedSheet());break;
   case 'stSave':{const v=$('#st_t').value;if(!v)break;let s0=atTime(T,v);if(s0>new Date())s0=new Date(s0.getTime()-864e5);mutate(logP(T),{k:'wTimes',s:s0.toISOString()},{delay:300});closeSheet();break}
   case 'wEdit':openSheet(editWoSheet(D.d));break;
