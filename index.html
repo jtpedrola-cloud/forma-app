@@ -26,6 +26,12 @@
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pg img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--inset);display:block}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
+.bfbar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),var(--warn) 60%,var(--bad));margin:14px 0 18px;opacity:.85}
+.bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
+.bfbar s{position:absolute;top:0;height:8px;border-radius:4px;background:rgba(255,255,255,.35);text-decoration:none}
+.bfbar span{position:absolute;top:12px;font-size:10px;color:var(--mut);transform:translateX(-50%)}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -303,13 +309,13 @@ function photoURL(p){
  if(!p)return '';
  if(PHOTOS[p])return PHOTOS[p];
  if(DB.photos[p])return 'data:image/jpeg;base64,'+DB.photos[p];
- if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
+ if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
  return '';
 }
 async function flushPhotos(){
  for(const p of Object.keys(DB.photos)){
   await B.putBin(p,DB.photos[p],'app: photo '+p.split('/').slice(2).join('/'));
-  PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];delete DB.photos[p];persist();
+  PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];DB.tree[p]=DB.tree[p]||'uploaded';delete DB.photos[p];persist();
  }
 }
 
@@ -662,13 +668,45 @@ function lineChart(pts,startW){
  <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" style="fill:var(--acc2)"/>`).join('')}
  <text x="${px}" y="${H-3}" font-size="9" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">today</text></svg>`;
 }
+/* ---------- body: progress photos (data/progress/<date>/<id>.jpg) and body fat estimates (log.bodyFat) ---------- */
+function progPhotos(){const m={};Object.keys(DB.tree).concat(Object.keys(DB.photos)).forEach(p=>{const x=p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\/[^/]+\.(jpe?g|png|webp)$/);if(x)(m[x[1]]=m[x[1]]||[]).includes(p)||m[x[1]].push(p)});
+ return Object.keys(m).sort().map(d=>({d,ps:m[d].sort()}))}
+function bfHistory(){return Object.keys(DB.files).filter(p=>p.startsWith('data/log/')).map(p=>view(p)).filter(l=>l&&l.bodyFat&&typeof l.bodyFat.pct==='number').map(l=>({d:l.date,...l.bodyFat})).sort((a,b)=>a.d<b.d?-1:1)}
+const latestBF=()=>{const h=bfHistory();return h.length?h[h.length-1]:null};
+let bodyLoaded=false;
+function bodyCard(){
+ const ph=progPhotos(),h=bfHistory(),bf=h.length?h[h.length-1]:null,w=latestWeight();
+ if(!bodyLoaded){bodyLoaded=true;const ds=[...new Set(ph.map(x=>x.d))];if(ds.length)loadDays(ds)}
+ const pos=v=>Math.max(0,Math.min(100,(v-6)/(36-6)*100));
+ let top;
+ if(bf){
+  const lean=w*(1-bf.pct/100),fat=w-lean,prev=h.length>1?h[h.length-2]:null;
+  top=`<div class="row"><div class="sp"><div class="big">~${bf.pct}<span class="mut sm" style="font-weight:400">% body fat</span></div><div class="xs mut">range ${bf.low}-${bf.high}%, ${fmtShort(bf.d)}${prev?', was '+prev.pct+'% on '+fmtShort(prev.d):''}</div></div></div>
+  <div class="bfbar"><s style="left:${pos(bf.low)}%;width:${pos(bf.high)-pos(bf.low)}%"></s><i style="left:${pos(bf.pct)}%"></i>${[[10,'abs'],[15,'lean'],[20,'fit'],[25,''],[30,'']].map(([v,l])=>`<span style="left:${pos(v)}%">${v}%${l?' '+l:''}</span>`).join('')}</div>
+  <div class="stk" style="margin-top:20px"><div><b>${lean.toFixed(1)}</b><span>kg lean mass</span></div><div><b>${fat.toFixed(1)}</b><span>kg fat</span></div><div><b>${h.length}</b><span>estimate${h.length===1?'':'s'}</span></div></div>
+  ${bf.note?`<div class="sm" style="padding:10px 12px;border-radius:12px;background:var(--inset);color:var(--soft)">${esc(bf.note)}</div>`:''}`;
+ }else top=`<div class="sm mut" style="margin:6px 0 10px">No estimate yet. Send Claude front, side and back photos and ask for a body fat estimate.</div>`;
+ const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null;
+ const gal=last?`<div class="row" style="margin:14px 0 8px"><div class="sp"><b class="sm">Photos</b> <span class="xs mut">${fmtShort(last.d)}${ph.length>1?' - '+ph.length+' sessions':''}</span></div>${ph.length>1||last.ps.length>3?'<button class="btn ghost sm" data-act="bodyAll">All photos</button>':''}</div>
+  <div class="pg">${last.ps.slice(0,3).map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`:'';
+ const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(first.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(last.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
+ return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${gal}${cmp}
+ <input type="file" id="pp_in" accept="image/*" multiple hidden><button class="btn ghost full" style="margin-top:12px" data-act="bodyAdd">Add progress photos</button>
+ <div class="xs mut" style="margin-top:8px">Best results: morning, same spot and light, relaxed, front, side and back. Estimates from photos are about plus or minus 3%.</div></div>`;
+}
+function bodyAllSheet(){
+ const ph=progPhotos().slice().reverse(),h=bfHistory();
+ return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`}).join('')}
+ <div class="xs mut" style="margin-top:12px">To delete a photo, ask Claude.</div>`;
+}
+
 /* ---------- maintenance (TDEE) estimate ----------
    BMR: Mifflin-St Jeor. Daily life + digestion: 15% of BMR (sedentary baseline, steps counted separately).
    Walking: net 0.5 kcal per kg per km, stride 0.75 m, so about 0.000375 kcal per step per kg.
    Lifting: net 0.05 kcal per kg per minute of a finished workout (planned days assume 60 minutes).
    From data: average intake minus weight change (7,700 kcal per kg), once 14+ days are logged. */
 function latestWeight(){const T=today();for(let i=0;i<60;i++){const w=logOf(addDays(T,-i)).weight;if(w!=null)return w}return profile().startWeight}
-function bmrOf(w){const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
+function bmrOf(w){const bf=latestBF();if(bf)return 370+21.6*w*(1-bf.pct/100);const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
 function maintFor(steps,liftMin){const w=latestWeight(),bmr=bmrOf(w);const life=bmr*.15,walk=(steps||0)*w*.000375,lift=(liftMin||0)*w*.05;return {w,bmr,life,walk,lift,total:bmr+life+walk+lift}}
 function woMinutes(d){const wo=logOf(d).workout;if(!wo||!wo.finishedAt)return 0;return Math.min(150,Math.max(0,(new Date(wo.finishedAt)-new Date(wo.startedAt))/60000))}
 function adaptiveTDEE(){
@@ -691,12 +729,12 @@ function maintCard(){
  const fmt=v=>rnd(v).toLocaleString('en-US');
  const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--faint)">${sub}</div>`:''}</span><span>${v}</span></div>`;
  return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance</h3><div class="mut sm">Calories you burn in a day (TDEE)</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(typ)}</b><div class="xs mut">per day, your week</div></div></div>
- <div style="margin-top:8px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg')}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
+ <div style="margin-top:8px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg'+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
  ${row('<b style="color:var(--txt)">Training day, '+(sg/1000)+'k steps</b>','<b>'+fmt(train.total)+'</b>')}${row('Rest day, 5k steps',fmt(rest.total))}
  ${wk?row('Last 7 days, from your logs',fmt(wk),n+' day'+(n===1?'':'s')+' with steps or a workout'):''}
  ${row('From your weight trend',ad.ready?'<b>'+fmt(ad.tdee)+'</b>':'<span class="mut">'+ad.days+' / 14 days</span>',ad.ready?'eating '+fmt(ad.intake)+', weight '+(ad.rate>0?'+':'')+ad.rate.toFixed(2)+' kg a week':'most accurate once 14 days of food and weight are logged')}</div>
  <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset)">Target ${fmt(pr.targets.kcal)} is ${gap>=0?'about <b>'+fmt(gap)+' below</b>':'about <b>'+fmt(-gap)+' above</b>'} maintenance: roughly ${gap>=0?'-':'+'}${Math.abs(kgWk).toFixed(1)} kg a week.</div>
- ${b.assumed||!b.heightCm?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${b.heightCm||175} cm. Tell Claude your real height and age.</div>`:''}</div>`;
+ ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${b.heightCm||175} cm. Tell Claude your real height and age.</div>`:''}</div>`;
 }
 function progressView(){
  const pr=profile(),T=today();
@@ -713,7 +751,7 @@ function progressView(){
  const wk=weekDates(T);let planned=0,did=0;wk.forEach(d=>{if(progDay(d))planned++;const w=logOf(d).workout;if(w&&w.finishedAt)did++});
  /* streak */
  let streak=0,i=hasData(T)?0:1;for(;i<31;i++){if(hasData(addDays(T,-i)))streak++;else break}
- return header('Progress')+maintCard()+`
+ return header('Progress')+maintCard()+bodyCard()+`
  <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'var(--ok)':'var(--warn)'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>
@@ -822,6 +860,8 @@ document.addEventListener('click',async e=>{
   case 'pickMeal':foodMeal=+D.m;document.querySelectorAll('#fm button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
   case 'phPick':$('#f_photo').click();break;
+  case 'bodyAdd':$('#pp_in').click();break;
+  case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
   case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
   case 'phView':{const src=t.getAttribute('src');if(!src)break;let ov=$('#ov');const full=document.createElement('div');full.id='ov';full.className='full';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>full.remove());document.body.appendChild(full);break}
   case 'foodSave':{
@@ -858,6 +898,11 @@ document.addEventListener('click',async e=>{
  }
 });
 document.addEventListener('change',async e=>{
+ if(e.target.id==='pp_in'&&e.target.files&&e.target.files.length){
+  const fl=[...e.target.files];e.target.value='';let n=0;
+  for(const f of fl){try{const u=await shrinkImage(f);const p='data/progress/'+today()+'/'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;n++}catch(x){}}
+  persist();toast0(n+' photo'+(n===1?'':'s')+' saved. Ask Claude for a body fat estimate.');render();flushSoon(300);return;
+ }
  if(e.target.id!=='f_photo'||!e.target.files||!e.target.files[0])return;
  try{foodPhoto=await shrinkImage(e.target.files[0]);const im=$('#f_phimg');im.src=foodPhoto;im.style.display='';$('#f_phrm').style.display='';$('#f_phpick').textContent='Change photo'}
  catch(x){toast('Could not read that photo.')}
