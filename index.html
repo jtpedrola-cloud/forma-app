@@ -95,6 +95,9 @@ svg{display:block}
 #sheet h2{margin:0 0 12px;font-size:19px}
 .fld{margin-bottom:10px}.fld label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#0f1829;flex:none}
+.phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:#0f1829;margin-bottom:8px;display:block}
+#ov.full{align-items:center;background:rgba(0,0,0,.92)}#ov.full img{max-width:100%;max-height:90vh;object-fit:contain}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2a1620;border:1px solid #6b2a3a;color:#ffb4b4;padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
 .empty{text-align:center;color:var(--mut);padding:18px 8px;font-size:14px}
 .setup{padding-top:40px}.setup h1{font-size:30px;margin:0 0 6px}
@@ -142,7 +145,7 @@ const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="no
 
 /* ---------- state + cache ---------- */
 let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:'jtpedrola-cloud/forma'});
-let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});
+let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});DB.photos=DB.photos||{};
 if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
 const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
@@ -223,8 +226,42 @@ const GH={
   const r=await gh('PUT','/contents/'+encPath(p),body);
   if(!r.ok)throw new HttpErr(r.status);
   const j=await r.json();return {sha:j.content.sha};
+ },
+ async putBin(p,b64,msg){
+  const m=await this.meta0(p);const body={message:msg,content:b64,branch:'main'};if(m)body.sha=m;
+  const r=await gh('PUT','/contents/'+encPath(p),body);
+  if(!r.ok)throw new HttpErr(r.status);
+ },
+ async meta0(p){const r=await gh('GET','/contents/'+encPath(p)+'?ref=main');if(r.status===404)return null;if(!r.ok)throw new HttpErr(r.status);return (await r.json()).sha},
+ async blobURL(p){
+  const r=await gh('GET','/contents/'+encPath(p)+'?ref=main',null,true);
+  if(!r.ok)throw new HttpErr(r.status);
+  return URL.createObjectURL(await r.blob());
  }
 };
+
+/* ---------- meal photos: shrunk in the browser, stored in the repo under data/photos/ ---------- */
+const PHOTOS={},PHLOAD={};
+function shrinkImage(file){
+ return new Promise((res,rej)=>{
+  const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{const M=1280,k=Math.min(1,M/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+   c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.8))};
+  img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};img.src=u});
+}
+function photoURL(p){
+ if(!p)return '';
+ if(PHOTOS[p])return PHOTOS[p];
+ if(DB.photos[p])return 'data:image/jpeg;base64,'+DB.photos[p];
+ if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
+ return '';
+}
+async function flushPhotos(){
+ for(const p of Object.keys(DB.photos)){
+  await B.putBin(p,DB.photos[p],'app: photo '+p.split('/').slice(2).join('/'));
+  PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];delete DB.photos[p];persist();
+ }
+}
 
 /* ---------- demo backend (in memory, seeded from ../data) ---------- */
 let DEMOFILES=null,demoN=1;
@@ -236,7 +273,7 @@ const DEMOB={
   const meals=[['breakfast','Oatmeal with banana','1 bowl',380,14,62,8],['breakfast','Eggs and toast','3 eggs, 2 toast',420,26,30,22],['lunch','Chicken adobo with rice','1 cup rice',650,42,70,20],['lunch','Tuna sandwich','1',430,32,40,14],['dinner','Grilled chicken, veg','200 g',520,48,20,18],['dinner','Beef and broccoli','1 plate',610,40,45,25],['snacks','Whey shake','1 scoop',130,25,3,2],['snacks','Banana','1',100,1,26,0]];
   for(let i=0;i<=10;i++){
    const d=addDays(T,-i),dow=parseD(d).getDay();
-   const items=[];meals.forEach((m,k)=>{if(i===0&&k>2)return;if(rn()<.8)items.push({id:'d'+i+'-'+k,meal:m[0],name:m[1],amount:m[2],kcal:m[3],protein:m[4],carbs:m[5],fat:m[6],by:k%2?'claude':'app',t:d+'T12:00:00Z'})});
+   const items=[];meals.forEach((m,k)=>{if(i===0&&k>2)return;if(rn()<.8)items.push({id:'d'+i+'-'+k,meal:({breakfast:1,lunch:2,snacks:3,dinner:4})[m[0]]||1,name:m[1],amount:m[2],kcal:m[3],protein:m[4],carbs:m[5],fat:m[6],by:k%2?'claude':'app',t:d+'T12:00:00Z'})});
    if(i===3)continue;
    F['data/food/'+d+'.json']=JSON.stringify({date:d,items},null,2)+'\n';
   }
@@ -255,6 +292,8 @@ const DEMOB={
   if(cur&&sha!==cur)throw new HttpErr(409);if(!cur&&sha)throw new HttpErr(422);
   JSON.parse(text);DEMOFILES.F[p]=text;DEMOFILES.sha[p]='s'+(demoN++);return {sha:DEMOFILES.sha[p]}},
  /* test hook: change a file "from outside" (as Claude would) */
+ async putBin(p,b64){DEMOFILES.F[p]=b64;DEMOFILES.sha[p]='s'+(demoN++)},
+ async blobURL(p){if(!DEMOFILES.F[p])throw new HttpErr(404);return 'data:image/jpeg;base64,'+DEMOFILES.F[p]},
  external(p,fn){const cur=DEMOFILES.F[p]?JSON.parse(DEMOFILES.F[p]):blank(p);DEMOFILES.F[p]=JSON.stringify(fn(cur),null,2)+'\n';DEMOFILES.sha[p]='s'+(demoN++)}
 };
 const tick=()=>new Promise(r=>setTimeout(r,30));
@@ -265,7 +304,7 @@ if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
 let flushT=null,flushing=false,again=false,lastErr='';
 function setSync(s,msg){UI.sync=s;UI.syncMsg=msg||'';const d=$('#sd');if(d){d.className='dot '+s;d.parentElement.title=s+(msg?': '+msg:'')}}
 const isNet=e=>!(e instanceof HttpErr)&&!(e&&e.status);
-const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0);
+const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length;
 function errText(e){
  if(isNet(e))return 'No connection. Your changes are saved on this phone and will sync when you are back online.';
  if(e.status===401||e.status===403)return 'GitHub rejected the token. Open settings and paste a new one.';
@@ -280,6 +319,7 @@ async function flush(){
  if(!pendCount()){if(UI.sync!=='offline'&&UI.sync!=='error')setSync('synced');return}
  flushing=true;setSync('syncing');
  try{
+  await flushPhotos();
   for(const p of Object.keys(DB.pend)){if(DB.pend[p].length)await writePath(p)}
   setSync('synced');
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
@@ -367,7 +407,10 @@ function render(){
 
 /* ---------- derived numbers ---------- */
 function totals(d){const t={kcal:0,protein:0,carbs:0,fat:0};food(d).items.forEach(i=>{t.kcal+=num(i.kcal);t.protein+=num(i.protein);t.carbs+=num(i.carbs);t.fat+=num(i.fat)});return t}
-const mealTot=(d,m)=>{const t={kcal:0,protein:0};food(d).items.filter(i=>i.meal===m).forEach(i=>{t.kcal+=num(i.kcal);t.protein+=num(i.protein)});return t};
+const LEGACY_MEAL={breakfast:1,lunch:2,snacks:3,dinner:4};
+const mealNo=i=>typeof i.meal==='number'?i.meal:(LEGACY_MEAL[i.meal]||1);
+const mealList=d=>{const n=Math.max(0,...food(d).items.map(mealNo));return Array.from({length:n+1},(_,k)=>k+1)};
+const mealTot=(d,m)=>{const t={kcal:0,protein:0};food(d).items.filter(i=>mealNo(i)===m).forEach(i=>{t.kcal+=num(i.kcal);t.protein+=num(i.protein)});return t};
 const progDay=d=>{const id=program().weekdays[String(parseD(d).getDay())];return id==='rest'||!id?null:program().days.find(x=>x.id===id)};
 const exName=id=>(exdb().exercises[id]||{n:id}).n;
 function weekDates(d){const ws=(profile().weekStart||0);const dow=parseD(d).getDay();const s=addDays(d,-((dow-ws+7)%7));return Array.from({length:7},(_,i)=>addDays(s,i))}
@@ -405,25 +448,26 @@ function todayView(){
 }
 
 /* ---------- Food ---------- */
-const MEALS=[['breakfast','Breakfast'],['lunch','Lunch'],['dinner','Dinner'],['snacks','Snacks']];
 function foodView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),items=food(d).items,isCons=UI.mode==='consumed';
  const big=isCons?rnd(t.kcal):rnd(T.kcal-t.kcal);
- const secs=MEALS.map(([k,l])=>{
-  const its=items.filter(i=>i.meal===k),mt=mealTot(d,k),open=UI.open[k]!==false;
+ const secs=mealList(d).map(k=>{
+  const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="chip b">${rnd(mt.kcal)} Cal</span><span class="chip p">${rnd(mt.protein)} P</span><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
-  ${its.length?its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}"><div class="sp"><div class="n">${esc(i.name)}${i.by==='claude'?'<span class="tag">Claude</span>':''}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r"><div>${rnd(num(i.kcal))} cal</div><div class="xs mut">${rnd(num(i.protein))}g protein</div></div></button>`).join(''):`<div class="empty" style="padding:8px">No food logged yet. Tap + to add.</div>`}</details>`}).join('');
+  ${its.length?its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}${i.by==='claude'?'<span class="tag">Claude</span>':''}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r"><div>${rnd(num(i.kcal))} cal</div><div class="xs mut">${rnd(num(i.protein))}g protein</div></div></button>`).join(''):`<div class="empty" style="padding:8px">Nothing here yet. Tap + to add.</div>`}</details>`}).join('');
  return header('Food Log')+`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="ib" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left')}</button><b>${d===today()?'Today, ':''}${fmtShort(d)}</b><button class="ib" data-act="dnav" data-n="1" aria-label="Next day">${ic('right')}</button></div>
  <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
- <div class="card" style="padding:4px 16px">${secs}</div>
- <div class="card"><h3>Log meals with Claude</h3><div class="mut sm" style="margin:4px 0 12px">Tell Claude what you ate or attach a photo. It writes to your repo and shows up here after a refresh.</div><button class="btn full" data-act="claude">Copy prompt and open Claude</button><div class="xs mut" style="margin-top:8px">Example: "Log lunch: chicken adobo with 1 cup rice"</div></div>`;
+ <div class="card" style="padding:4px 16px">${secs}</div>`;
 }
 function foodSheet(item,meal){
  const e=!!item,i=item||{name:'',amount:'',kcal:'',protein:'',carbs:'',fat:''};
+ const cur=e?mealNo(item):meal,ms=mealList(UI.date);if(!ms.includes(cur))ms.push(cur);
+ const src=e&&item.photo?photoURL(item.photo):'';
  return `<h2>${e?'Edit food':'Add food'}</h2>
- <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${MEALS.map(([k,l])=>`<button data-act="pickMeal" data-m="${k}" class="${(e?item.meal:meal)===k?'on':''}">${l.slice(0,5)}</button>`).join('')}</div></div>
+ <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${ms.map(k=>`<button data-act="pickMeal" data-m="${k}" class="${cur===k?'on':''}">${k}</button>`).join('')}</div></div>
+ <div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${e?esc(item.photo||''):''}" src="${esc(src)}" style="${src?'':'display:none'}" alt="" data-act="phView"><input type="file" id="f_photo" accept="image/*" hidden><div class="row"><button class="btn ghost sm" id="f_phpick" data-act="phPick">${e&&item.photo?'Change photo':'Add photo'}</button><button class="btn ghost sm" id="f_phrm" data-act="phRemove" style="${e&&item.photo?'':'display:none'}">Remove</button></div></div>
  <div class="fld"><label>Name</label><input id="f_name" value="${esc(i.name)}" placeholder="Chicken adobo"></div>
  <div class="fld"><label>Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice"></div>
  <div class="g2"><div class="fld"><label>Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label>Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
@@ -594,11 +638,11 @@ function renderSheet(){
 }
 
 /* ---------- events ---------- */
-let foodMeal='breakfast';
+let foodMeal=1,foodPhoto=null;
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-act]');if(!t)return;
  const a=t.dataset.act,D=t.dataset;
- if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=D.m;openSheet(foodSheet(null,D.m));return}
+ if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=+D.m;foodPhoto=null;openSheet(foodSheet(null,+D.m));return}
  const T=today();
  switch(a){
   case 'tab':UI.tab=D.t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
@@ -617,17 +661,20 @@ document.addEventListener('click',async e=>{
   case 'stepsSave':{const v=$('#v_steps').value.trim();mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
   case 'weightSave':{const v=$('#v_weight').value.trim();mutate(logP(UI.date),{k:'weight',v:v===''?null:+num(v).toFixed(1)});closeSheet();break}
-  case 'claude':{const prompt='Log '+(new Date().getHours()<11?'breakfast':new Date().getHours()<16?'lunch':'dinner')+' for '+fmtLong(UI.date)+' in my Forma food log: ';
-   try{await navigator.clipboard.writeText(prompt)}catch(x){const i=document.createElement('textarea');i.value=prompt;document.body.appendChild(i);i.select();try{document.execCommand('copy')}catch(y){}i.remove()}
-   toast0('Prompt copied. Paste it in Claude and say what you ate.');window.open('https://claude.ai/code','_blank','noopener');break}
-  case 'pickMeal':foodMeal=D.m;document.querySelectorAll('#fm button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
-  case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=it.meal;openSheet(foodSheet(it))}break}
+  case 'pickMeal':foodMeal=+D.m;document.querySelectorAll('#fm button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
+  case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
+  case 'phPick':$('#f_photo').click();break;
+  case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
+  case 'phView':{const src=t.getAttribute('src');if(!src)break;let ov=$('#ov');const full=document.createElement('div');full.id='ov';full.className='full';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>full.remove());document.body.appendChild(full);break}
   case 'foodSave':{
    const name=$('#f_name').value.trim();if(!name){toast('Give the food a name first.');return}
    const g=id=>num($('#f_'+id).value);
    const old=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
-   const item=Object.assign({},old||{},{id:D.id||uid(),meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
-   mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
+   const id=D.id||uid();
+   const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
+   if(foodPhoto==='remove')delete item.photo;
+   else if(foodPhoto){const p='data/photos/'+UI.date+'/'+id+'.jpg';DB.photos[p]=foodPhoto.split(',')[1];item.photo=p}
+   foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;render();break;
   case 'wStart':if(UI.wDay&&D.id)startWorkout(D.id);break;
@@ -651,6 +698,12 @@ document.addEventListener('click',async e=>{
    openSheet(`<h2>Swap ${esc(exName(slot))}</h2><div class="mut sm" style="margin-bottom:10px">Only for today. Your sets move over.</div>${opts.length?opts.map(x=>`<button class="item" data-act="doSwap" data-slot="${slot}" data-to="${x}"><div class="sp"><div class="n">${esc(exName(x))}${x===slot?' (original)':''}</div><div class="xs mut">${esc((exdb().exercises[x]||{}).eq||'')}</div></div></button>`).join(''):'<div class="empty">No alternatives listed for this exercise.</div>'}`);break}
   case 'doSwap':{const wo=logOf(T).workout;const from=effEx(wo,D.slot);mutate(logP(T),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
  }
+});
+document.addEventListener('change',async e=>{
+ if(e.target.id!=='f_photo'||!e.target.files||!e.target.files[0])return;
+ try{foodPhoto=await shrinkImage(e.target.files[0]);const im=$('#f_phimg');im.src=foodPhoto;im.style.display='';$('#f_phrm').style.display='';$('#f_phpick').textContent='Change photo'}
+ catch(x){toast('Could not read that photo.')}
+ e.target.value='';
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.style.cssText+=';background:#12301f;border-color:#1c5a37;color:#9be8b5';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
