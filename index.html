@@ -218,6 +218,7 @@ svg{display:block}
 .set.drop{grid-template-columns:34px 1fr 74px 74px 46px;margin-top:4px}
 .set.drop .sn{font-size:11px;color:var(--acc)}
 .set.drop .x{width:44px;height:44px;border-radius:50%;color:var(--mut);display:grid;place-items:center}
+.rst.alt{background:var(--chipb);color:var(--chipbtx);border-color:var(--acc)}
 .rst{height:28px;padding:0 10px;border-radius:14px;background:var(--inset);border:1px solid var(--line);color:var(--soft);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
 .hint{font-size:12px;color:var(--ok);margin-top:4px}
 .cues{background:var(--inset);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--soft)}
@@ -271,7 +272,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='8c2d4eeaf5815e5215f7748ac7981d8d131b8fea';let verChecked=0;
+const BUILD='157a04141c5ee5572183b853945da49a11f4a783';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -322,6 +323,10 @@ const fw=(kg,dp=1)=>kg==null||kg===''?'':String(+kg2u(+kg).toFixed(dp));
 const fwu=(kg,dp=1)=>kg==null?'-':fw(kg,dp)+' '+wU();
 const fh=cm=>{if(cm==null||cm==='')return '';if(hUnitNow()!=='ft')return cm+' cm';const t=Math.round(cm/2.54);return Math.floor(t/12)+"'"+(t%12)+'"'};
 const toKg=v=>(typeof v==='number'&&imperial())?+(v*KG).toFixed(2):v;
+/* Per-exercise load unit: a machine labelled only in lb (or kg) can override the default, remembered in profile.exUnits. */
+const exU=ex=>{const p=profile(),m=p&&p.exUnits;return (m&&m[ex])||wU()};
+const kgTo=(kg,u)=>u==='lb'?kg/KG:kg,toKgU=(v,u)=>(typeof v==='number'&&u==='lb')?+(v*KG).toFixed(2):v;
+const fwU=(kg,u,dp=1)=>kg==null||kg===''?'':String(+kgTo(+kg,u).toFixed(dp));
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
 const blank=p=>{const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
 
@@ -779,14 +784,14 @@ function workoutView(){
  if(swo){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
-   return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(setTxt).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
+   return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(z=>setTxt(z,exU(ex))).join(', ')}${u==='SEC'?' s':u==='M'?' m':exU(ex)!==wU()?' '+exU(ex):''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
   body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+' - '+rnd(kg2u(woStats(swo).vol)).toLocaleString('en-US')+' '+wU()}</div>${swo.marked?'':`<div class="xs mut">${clock(swo.startedAt)} to ${clock(swo.finishedAt)}</div>`}${swo.note?`<div class="sm" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}</div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="btn ghost sm" data-act="wEdit" data-d="${sel}">Edit</button>`}</div></div>
   ${swo.marked?'':`<div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
  }else{
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>${!isT&&sel<T?`<button class="btn full" style="margin-top:12px" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}</div>
-  <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?fw(pv[0].w)+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
+  <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
  }
  const chips=isT&&!swo?`<div class="xs mut" style="margin:2px 0 8px">${td?'Not doing '+esc(td.name)+' today? Pick another day:':'Train anyway. Pick a day:'}</div><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}</button>`).join('')}</div>`:'';
  return header('Workout')+nav+`<div class="week w2">${strip}</div>`+body+chips+
@@ -796,18 +801,18 @@ function liveView(wo,lg){
  const day=program().days.find(x=>x.id===wo.dayId)||{name:'Workout',exercises:[]};
  const cards=day.exercises.map(e=>{
   const ex=effEx(wo,e.ex),inf=exdb().exercises[ex]||{n:ex},sets=(wo.sets&&wo.sets[ex])||[],prev=prevFor(ex),u=unitOf(ex);
-  const swapped=ex!==e.ex;
+  const swapped=ex!==e.ex,eu=exU(ex);
   const easy=prev&&prev.length&&prev.every(x=>x.rir===3);
-  return `<div class="card" style="padding:12px 12px 14px"><div class="row"><div class="sp"><h3>${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.sets} sets - ${esc(e.reps)} ${u==='REPS'?'reps':u==='SEC'?'seconds':'meters'} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
+  return `<div class="card" style="padding:12px 12px 14px"><div class="row"><div class="sp"><h3>${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.sets} sets - ${esc(e.reps)} ${u==='REPS'?'reps':u==='SEC'?'seconds':'meters'} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
   <button class="btn ghost sm" data-act="cues" data-ex="${ex}">Notes</button>${(inf.a||[]).length||swapped?`<button class="btn ghost sm" data-act="swap" data-slot="${e.ex}">Swap</button>`:''}</div>
   ${UI.cues[ex]?`<ul class="cues">${(inf.c||['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}
-  <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">${wU().toUpperCase()}</div><div style="text-align:center">${u}</div><div></div></div>
-  ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fw(ps.w):(pv&&pv.w?fw(pv.w):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?fw(pv.w)+' x ':'')+pv.r:'-'}</div>
-  <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fw(s.w):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
+  <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">${eu.toUpperCase()}</div><div style="text-align:center">${u}</div><div></div></div>
+  ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
+  <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
   <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
   <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-label="Mark set ${i+1} done">${ic('check',20)}</button></div>
   ${s.done&&u==='REPS'?`<div class="sx">${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
-  ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fw(d.w):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
+  ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="addSet" data-ex="${ex}">+ Add Set</button>${sets.length>1?`<button class="btn ghost" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">-</button>`:''}</div></div>`}).join('');
  const stt=woStats(wo),long=Date.now()-new Date(wo.startedAt)>3*3600000;
  return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><button class="sp" style="text-align:left" data-act="wStarted" aria-label="Change start time"><div class="xs mut">Elapsed - ${stt.done}/${stt.all} sets</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></button><button class="btn ghost sm" data-act="wCancel">Discard</button><button class="btn" data-act="wFinish">Finish</button></div></div>
@@ -881,7 +886,7 @@ function doneNext(how){
  if(!tickSet(nx.ex,nx.i,how))return;
  const x=((logOf(today()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
  let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';
- el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done${nx.i+1===nx.n?'<br>Exercise complete':''}</div><div class="sd-s">${esc(nm)}<br>${x.w?fwu(x.w)+' x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
+ el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done${nx.i+1===nx.n?'<br>Exercise complete':''}</div><div class="sd-s">${esc(nm)}<br>${x.w?fwU(x.w,exU(nx.ex))+' '+exU(nx.ex)+' x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
  <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
  el._undo={ex:nx.ex,before};el.addEventListener('click',e=>{if(!e.target.closest('.sd-undo'))el.remove()});
  document.body.appendChild(el);clearTimeout(sdTimer);sdTimer=setTimeout(()=>{const z=$('#sdone');if(z)z.remove()},3000);
@@ -937,7 +942,7 @@ const REST_PRESETS=[60,90,120,150,180];
 function restFor(ex){const o=LS.get('forma.rest',{});if(o[ex])return o[ex];const e=exdb().exercises[ex]||{};return e.big?150:/jump/.test(ex)?120:90}
 const RIR=[[3,'3+ left'],[2,'1-2 left'],[0,'Failure']];
 const rirTxt=x=>x.rir==null?'':x.rir===0?' F':x.rir===3?' (3+)':' (1-2)';
-const setTxt=x=>(x.w?fw(x.w)+' x ':'')+x.r+rirTxt(x)+((x.drops||[]).length?' + drop '+x.drops.map(d=>(d.w?fw(d.w)+' x ':'')+d.r).join(', '):'');
+const setTxt=(x,u=wU())=>(x.w?fwU(x.w,u)+' x ':'')+x.r+rirTxt(x)+((x.drops||[]).length?' + drop '+x.drops.map(d=>(d.w?fwU(d.w,u)+' x ':'')+d.r).join(', '):'');
 /* Rest timer sound: a loud rising chime when rest ends, short ticks for the last 3 seconds. Uses media volume. */
 let audioCtx=null;
 function actx(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){return null}}
@@ -1527,6 +1532,8 @@ document.addEventListener('click',async e=>{
   case 'actNew':UI.date=today();openSheet(actSheet(),actSheet);break;
   case 'actDay':UI.date=D.d;openSheet(actSheet(),actSheet);break;
   case 'hUnitSet':mutate(P_PROFILE,{k:'merge',data:{hUnit:D.u}},{delay:300});openSheet(settingsSheet());render();break;
+  case 'exUnit':{const m=Object.assign({},profile().exUnits||{}),nu=exU(D.ex)==='kg'?'lb':'kg';if(nu===wU())delete m[D.ex];else m[D.ex]=nu;
+   mutate(P_PROFILE,{k:'merge',data:{exUnits:m}},{delay:300});render();toast0(exName(D.ex)+' now in '+nu+(nu===wU()?'.':'. Remembered for next time.'));break}
   case 'unitsSet':mutate(P_PROFILE,{k:'merge',data:{units:D.u}},{delay:300});openSheet(settingsSheet());render();break;
   case 'modTog':{const ms=Object.assign({food:true,workout:true,activity:true},profile().modules||{});ms[D.m]=!ms[D.m];if(!ms.food&&!ms.workout&&!ms.activity){toast('Keep at least one.');break}
    mutate(P_PROFILE,{k:'merge',data:{modules:ms}},{delay:300});if(UI.tab===D.m&&!ms[D.m])UI.tab='today';openSheet(settingsSheet());render();break}
@@ -1612,8 +1619,8 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
  const v=t.value.trim()===''?0:num(t.value);
- if(t.dataset.f==='dw'||t.dataset.f==='dr'){editSets(t.dataset.ex,s=>{const x=s[+t.dataset.i];if(x&&x.drops&&x.drops[+t.dataset.j])x.drops[+t.dataset.j][t.dataset.f==='dw'?'w':'r']=t.dataset.f==='dw'?toKg(v):v},{quiet:true,delay:2000});return}
- editSets(t.dataset.ex,s=>{if(s[+t.dataset.i])s[+t.dataset.i][t.dataset.f]=t.dataset.f==='w'?toKg(v):v},{quiet:true,delay:2000});
+ if(t.dataset.f==='dw'||t.dataset.f==='dr'){editSets(t.dataset.ex,s=>{const x=s[+t.dataset.i];if(x&&x.drops&&x.drops[+t.dataset.j])x.drops[+t.dataset.j][t.dataset.f==='dw'?'w':'r']=t.dataset.f==='dw'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});return}
+ editSets(t.dataset.ex,s=>{if(s[+t.dataset.i])s[+t.dataset.i][t.dataset.f]=t.dataset.f==='w'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});
 });
 let ty=null;
 document.addEventListener('touchstart',e=>{ty=window.scrollY===0?e.touches[0].clientY:null},{passive:true});
