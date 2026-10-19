@@ -216,7 +216,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='75c37d09c9f13b9be11053fec50d330c66b39f23';let verChecked=0;
+const BUILD='8d4663bb7e5a15013894731a18bdceaf728e8c4b';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -266,7 +266,12 @@ function applyOp(d,o){
   case 'foodDel':d.items=d.items.filter(i=>i.id!==o.id);break;
   case 'steps':case 'weight':case 'note':d[o.k]=o.v;break;
   case 'wStart':if(!d.workout)d.workout={dayId:o.dayId,startedAt:o.t,finishedAt:null,sets:o.sets,swaps:{}};break;
-  case 'wSets':w().sets[o.ex]=o.sets;break;
+  case 'wSets':w().sets[o.ex]=o.sets;if(o.t)w().lastAt=o.t;break;
+  case 'wTimes':{const x=w();if(o.s)x.startedAt=o.s;if(o.f!==undefined)x.finishedAt=o.f;break}
+  case 'wNote':{const x=w();if(o.v)x.note=o.v;else delete x.note;break}
+  case 'wFinalize':{const x=w();Object.keys(x.sets||{}).forEach(ex=>{let a=x.sets[ex]||[];
+    if(o.mode==='tick')a.forEach(z=>{if(!z.done&&(num(z.r)>0))z.done=true});
+    a=a.filter(z=>z.done);if(a.length)x.sets[ex]=a;else delete x.sets[ex]});break}
   case 'wSwap':{const x=w();x.swaps=x.swaps||{};if(o.alt===o.slot)delete x.swaps[o.slot];else x.swaps[o.slot]=o.alt;
     if(o.moved&&x.sets[o.from]&&!x.sets[o.to]){x.sets[o.to]=x.sets[o.from];delete x.sets[o.from]}break}
   case 'wFinish':w().finishedAt=o.t;break;
@@ -289,7 +294,7 @@ const logOf=d=>view(logP(d))||blank(logP(d));
 function mutate(p,op,o={}){
  const q=DB.pend[p]||(DB.pend[p]=[]);
  if(op.k==='wSets'||op.k==='steps'||op.k==='weight'||op.k==='note'){
-  const i=q.findIndex(x=>x.k===op.k&&x.ex===op.ex);if(i>=0)q.splice(i,1)}
+  const i=q.findIndex(x=>x.k===op.k&&x.ex===op.ex);if(i>=0){if(op.k==='wSets'&&q[i].t&&!op.t)op.t=q[i].t;q.splice(i,1)}}
  q.push(op);persist();
  if(!o.quiet)render();
  flushSoon(o.delay==null?700:o.delay);
@@ -669,7 +674,7 @@ function workoutView(){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
    return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(setTxt).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
-  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:''}${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
+  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+' - '+woStats(swo).vol.toLocaleString('en-US')+' kg'}</div>${swo.marked?'':`<div class="xs mut">${clock(swo.startedAt)} to ${clock(swo.finishedAt)}</div>`}${swo.note?`<div class="sm" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}</div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="btn ghost sm" data-act="wEdit" data-d="${sel}">Edit</button>`}</div></div>
   ${swo.marked?'':`<div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
@@ -698,8 +703,39 @@ function liveView(wo,lg){
   ${s.done&&u==='REPS'?`<div class="sx">${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?d.w:''}" placeholder="0" aria-label="Drop kilograms"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="addSet" data-ex="${ex}">+ Add Set</button>${sets.length>1?`<button class="btn ghost" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">-</button>`:''}</div></div>`}).join('');
- return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><div class="sp"><div class="xs mut">Elapsed</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></div><button class="btn ghost sm" data-act="wCancel">Cancel</button><button class="btn" data-act="wFinish">Finish</button></div></div>${cards}<div style="height:50px"></div>`;
+ const stt=woStats(wo),long=Date.now()-new Date(wo.startedAt)>3*3600000;
+ return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><button class="sp" style="text-align:left" data-act="wStarted" aria-label="Change start time"><div class="xs mut">Elapsed - ${stt.done}/${stt.all} sets</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></button><button class="btn ghost sm" data-act="wCancel">Discard</button><button class="btn" data-act="wFinish">Finish</button></div></div>
+ ${long?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}<div style="height:50px"></div>`;
 }
+/* workout times and totals */
+const hhmm=iso=>{const d=new Date(iso);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const atTime=(date,t)=>{const [y,m,dd]=date.split('-').map(Number),[h,mi]=t.split(':').map(Number);return new Date(y,m-1,dd,h,mi)};
+const clock=iso=>{const d=new Date(iso);let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(d.getMinutes())+' '+ap};
+function woStats(wo){let done=0,all=0,vol=0;Object.entries(wo.sets||{}).forEach(([ex,a])=>{const reps=unitOf(ex)==='REPS';(a||[]).forEach(z=>{all++;if(z.done){done++;if(reps){vol+=num(z.w)*num(z.r);(z.drops||[]).forEach(d=>vol+=num(d.w)*num(d.r))}}})});return {done,all,vol:Math.round(vol)}}
+function finishSheet(){
+ const T=today(),wo=logOf(T).workout;if(!wo)return '<h2>No workout running</h2>';
+ const day=program().days.find(x=>x.id===wo.dayId)||{name:'Workout'},st=woStats(wo),open=st.all-st.done;
+ const now=Date.now(),last=wo.lastAt?new Date(wo.lastAt).getTime():null,stale=last&&now-last>20*60000;
+ const endIso=stale?new Date(last+2*60000).toISOString():new Date(now).toISOString();
+ return `<h2>Finish ${esc(day.name)}</h2>
+ <div class="stk"><div><b>${st.done}</b><span>sets done</span></div><div><b>${st.vol.toLocaleString('en-US')}</b><span>kg volume</span></div><div><b id="fin_dur">${mmss((new Date(endIso)-new Date(wo.startedAt))/1000)}</b><span>duration</span></div></div>
+ ${open?`<div class="fld"><label>${open} set${open===1?'':'s'} not ticked</label><div class="seg" style="margin:0" id="fin_mode"><button data-act="finMode" data-m="drop" class="on">Leave them out</button><button data-act="finMode" data-m="tick">Count ones with reps</button></div></div>`:''}
+ ${stale?`<div class="xs" style="color:var(--warn);margin:-2px 0 8px">Your last set was at ${clock(wo.lastAt)}. End time is set to just after it.</div>`:''}
+ <div class="g2"><div class="fld"><label>Started</label><input type="time" id="fin_s" value="${hhmm(wo.startedAt)}"></div><div class="fld"><label>Finished</label><input type="time" id="fin_f" value="${hhmm(endIso)}"></div></div>
+ <div class="fld"><label>Notes (optional)</label><input id="fin_n" value="${esc(wo.note||'')}" placeholder="Felt strong, shoulder a bit tight"></div>
+ <button class="btn full" data-act="finSave">Save workout</button>
+ <div class="row" style="margin-top:8px"><button class="btn ghost sp" data-act="finKeep">Keep going</button><button class="btn red sp" data-act="wCancel">Discard</button></div>`;
+}
+function editWoSheet(date){
+ const wo=logOf(date).workout;if(!wo)return '<h2>No workout</h2>';const day=program().days.find(x=>x.id===wo.dayId)||{name:'Workout'};
+ return `<h2>Edit ${esc(day.name)}</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(date)}</div>
+ <div class="g2"><div class="fld"><label>Started</label><input type="time" id="ed_s" value="${hhmm(wo.startedAt)}"></div><div class="fld"><label>Finished</label><input type="time" id="ed_f" value="${hhmm(wo.finishedAt||wo.startedAt)}"></div></div>
+ <div class="fld"><label>Notes</label><input id="ed_n" value="${esc(wo.note||'')}" placeholder="How did it feel?"></div>
+ <button class="btn full" data-act="edSave" data-d="${date}">Save</button>
+ <div class="row" style="margin-top:8px">${date===today()&&!wo.marked?'<button class="btn ghost sp" data-act="wReopen">Reopen and keep training</button>':''}<button class="btn red sp" data-act="edDel" data-d="${date}">Delete workout</button></div>`;
+}
+function startedSheet(){const wo=logOf(today()).workout;return `<h2>When did you start?</h2><div class="fld"><input type="time" id="st_t" value="${hhmm(wo.startedAt)}"></div><div class="xs mut" style="margin-bottom:12px">Use this if you forgot to tap Start. The timer counts from the new time.</div><button class="btn full" data-act="stSave">Save</button>`}
+function discardSheet(){const st=woStats(logOf(today()).workout||{});return `<h2>Discard this workout?</h2><div class="mut sm" style="margin-bottom:14px">${st.done?st.done+' ticked set'+(st.done===1?'':'s')+' will be deleted. This cannot be undone.':'Nothing has been ticked yet.'}</div><button class="btn red full" data-act="discardYes">Discard workout</button><button class="btn ghost full" style="margin-top:8px" data-act="discardNo">Keep it</button>`}
 function startWorkout(id){
  const day=program().days.find(x=>x.id===id),sets={};
  day.exercises.forEach(e=>{sets[e.ex]=Array.from({length:e.sets},()=>({w:0,r:0,done:false}))});
@@ -708,8 +744,10 @@ function startWorkout(id){
 function editSets(ex,fn,o){
  const p=logP(today()),wo=logOf(today()).workout;if(!wo)return;
  const sets=clone((wo.sets||{})[ex])||[];fn(sets);
- mutate(p,{k:'wSets',ex,sets},o);
+ const op={k:'wSets',ex,sets};if(o&&o.t)op.t=o.t;
+ mutate(p,op,o);
 }
+let finMode='drop';
 /* Rest per exercise: big compounds 2:30, jumps 2:00, everything else 1:30. A tap on the chip cycles presets and is
    remembered per exercise on this phone (forma.rest). */
 const REST_PRESETS=[60,90,120,150,180];
@@ -1116,11 +1154,27 @@ document.addEventListener('click',async e=>{
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
   case 'wStart':if(UI.wDay&&D.id)startWorkout(D.id);break;
-  case 'wFinish':mutate(logP(T),{k:'wFinish',t:new Date().toISOString()},{delay:0});UI.rest=null;break;
-  case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});break;
+  case 'wFinish':finMode='drop';openSheet(finishSheet());break;
+  case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
+  case 'finKeep':closeSheet();break;
+  case 'finSave':{const wo=logOf(T).workout;if(!wo){closeSheet();break}
+   const s0=atTime(T,$('#fin_s').value||hhmm(wo.startedAt));let f0=atTime(T,$('#fin_f').value||hhmm(new Date().toISOString()));if(f0<=s0)f0=new Date(f0.getTime()+864e5);
+   if(f0-s0>6*3600000){toast('That is over 6 hours. Check the times.');break}
+   const st=woStats(wo);if(st.all>st.done)mutate(logP(T),{k:'wFinalize',mode:finMode},{quiet:true});
+   const n=$('#fin_n').value.trim();mutate(logP(T),{k:'wNote',v:n},{quiet:true});
+   mutate(logP(T),{k:'wTimes',s:s0.toISOString(),f:f0.toISOString()},{delay:0});UI.rest=null;closeSheet();toast0('Workout saved.');break}
+  case 'wStarted':openSheet(startedSheet());break;
+  case 'stSave':{const v=$('#st_t').value;if(!v)break;let s0=atTime(T,v);if(s0>new Date())s0=new Date(s0.getTime()-864e5);mutate(logP(T),{k:'wTimes',s:s0.toISOString()},{delay:300});closeSheet();break}
+  case 'wEdit':openSheet(editWoSheet(D.d));break;
+  case 'edSave':{const wo=logOf(D.d).workout;if(!wo)break;const s0=atTime(D.d,$('#ed_s').value||hhmm(wo.startedAt));let f0=atTime(D.d,$('#ed_f').value||hhmm(wo.finishedAt));if(f0<s0)f0=new Date(f0.getTime()+864e5);
+   mutate(logP(D.d),{k:'wNote',v:$('#ed_n').value.trim()},{quiet:true});mutate(logP(D.d),{k:'wTimes',s:s0.toISOString(),f:f0.toISOString()},{delay:300});closeSheet();break}
+  case 'edDel':if(t.dataset.sure){mutate(logP(D.d),{k:'wClear'},{delay:300});closeSheet();toast0('Workout deleted.')}else{t.dataset.sure='1';t.textContent='Tap again to delete'}break;
+  case 'discardYes':mutate(logP(T),{k:'wClear'},{delay:300});UI.rest=null;closeSheet();break;
+  case 'discardNo':closeSheet();break;
+  case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});closeSheet();break;
   case 'wMark':mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
   case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
-  case 'wCancel':if(confirm('Discard this workout and all its sets?'))mutate(logP(T),{k:'wClear'},{delay:300});break;
+  case 'wCancel':openSheet(discardSheet());break;
   case 'cues':UI.cues[D.ex]=!UI.cues[D.ex];render();break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
   case 'rmSet':editSets(D.ex,s=>{if(s.length>1)s.pop()},{delay:2000});break;
@@ -1128,7 +1182,7 @@ document.addEventListener('click',async e=>{
    let on=false;
    editSets(D.ex,s=>{const x=s[+D.i];x.done=!x.done;on=x.done;
     if(on&&!x.w&&!x.r){const pv=prevFor(D.ex),p=pv&&(pv[+D.i]||pv[pv.length-1]);if(p){x.w=p.w;x.r=p.r}else{const wo=logOf(T).workout,slot=program().days.find(d=>d.id===wo.dayId).exercises.find(q=>effEx(wo,q.ex)===D.ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
-   },{delay:2000});
+   },{delay:2000,t:new Date().toISOString()});
    if(on)startRest(restFor(D.ex),(exdb().exercises[D.ex]||{}).n);else{UI.rest=null;}render();break}
   case 'restSet':{const o=LS.get('forma.rest',{}),cur=restFor(D.ex),i=REST_PRESETS.indexOf(cur);o[D.ex]=REST_PRESETS[(i+1)%REST_PRESETS.length];LS.set('forma.rest',o);render();break}
   case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
