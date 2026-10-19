@@ -3,19 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1525">
+<meta name="theme-color" content="#070605">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Forma</title>
 <style>
-:root{--bg:#0E1525;--card:#172033;--card2:#1d2840;--line:#26324b;--txt:#fff;--mut:#8b97b3;--acc:#3B82F6;--acc2:#8B5CF6;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--grad:linear-gradient(90deg,#3B82F6,#8B5CF6)}
+/* Themes. Every colour in the app comes from these tokens. Ember is the default (set by applyTheme); Midnight is the CSS fallback. */
+:root,:root[data-theme="midnight"]{--bg:#0E1525;--card:#172033;--card2:#1d2840;--line:#26324b;--txt:#fff;--mut:#8b97b3;--faint:#4b5673;--soft:#c8d2ec;--inset:#0f1829;--nav:#0b1120;
+ --acc:#3B82F6;--acc2:#8B5CF6;--onacc:#fff;--grad:linear-gradient(90deg,#3B82F6,#8B5CF6);
+ --chip:#22304f;--chiptx:#b9c6e6;--chipb:#1c3566;--chipbtx:#8fbaff;--chipp:#3a2a66;--chipptx:#c4a8ff;--chk:#3a4766;--restline:#2e5bb0;
+ --ok:#22c55e;--okbg:#14532d;--oktx:#bbf7d0;--okin:#10301f;--okline:#1c5a37;--warn:#f59e0b;--warnline:#5a4210;--bad:#ef4444;--badbg:#3a1b24;--badtx:#ff8a8a;--badline:#6b2a3a}
+:root[data-theme="ember"]{--bg:#070605;--card:#121010;--card2:#1b1715;--line:#2a2320;--txt:#f7f2ed;--mut:#9c9088;--faint:#4d4440;--soft:#e6dbd2;--inset:#0b0908;--nav:#050404;
+ --acc:#ff5a1f;--acc2:#e11d48;--onacc:#fff;--grad:linear-gradient(90deg,#ff9a1f,#ff5a1f 45%,#e11d48);
+ --chip:#221b18;--chiptx:#e3cdbd;--chipb:#3a1a0b;--chipbtx:#ffb27a;--chipp:#3d0f19;--chipptx:#ff8fa3;--chk:#4a3a33;--restline:#a8401a;
+ --ok:#22c55e;--okbg:#123d22;--oktx:#bbf7d0;--okin:#0f2717;--okline:#1c5a37;--warn:#fbbf24;--warnline:#6b4a0c;--bad:#ef4444;--badbg:#3a1416;--badtx:#ff8a8a;--badline:#6b2a2a}
+:root[data-theme="daylight"]{--bg:#f3f4f7;--card:#ffffff;--card2:#f1f3f8;--line:#e1e5ee;--txt:#0f172a;--mut:#64748b;--faint:#c0c8d6;--soft:#334155;--inset:#eef1f6;--nav:#ffffff;
+ --acc:#4f46e5;--acc2:#0ea5e9;--onacc:#fff;--grad:linear-gradient(90deg,#4f46e5,#0ea5e9);
+ --chip:#eef1f6;--chiptx:#334155;--chipb:#e0e7ff;--chipbtx:#3730a3;--chipp:#e0f2fe;--chipptx:#075985;--chk:#cbd5e1;--restline:#a5b4fc;
+ --ok:#16a34a;--okbg:#dcfce7;--oktx:#166534;--okin:#f0fdf4;--okline:#86efac;--warn:#d97706;--warnline:#fcd34d;--bad:#dc2626;--badbg:#fee2e2;--badtx:#b91c1c;--badline:#fca5a5}
+:root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
+:root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
+.thm button.on{border-color:var(--acc)}
+.thm .sw{height:44px;border-radius:9px;margin-bottom:6px;position:relative;overflow:hidden}
+.thm .sw i{position:absolute;left:8px;right:8px;bottom:8px;height:6px;border-radius:3px}
+.thm b{font-size:13px;display:block}.thm span{font-size:11px;color:var(--mut)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
 body{min-height:100vh}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-input,select{font:inherit;color:var(--txt);background:#0f1829;border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;min-height:46px;outline:none}
+input,select{font:inherit;color:var(--txt);background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;min-height:46px;outline:none}
 input:focus{border-color:var(--acc)}
 .wrap{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:8px;padding:14px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px}
@@ -31,10 +52,10 @@ svg{display:block}
 .row{display:flex;align-items:center;gap:10px}.sp{flex:1;min-width:0}
 .mut{color:var(--mut)}.sm{font-size:13px}.xs{font-size:12px}
 .big{font-size:30px;font-weight:700;letter-spacing:-.5px}
-.btn{background:var(--acc);color:#fff;border-radius:14px;min-height:46px;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.btn.full{width:100%}.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}.btn.red{background:#3a1b24;color:#ff8a8a}
+.btn{background:var(--acc);color:var(--onacc);border-radius:14px;min-height:46px;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.full{width:100%}.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}.btn.red{background:var(--badbg);color:var(--badtx)}
 .btn.sm{min-height:36px;padding:0 12px;border-radius:10px;font-size:13px}
-.bar{height:10px;border-radius:6px;background:#0f1829;overflow:hidden;margin:10px 0}
+.bar{height:10px;border-radius:6px;background:var(--inset);overflow:hidden;margin:10px 0}
 .bar>i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .3s}
 .bar.over>i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
 .mac{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
@@ -42,35 +63,35 @@ svg{display:block}
 .ring{position:relative;width:84px;height:84px;margin:6px 0 4px}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:8;stroke-linecap:round}
-.ring .tr{stroke:#0f1829}.ring .pg{stroke:url(#ringGrad);transition:stroke-dashoffset .3s}
+.ring .tr{stroke:var(--inset)}.ring .pg{stroke:url(#ringGrad);transition:stroke-dashoffset .3s}
 .ring.over .pg{stroke:url(#ringOver)}
 .ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1}
 .ring .v small{display:block;font-size:10px;font-weight:500;color:var(--mut);margin-top:2px}
-.chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:#22304f;color:#b9c6e6;font-size:12px;font-weight:600;white-space:nowrap}
-.chip.b{background:#1c3566;color:#8fbaff}.chip.p{background:#3a2a66;color:#c4a8ff}
+.chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:var(--chip);color:var(--chiptx);font-size:12px;font-weight:600;white-space:nowrap}
+.chip.b{background:var(--chipb);color:var(--chipbtx)}.chip.p{background:var(--chipp);color:var(--chipptx)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .week{display:flex;justify-content:space-between;margin:2px 0 14px}
 .wd{width:12.5%;min-width:40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mut);font-size:12px;min-height:60px}
-.wd b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff;font-weight:500;border:2px solid transparent;position:relative}
-.wd.today b{border-color:var(--acc)}.wd.sel b{background:var(--acc);border-color:var(--acc)}
+.wd b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:var(--txt);font-weight:500;border:2px solid transparent;position:relative}
+.wd.today b{border-color:var(--acc)}.wd.sel b{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .wd i{width:5px;height:5px;border-radius:50%;background:var(--mut);position:absolute;bottom:2px}
-.wd.sel i{background:#fff}
+.wd.sel i{background:var(--onacc)}
 .wd small{font-size:10px;color:var(--mut);max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1}
-.wd.done b{background:#14532d;border-color:#22c55e}.wd.done.sel b{background:var(--acc);border-color:var(--acc)}
-.wd.miss b{border-color:#3a1b24}.wd.rest b{color:var(--mut)}
+.wd.done b{background:var(--okbg);border-color:var(--ok);color:var(--oktx)}.wd.done.sel b{background:var(--acc);border-color:var(--acc)}
+.wd.miss b{border-color:var(--badline)}.wd.rest b{color:var(--mut)}
 .week.w2 .wd{min-height:74px}
 .mnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal .dh{font-size:11px;color:var(--mut);text-align:center;padding:2px 0 4px}
-.cal .c{aspect-ratio:1;border-radius:10px;background:#0f1829;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c8d2ec;border:2px solid transparent;width:100%;min-height:40px}
-.cal .c.fut{color:#4b5673}.cal .c.today{border-color:var(--acc)}.cal .c.sel{border-color:#fff}
-.cal .c.hit{background:#14532d;color:#bbf7d0}.cal .c.part{background:#1c3566;color:#c8d2ec}
+.cal .c{aspect-ratio:1;border-radius:10px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:var(--soft);border:2px solid transparent;width:100%;min-height:40px}
+.cal .c.fut{color:var(--faint)}.cal .c.today{border-color:var(--acc)}.cal .c.sel{border-color:var(--txt)}
+.cal .c.hit{background:var(--okbg);color:var(--oktx)}.cal .c.part{background:var(--chipb);color:var(--chipbtx)}
 .cal .ds{display:flex;gap:3px;height:5px}.cal .ds i{width:5px;height:5px;border-radius:50%;display:block}
 .stk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 12px}
-.stk div{background:#0f1829;border-radius:12px;padding:10px 6px;text-align:center}.stk b{font-size:22px;display:block;line-height:1.1}.stk span{font-size:11px;color:var(--mut)}
+.stk div{background:var(--inset);border-radius:12px;padding:10px 6px;text-align:center}.stk b{font-size:22px;display:block;line-height:1.1}.stk span{font-size:11px;color:var(--mut)}
 .lg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-top:10px}.lg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.card.warn{border-color:#5a4210}
-.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0b1120;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.card.warn{border-color:var(--warnline)}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--nav);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabs div{max-width:480px;margin:0 auto;display:flex}
 .tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11px;color:var(--mut);min-height:56px}
 .tabs button.on{color:var(--acc)}
@@ -87,13 +108,13 @@ svg{display:block}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);min-height:52px;width:100%;text-align:left}
 .item .n{font-weight:500;overflow-wrap:anywhere}
 .item .r{text-align:right;white-space:nowrap}
-.tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#3a2a66;color:#c4a8ff;margin-left:6px;vertical-align:middle}
-.seg{display:flex;background:#0f1829;border-radius:12px;padding:3px;margin-bottom:12px}
+.tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--chipp);color:var(--chipptx);margin-left:6px;vertical-align:middle}
+.seg{display:flex;background:var(--inset);border-radius:12px;padding:3px;margin-bottom:12px}
 .seg button{flex:1;min-height:36px;border-radius:10px;color:var(--mut);font-weight:600;font-size:14px}
-.seg button.on{background:var(--card2);color:#fff}
+.seg button.on{background:var(--card);color:var(--txt);box-shadow:0 1px 2px rgba(0,0,0,.15)}
 .dchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
 .dchips button{flex:none;padding:0 14px;min-height:40px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--mut);font-weight:600;font-size:14px}
-.dchips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.dchips button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .ex{padding:12px 0;border-top:1px solid var(--line)}.ex:first-of-type{border:0}
 .lbar{position:sticky;top:64px;z-index:15;background:var(--bg);padding:6px 0 8px}
 .set{display:grid;grid-template-columns:34px 1fr 74px 74px 46px;gap:8px;align-items:center;margin-top:8px}
@@ -101,27 +122,27 @@ svg{display:block}
 .set .sn{text-align:center;font-weight:600;color:var(--mut)}
 .set input{text-align:center;padding:8px 4px;min-height:44px}
 .set .pv{color:var(--mut);font-size:13px;text-align:center;min-height:44px;display:grid;place-items:center}
-.chk{width:44px;height:44px;border-radius:50%;border:2px solid #3a4766;display:grid;place-items:center;color:transparent}
+.chk{width:44px;height:44px;border-radius:50%;border:2px solid var(--chk);display:grid;place-items:center;color:transparent}
 .chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
-.set.dn input{background:#10301f;border-color:#1c5a37}
-.cues{background:#0f1829;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:#c8d2ec}
+.set.dn input{background:var(--okin);border-color:var(--okline)}
+.cues{background:var(--inset);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--soft)}
 .cues li{margin:4px 0 4px 16px}
 #rest{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:25}
 #rest>div{max-width:480px;margin:0 auto;padding:0 16px}
-#rest .in{background:#1c3566;border:1px solid #2e5bb0;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+#rest .in{background:var(--chipb);border:1px solid var(--restline);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:10px}
 #rest .bar{margin:0;flex:1;height:8px}
 #ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 #sheet{background:var(--card);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
 #sheet h2{margin:0 0 12px;font-size:19px}
 .fld{margin-bottom:10px}.fld label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#0f1829;flex:none}
-.phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:#0f1829;margin-bottom:8px;display:block}
+.ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--inset);flex:none}
+.phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:var(--inset);margin-bottom:8px;display:block}
 #ov.full{align-items:center;background:rgba(0,0,0,.92)}#ov.full img{max-width:100%;max-height:90vh;object-fit:contain}
-.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2a1620;border:1px solid #6b2a3a;color:#ffb4b4;padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--badbg);border:1px solid var(--badline);color:var(--badtx);padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
 .empty{text-align:center;color:var(--mut);padding:18px 8px;font-size:14px}
 .setup{padding-top:40px}.setup h1{font-size:30px;margin:0 0 6px}
-.setup ol{padding-left:20px;color:#c8d2ec}.setup li{margin:6px 0}
+.setup ol{padding-left:20px;color:var(--soft)}.setup li{margin:6px 0}
 a{color:var(--acc)}
 .lg{display:flex;gap:12px;font-size:12px;color:var(--mut);margin-top:6px}
 .kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
@@ -150,13 +171,20 @@ const rnd=n=>Math.round(n);
 const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return (h?h+':'+pad(m):m)+':'+pad(s%60)};
 const DEMO=/[?&]demo=1/.test(location.search);
+const THEMES=[['ember','Ember','Black, orange, red','#070605','#121010','linear-gradient(90deg,#ff9a1f,#ff5a1f 45%,#e11d48)'],
+ ['midnight','Midnight','Navy, blue, violet','#0E1525','#172033','linear-gradient(90deg,#3B82F6,#8B5CF6)'],
+ ['daylight','Daylight','Light, indigo, sky','#f3f4f7','#ffffff','linear-gradient(90deg,#4f46e5,#0ea5e9)']];
+function applyTheme(id){const t=THEMES.find(x=>x[0]===id)||THEMES[0];document.documentElement.dataset.theme=t[0];
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t[3]);
+ document.documentElement.style.colorScheme=t[0]==='daylight'?'light':'dark'}
+try{applyTheme(JSON.parse(localStorage.getItem('forma.theme')||'"ember"'))}catch(e){applyTheme('ember')}
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const IC={
  today:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  food:'<path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 21V3c-3 2-4 6-4 9h4"/>',
  workout:'<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
  progress:'<path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/>',
- gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+ gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
@@ -443,7 +471,7 @@ function weekDates(d){const ws=(profile().weekStart||0);const dow=parseD(d).getD
 const hasData=d=>{const f=view(foodP(d)),l=view(logP(d));return !!((f&&f.items.length)||(l&&(l.steps!=null||l.weight!=null||l.workout)))};
 
 /* ---------- Macro rings ---------- */
-const RING_DEFS=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient><linearGradient id="ringOver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs></svg>`;
+const RING_DEFS=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc2)"/></linearGradient><linearGradient id="ringOver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs></svg>`;
 function ring(l,v,g,opt){
  opt=opt||{};const r=36,c=2*Math.PI*r,p=g>0?Math.min(1,v/g):0,over=opt.over!==false&&v>g,shown=opt.remaining?Math.max(0,g-v):v;
  return `<div><div class="ring ${over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/><circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div></div>`}
@@ -467,12 +495,12 @@ function calSheet(){
  const m=UI.calM,T=today();
  const sF=streakOf(d=>dayFlags(d).food),sS=streakOf(d=>dayFlags(d).hit),sW=streakOf(d=>dayFlags(d).weight);
  const dot=(on,col)=>on?`<i style="background:${col}"></i>`:'';
- const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds">${dot(f.food,'#3B82F6')}${dot(f.wo,'#8B5CF6')}${dot(f.hit,'#22c55e')}${dot(f.weight,'#f59e0b')}</span>`:''}},'calDay');
+ const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds">${dot(f.food,'var(--acc)')}${dot(f.wo,'var(--acc2)')}${dot(f.hit,'var(--ok)')}${dot(f.weight,'var(--warn)')}</span>`:''}},'calDay');
  return `<h2>Calendar</h2>
  <div class="stk"><div><b>${sF}</b><span>day food streak</span></div><div><b>${sS}</b><span>day step streak</span></div><div><b>${sW}</b><span>day weigh-in streak</span></div></div>
  <div class="mnav"><button class="ib" data-act="calNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="calNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>
  ${grid}
- <div class="lg"><span><i style="background:#3B82F6"></i>Food logged</span><span><i style="background:#8B5CF6"></i>Workout done</span><span><i style="background:#22c55e"></i>Step goal hit</span><span><i style="background:#f59e0b"></i>Weighed in</span></div>
+ <div class="lg"><span><i style="background:var(--acc)"></i>Food logged</span><span><i style="background:var(--acc2)"></i>Workout done</span><span><i style="background:var(--ok)"></i>Step goal hit</span><span><i style="background:var(--warn)"></i>Weighed in</span></div>
  <div class="xs mut" style="margin-top:10px">Tap a day to open it.</div>`;
 }
 
@@ -493,14 +521,14 @@ function todayView(){
  const sStk=streakOf(x=>dayFlags(x).hit);
  const needW=isT&&lg.weight==null;
  return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>
- <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'#fff':'#ff8a8a'}">${Math.abs(rnd(rem))}</div></div></div>
+ <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'var(--txt)':'var(--badtx)'}">${Math.abs(rnd(rem))}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
  ${t.kcal===0?'<div class="xs mut" style="margin-top:10px">Nothing logged yet. Open the Food tab to add a meal or ask Claude.</div>':''}</div>
  ${wcard}
- <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right">${sStk>0?`<div class="chip" style="background:#14532d;color:#bbf7d0;margin-bottom:4px">${sStk} day streak</div>`:''}<div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
+ <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right">${sStk>0?`<div class="chip" style="background:var(--okbg);color:var(--oktx);margin-bottom:4px">${sStk} day streak</div>`:''}<div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
  <div class="bar"><i style="width:${Math.min(100,(st||0)/sg*100)}%"></i></div></div>
- <button class="card ${needW?'warn':''}" style="width:100%;text-align:left;display:block" data-act="weightEdit"><div class="row"><div class="sp"><div class="xs ${needW?'':'mut'}" style="${needW?'color:#f59e0b':''}">${needW?'Weight: not logged yet today':'Weight'}</div><div class="big">${lg.weight==null?'<span class="mut" style="font-size:18px;font-weight:600">Log weight</span>':lg.weight+' <span class="mut sm" style="font-weight:400">kg</span>'}</div></div><div class="mut sm">Start ${pr.startWeight} kg</div></div></button>`;
+ <button class="card ${needW?'warn':''}" style="width:100%;text-align:left;display:block" data-act="weightEdit"><div class="row"><div class="sp"><div class="xs ${needW?'':'mut'}" style="${needW?'color:var(--warn)':''}">${needW?'Weight: not logged yet today':'Weight'}</div><div class="big">${lg.weight==null?'<span class="mut" style="font-size:18px;font-weight:600">Log weight</span>':lg.weight+' <span class="mut sm" style="font-weight:400">kg</span>'}</div></div><div class="mut sm">Start ${pr.startWeight} kg</div></div></button>`;
 }
 
 /* ---------- Food ---------- */
@@ -565,7 +593,7 @@ function workoutView(){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
    return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(x=>(x.w?x.w+' x ':'')+x.r).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
-  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:#14532d;color:#bbf7d0;vertical-align:middle">Done</span></h3><div class="mut sm">${ns} sets - ${mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
+  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${ns} sets - ${mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
   <div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`;
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
@@ -617,10 +645,10 @@ setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.
 /* ---------- Progress ---------- */
 function barChart(vals,labels,target,fmt){
  const W=340,H=150,pl=4,pb=18,n=vals.length,mx=Math.max(target||0,...vals,1)*1.1,bw=(W-pl*2)/n;
- let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><defs><linearGradient id="g" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>`;
- vals.forEach((v,i)=>{const h=v==null?0:v/mx*(H-pb-8),x=pl+i*bw+bw*.15;if(v!=null&&v>0)s+=`<rect x="${x}" y="${H-pb-h}" width="${bw*.7}" height="${h}" rx="3" fill="url(#g)"/>`;else s+=`<rect x="${x}" y="${H-pb-2}" width="${bw*.7}" height="2" rx="1" fill="#26324b"/>`;
-  s+=`<text x="${x+bw*.35}" y="${H-4}" font-size="9" fill="#8b97b3" text-anchor="middle">${labels[i]}</text>`});
- if(target){const y=H-pb-target/mx*(H-pb-8);s+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="#f59e0b" stroke-dasharray="4 3"/><text x="${W-2}" y="${y-3}" font-size="9" fill="#f59e0b" text-anchor="end">${fmt?fmt(target):target}</text>`}
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><defs><linearGradient id="g" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc2)"/></linearGradient></defs>`;
+ vals.forEach((v,i)=>{const h=v==null?0:v/mx*(H-pb-8),x=pl+i*bw+bw*.15;if(v!=null&&v>0)s+=`<rect x="${x}" y="${H-pb-h}" width="${bw*.7}" height="${h}" rx="3" fill="url(#g)"/>`;else s+=`<rect x="${x}" y="${H-pb-2}" width="${bw*.7}" height="2" rx="1" style="fill:var(--line)"/>`;
+  s+=`<text x="${x+bw*.35}" y="${H-4}" font-size="9" style="fill:var(--mut)" text-anchor="middle">${labels[i]}</text>`});
+ if(target){const y=H-pb-target/mx*(H-pb-8);s+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" style="stroke:var(--warn)" stroke-dasharray="4 3"/><text x="${W-2}" y="${y-3}" font-size="9" style="fill:var(--warn)" text-anchor="end">${fmt?fmt(target):target}</text>`}
  return s+'</svg>';
 }
 function lineChart(pts,startW){
@@ -629,9 +657,9 @@ function lineChart(pts,startW){
  const X=i=>px+i/29*(W-px*2),Y=v=>H-py-(v-mn)/(mx-mn)*(H-py*2);
  const path=pts.map((p,i)=>(i?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
  const ys0=Y(startW);
- return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><line x1="0" x2="${W}" y1="${ys0}" y2="${ys0}" stroke="#26324b" stroke-dasharray="4 3"/><text x="${W-2}" y="${ys0-3}" font-size="9" fill="#8b97b3" text-anchor="end">start ${startW}</text>
- <path d="${path}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" fill="#8B5CF6"/>`).join('')}
- <text x="${px}" y="${H-3}" font-size="9" fill="#8b97b3">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" fill="#8b97b3" text-anchor="end">today</text></svg>`;
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img"><line x1="0" x2="${W}" y1="${ys0}" y2="${ys0}" style="stroke:var(--line)" stroke-dasharray="4 3"/><text x="${W-2}" y="${ys0-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">start ${startW}</text>
+ <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3" style="fill:var(--acc2)"/>`).join('')}
+ <text x="${px}" y="${H-3}" font-size="9" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="9" style="fill:var(--mut)" text-anchor="end">today</text></svg>`;
 }
 function progressView(){
  const pr=profile(),T=today();
@@ -649,7 +677,7 @@ function progressView(){
  /* streak */
  let streak=0,i=hasData(T)?0:1;for(;i<31;i++){if(hasData(addDays(T,-i)))streak++;else break}
  return header('Progress')+`
- <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'#22c55e':'#f59e0b'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
+ <div class="card"><div class="row"><div class="sp"><h3>Weight</h3><div class="mut sm">Last 30 days</div></div><div style="text-align:right"><b style="font-size:20px">${now==null?'-':now+' kg'}</b><div class="xs ${delta<=0?'':'mut'}" style="color:${delta<=0?'var(--ok)':'var(--warn)'}">${now==null?'':(delta>0?'+':'')+delta.toFixed(1)+' since start ('+pr.startWeight+')'}</div></div></div>${wcard}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Steps</h3><div class="mut sm">Last 14 days, goal ${pr.stepGoal.toLocaleString('en-US')}</div></div><div style="text-align:right"><b style="font-size:20px">${savg.toLocaleString('en-US')}</b><div class="xs mut">average</div></div></div>${sd.length?barChart(sv,sl,pr.stepGoal,v=>v/1000+'k'):'<div class="empty">No steps logged. Add them from the Today tab.</div>'}</div>
  <div class="card"><div class="row"><div class="sp"><h3>Calories</h3><div class="mut sm">Last 7 days, target ${pr.targets.kcal}</div></div><div style="text-align:right"><b style="font-size:20px">${logged}/7</b><div class="xs mut">days logged</div></div></div>${logged?barChart(cv,cl,pr.targets.kcal):'<div class="empty">No meals logged this week. Add food or ask Claude.</div>'}</div>
  ${stepsCalCard()}
@@ -664,7 +692,7 @@ function stepsCalCard(){
  return `<div class="card"><div class="row"><div class="sp"><h3>Step streak</h3><div class="mut sm">Days at ${pr.stepGoal.toLocaleString('en-US')} or more</div></div></div>
  <div class="stk"><div><b>${cur}</b><span>current streak</span></div><div><b>${best}</b><span>best (90 days)</span></div><div><b>${hits}</b><span>hit this month</span></div></div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}
- <div class="lg"><span><i style="background:#14532d"></i>Goal hit</span><span><i style="background:#1c3566"></i>Logged, under goal</span></div></div>`;
+ <div class="lg"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>Goal hit</span><span><i style="background:var(--chipb)"></i>Logged, under goal</span></div></div>`;
 }
 
 /* ---------- Setup + settings ---------- */
@@ -679,7 +707,7 @@ function setupView(){
  <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>forma</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
  <div class="card"><h3>Step 2: paste it here</h3>
  <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
- <div id="s_err" class="sm" style="color:#ff8a8a;min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
+ <div id="s_err" class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
  <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details></div>`;
 }
 async function setupSave(){
@@ -698,14 +726,16 @@ async function setupSave(){
 }
 function settingsSheet(){
  const pr=profile();
+ const cur=document.documentElement.dataset.theme;
  return `<h2>Settings</h2>
+ <div class="fld"><label>Style</label><div class="thm">${THEMES.map(([id,n,d,bg,card,g])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}"><div class="sw" style="background:${bg};border:1px solid rgba(128,128,128,.25)"><i style="background:${g}"></i><i style="background:${card};bottom:20px;right:30%;height:8px"></i></div><b>${n}</b><span>${d}</span></button>`).join('')}</div></div>
  <div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div>
  <div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div>
  ${pr?`<div class="kv"><span class="mut">Calories</span><span>${pr.targets.kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div><div class="kv"><span class="mut">Step goal</span><span>${pr.stepGoal.toLocaleString('en-US')}</span></div><div class="kv"><span class="mut">Units</span><span>${esc(pr.units)}</span></div>
  <div class="xs mut" style="margin:8px 0 12px">Ask Claude to change targets, step goal or units. They live in profile.json.</div>`:''}
  <div class="row" style="flex-wrap:wrap"><button class="btn sp" data-act="cfgSave">Save repo</button><button class="btn ghost sp" data-act="force">Force refresh</button></div>
  <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
- <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.1.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.2.0${DEMO?' (demo mode)':''}</div>`;
 }
 function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2><div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">Phones do not let web pages read the step counter, so type the number from your phone or ask Claude to log it from a screenshot.</div><button class="btn full" data-act="stepsSave">Save</button>`}
 function weightSheet(){const w=logOf(UI.date).weight;return `<h2>Weight</h2><div class="fld"><label>Kilograms</label><input id="v_weight" inputmode="decimal" value="${w==null?'':w}" placeholder="85.0"></div><button class="btn full" data-act="weightSave">Save</button>`}
@@ -735,6 +765,7 @@ document.addEventListener('click',async e=>{
   case 'refresh':refresh(true);break;
   case 'retry':if(UI.sync==='error'||UI.sync==='offline'){toast(UI.syncMsg||'Retrying...');await flush();refresh()}break;
   case 'settings':openSheet(settingsSheet());break;
+  case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
   case 'setupSave':setupSave();break;
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
   case 'force':closeSheet();refresh(true);break;
@@ -795,7 +826,7 @@ document.addEventListener('change',async e=>{
  catch(x){toast('Could not read that photo.')}
  e.target.value='';
 });
-function toast0(m){const t=document.createElement('div');t.className='toast';t.style.cssText+=';background:#12301f;border-color:#1c5a37;color:#9be8b5';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
+function toast0(m){const t=document.createElement('div');t.className='toast';t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
