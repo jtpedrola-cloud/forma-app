@@ -145,7 +145,8 @@ let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:
 let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});
 if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
-const UI={tab:'today',date:today(),wDay:null,mode:'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
+const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
+const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
 const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
 const profile=()=>base(P_PROFILE),program=()=>base(P_PROG),exdb=()=>base(P_EX);
@@ -600,10 +601,10 @@ document.addEventListener('click',async e=>{
  if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=D.m;openSheet(foodSheet(null,D.m));return}
  const T=today();
  switch(a){
-  case 'tab':UI.tab=D.t;window.scrollTo(0,0);render();break;
+  case 'tab':UI.tab=D.t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
   case 'day':UI.date=D.d;loadDay(D.d);render();break;
   case 'dnav':UI.date=addDays(UI.date,+D.n);loadDay(UI.date);render();break;
-  case 'mode':UI.mode=D.m;render();break;
+  case 'mode':UI.mode=D.m;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();break;
   case 'refresh':refresh(true);break;
   case 'retry':if(UI.sync==='error'||UI.sync==='offline'){toast(UI.syncMsg||'Retrying...');await flush();refresh()}break;
   case 'settings':openSheet(settingsSheet());break;
