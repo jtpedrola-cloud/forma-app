@@ -13,15 +13,15 @@
 /* Themes. Every colour in the app comes from these tokens. Ember is the default (set by applyTheme); Midnight is the CSS fallback. */
 :root,:root[data-theme="midnight"]{--bg:#0E1525;--card:#172033;--card2:#1d2840;--line:#26324b;--txt:#fff;--mut:#8b97b3;--faint:#4b5673;--soft:#c8d2ec;--inset:#0f1829;--nav:#0b1120;
  --acc:#3B82F6;--acc2:#8B5CF6;--onacc:#fff;--grad:linear-gradient(90deg,#3B82F6,#8B5CF6);
- --chip:#22304f;--chiptx:#b9c6e6;--chipb:#1c3566;--chipbtx:#8fbaff;--chipp:#3a2a66;--chipptx:#c4a8ff;--chipc:#153a3a;--chipctx:#7ee0d0;--chipf:#3d3011;--chipftx:#f5c96a;--chk:#3a4766;--restline:#2e5bb0;
+ --chip:#22304f;--chiptx:#b9c6e6;--chipb:#1c3566;--chipbtx:#8fbaff;--chipp:#3a2a66;--chipptx:#c4a8ff;--wo:#a78bfa;--sport:#22d3ee;--chipc:#153a3a;--chipctx:#7ee0d0;--chipf:#3d3011;--chipftx:#f5c96a;--chk:#3a4766;--restline:#2e5bb0;
  --ok:#22c55e;--okbg:#14532d;--oktx:#bbf7d0;--okin:#10301f;--okline:#1c5a37;--warn:#f59e0b;--warnline:#5a4210;--bad:#ef4444;--badbg:#3a1b24;--badtx:#ff8a8a;--badline:#6b2a3a}
 :root[data-theme="ember"]{--bg:#070605;--card:#121010;--card2:#1b1715;--line:#2a2320;--txt:#f7f2ed;--mut:#9c9088;--faint:#4d4440;--soft:#e6dbd2;--inset:#0b0908;--nav:#050404;
  --acc:#ff5a1f;--acc2:#e11d48;--onacc:#fff;--grad:linear-gradient(90deg,#ff9a1f,#ff5a1f 45%,#e11d48);
- --chip:#221b18;--chiptx:#e3cdbd;--chipb:#3a1a0b;--chipbtx:#ffb27a;--chipp:#3d0f19;--chipptx:#ff8fa3;--chipc:#2a2418;--chipctx:#e8d3a8;--chipf:#3a2a0a;--chipftx:#ffd166;--chk:#4a3a33;--restline:#a8401a;
+ --chip:#221b18;--chiptx:#e3cdbd;--chipb:#3a1a0b;--chipbtx:#ffb27a;--chipp:#3d0f19;--chipptx:#ff8fa3;--wo:#c084fc;--sport:#22d3ee;--chipc:#2a2418;--chipctx:#e8d3a8;--chipf:#3a2a0a;--chipftx:#ffd166;--chk:#4a3a33;--restline:#a8401a;
  --ok:#22c55e;--okbg:#123d22;--oktx:#bbf7d0;--okin:#0f2717;--okline:#1c5a37;--warn:#fbbf24;--warnline:#6b4a0c;--bad:#ef4444;--badbg:#3a1416;--badtx:#ff8a8a;--badline:#6b2a2a}
 :root[data-theme="daylight"]{--bg:#f3f4f7;--card:#ffffff;--card2:#f1f3f8;--line:#e1e5ee;--txt:#0f172a;--mut:#64748b;--faint:#c0c8d6;--soft:#334155;--inset:#eef1f6;--nav:#ffffff;
  --acc:#4f46e5;--acc2:#0ea5e9;--onacc:#fff;--grad:linear-gradient(90deg,#4f46e5,#0ea5e9);
- --chip:#eef1f6;--chiptx:#334155;--chipb:#e0e7ff;--chipbtx:#3730a3;--chipp:#e0f2fe;--chipptx:#075985;--chipc:#dcfce7;--chipctx:#166534;--chipf:#fef3c7;--chipftx:#92400e;--chk:#cbd5e1;--restline:#a5b4fc;
+ --chip:#eef1f6;--chiptx:#334155;--chipb:#e0e7ff;--chipbtx:#3730a3;--chipp:#e0f2fe;--chipptx:#075985;--wo:#7c3aed;--sport:#0891b2;--chipc:#dcfce7;--chipctx:#166534;--chipf:#fef3c7;--chipftx:#92400e;--chk:#cbd5e1;--restline:#a5b4fc;
  --ok:#16a34a;--okbg:#dcfce7;--oktx:#166534;--okin:#f0fdf4;--okline:#86efac;--warn:#d97706;--warnline:#fcd34d;--bad:#dc2626;--badbg:#fee2e2;--badtx:#b91c1c;--badline:#fca5a5}
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -36,6 +36,25 @@
 .cl:first-of-type{border-top:0}.cl .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--chk);display:grid;place-items:center;flex:none;color:transparent}
 .cl.ok .ck{background:var(--ok);border-color:var(--ok);color:#fff}.cl.ok .n{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--faint)}
 .cl .n{flex:1;font-weight:500}.cl .s{font-size:12px;color:var(--mut);white-space:nowrap}
+.tlimg{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;background:var(--inset);display:block}
+input[type=range]{min-height:auto;padding:0;border:0;background:none;accent-color:var(--acc);width:100%;height:32px}
+.seg.sm button{min-height:30px;font-size:13px}
+#cam{position:fixed;inset:0;background:#000;z-index:70;display:flex;flex-direction:column;color:#fff}
+#cam .vw{position:relative;flex:1;overflow:hidden;background:#000}
+#cam video,#cam .gh,#cam .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam .gh{pointer-events:none}
+#cam .gl{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(50% - .5px),rgba(255,255,255,.25) 50%,transparent calc(50% + .5px)),linear-gradient(transparent calc(33.3% - .5px),rgba(255,255,255,.18) 33.3%,transparent calc(33.3% + .5px),transparent calc(66.6% - .5px),rgba(255,255,255,.18) 66.6%,transparent calc(66.6% + .5px))}
+#cam .top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 18px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#cam .top b{flex:1;text-align:center;font-size:15px}
+#cam .cb{min-width:44px;height:44px;border-radius:22px;background:rgba(0,0,0,.45);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;padding:0 10px}
+#cam .cb.on{background:var(--acc)}
+#cam .bot{background:#000;padding:10px 16px calc(14px + env(safe-area-inset-bottom))}
+#cam .pz{display:flex;gap:6px;justify-content:center;margin-bottom:8px}
+#cam .pz button{padding:0 14px;min-height:34px;border-radius:17px;background:#1a1a1a;color:#bbb;font-weight:600;font-size:13px}
+#cam .pz button.on{background:#fff;color:#000}
+#cam .shut{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18)}
+#cam .shut:active{background:rgba(255,255,255,.5)}
+#cam .cd{position:absolute;inset:0;display:grid;place-items:center;font-size:120px;font-weight:800;text-shadow:0 4px 30px rgba(0,0,0,.6);pointer-events:none}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -199,7 +218,7 @@ const IC={
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
- left:'<path d="M15 5l-7 7 7 7"/>',right:'<path d="M9 5l7 7-7 7"/>'
+ left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
 };
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 
@@ -231,6 +250,8 @@ function applyOp(d,o){
   case 'wFinish':w().finishedAt=o.t;break;
   case 'wReopen':w().finishedAt=null;break;
   case 'wClear':d.workout=null;break;
+  case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
+  case 'actDel':d.activities=(d.activities||[]).filter(a=>a.id!==o.id);if(!d.activities.length)delete d.activities;break;
  }
  return d;
 }
@@ -313,7 +334,7 @@ function photoURL(p){
  if(!p)return '';
  if(PHOTOS[p])return PHOTOS[p];
  if(DB.photos[p])return 'data:image/jpeg;base64,'+DB.photos[p];
- if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
+ if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);{const g=document.querySelector('#cam .gh');if(g&&g.dataset.p===p)camUI()}if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
  return '';
 }
 async function flushPhotos(){
@@ -492,7 +513,12 @@ const ym=d=>d.slice(0,7);
 const monthDates=m=>{const [y,mo]=m.split('-').map(Number);const n=new Date(y,mo,0).getDate();return Array.from({length:n},(_,i)=>y+'-'+pad(mo)+'-'+pad(i+1))};
 const shiftMonth=(m,n)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
 const monthName=m=>{const [y,mo]=m.split('-').map(Number);return MONTHS[mo-1]+' '+y};
-function dayFlags(d){const l=logOf(d),g=profile().stepGoal;return {food:food(d).items.length>0,wo:!!(l.workout&&l.workout.finishedAt),steps:l.steps!=null,hit:l.steps!=null&&l.steps>=g,weight:l.weight!=null}}
+const ACTS=[['basketball','Basketball',6.5],['badminton','Badminton',5.5],['volleyball','Volleyball',4],['tennis','Tennis',7],['pickleball','Pickleball',4.5],['football','Football',7],['running','Running',9],['cycling','Cycling',7],['swimming','Swimming',7],['hiking','Hiking',6],['boxing','Boxing',7.8],['other','Other',5]];
+const actName=k=>(ACTS.find(a=>a[0]===k)||[k,k.charAt(0).toUpperCase()+k.slice(1)])[1];
+const actKcal=(k,min,w)=>Math.round(((ACTS.find(a=>a[0]===k)||ACTS[ACTS.length-1])[2]-1)*w*min/60);
+const actsOf=d=>logOf(d).activities||[];
+const dayActKcal=d=>actsOf(d).reduce((a,x)=>a+(num(x.kcal)||0),0);
+function dayFlags(d){const l=logOf(d),g=profile().stepGoal;return {sport:(l.activities||[]).length>0,food:food(d).items.length>0,wo:!!(l.workout&&l.workout.finishedAt),steps:l.steps!=null,hit:l.steps!=null&&l.steps>=g,weight:l.weight!=null}}
 function streakOf(fn){const T=today();let n=0,i=fn(T)?0:1;for(;i<400;i++){if(fn(addDays(T,-i)))n++;else break}return n}
 function bestStreak(fn,days){let b=0,c=0;for(let i=days-1;i>=0;i--){if(fn(addDays(today(),-i))){c++;if(c>b)b=c}else c=0}return b}
 function monthGrid(m,cell,act){
@@ -506,12 +532,12 @@ function calSheet(){
  const m=UI.calM,T=today();
  const sF=streakOf(d=>dayFlags(d).food),sS=streakOf(d=>dayFlags(d).hit),sW=streakOf(d=>dayFlags(d).weight);
  const dot=(on,col)=>on?`<i style="background:${col}"></i>`:'';
- const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds">${dot(f.food,'var(--acc)')}${dot(f.wo,'var(--acc2)')}${dot(f.hit,'var(--ok)')}${dot(f.weight,'var(--warn)')}</span>`:''}},'calDay');
+ const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight||f.sport;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds">${dot(f.food,'var(--acc)')}${dot(f.wo,'var(--wo)')}${dot(f.sport,'var(--sport)')}${dot(f.hit,'var(--ok)')}${dot(f.weight,'var(--warn)')}</span>`:''}},'calDay');
  return `<h2>Calendar</h2>
  <div class="stk"><div><b>${sF}</b><span>day food streak</span></div><div><b>${sS}</b><span>day step streak</span></div><div><b>${sW}</b><span>day weigh-in streak</span></div></div>
  <div class="mnav"><button class="ib" data-act="calNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="calNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>
  ${grid}
- <div class="lg"><span><i style="background:var(--acc)"></i>Food logged</span><span><i style="background:var(--acc2)"></i>Workout done</span><span><i style="background:var(--ok)"></i>Step goal hit</span><span><i style="background:var(--warn)"></i>Weighed in</span></div>
+ <div class="lg"><span><i style="background:var(--acc)"></i>Food logged</span><span><i style="background:var(--wo)"></i>Workout done</span><span><i style="background:var(--sport)"></i>Sport</span><span><i style="background:var(--ok)"></i>Step goal hit</span><span><i style="background:var(--warn)"></i>Weighed in</span></div>
  <div class="xs mut" style="margin-top:10px">Tap a day to open it.</div>`;
 }
 
@@ -552,7 +578,8 @@ function todayView(){
  ${t.kcal===0?'<div class="xs mut" style="margin-top:10px">Nothing logged yet. Open the Food tab to add a meal or ask Claude.</div>':''}</div>
  ${wcard}
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right">${sStk>0?`<div class="chip" style="background:var(--okbg);color:var(--oktx);margin-bottom:4px">${sStk} day streak</div>`:''}<div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
- <div class="bar"><i style="width:${Math.min(100,(st||0)/sg*100)}%"></i></div></div>
+ <div class="bar"><i style="width:${Math.min(100,(st||0)/sg*100)}%"></i></div>
+ <div class="row" style="flex-wrap:wrap;gap:6px">${actsOf(d).map(a=>`<span class="chip" style="background:color-mix(in srgb,var(--sport) 18%,transparent);color:var(--sport)">${esc(actName(a.kind))} ${a.min} min</span>`).join('')}<button class="btn ghost sm" data-act="actOpen">+ Sport</button></div></div>
  <button class="card ${needW?'warn':''}" style="width:100%;text-align:left;display:block" data-act="weightEdit"><div class="row"><div class="sp"><div class="xs ${needW?'':'mut'}" style="${needW?'color:var(--warn)':''}">${needW?'Weight: not logged yet today':'Weight'}</div><div class="big">${lg.weight==null?'<span class="mut" style="font-size:18px;font-weight:600">Log weight</span>':lg.weight+' <span class="mut sm" style="font-weight:400">kg</span>'}</div></div><div class="mut sm">Start ${pr.startWeight} kg</div></div></button>`;
 }
 
@@ -705,13 +732,76 @@ function bodyCard(){
   ${bf.note?`<div class="sm" style="padding:10px 12px;border-radius:12px;background:var(--inset);color:var(--soft)">${esc(bf.note)}</div>`:''}`;
  }else top=`<div class="sm mut" style="margin:6px 0 10px">No estimate yet. Send Claude front, side and back photos and ask for a body fat estimate.</div>`;
  const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null;
- const gal=last?`<div class="row" style="margin:14px 0 8px"><div class="sp"><b class="sm">Photos</b> <span class="xs mut">${fmtShort(last.d)}${ph.length>1?' - '+ph.length+' sessions':''}</span></div>${ph.length>1||last.ps.length>3?'<button class="btn ghost sm" data-act="bodyAll">All photos</button>':''}</div>
-  <div class="pg">${last.ps.slice(0,3).map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`:'';
+ const gal=last?timelineHTML(ph):'';
  const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(first.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(last.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
  return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${gal}${cmp}
- <input type="file" id="pp_in" accept="image/*" multiple hidden><button class="btn ghost full" style="margin-top:12px" data-act="bodyAdd">Add progress photos</button>
+ <input type="file" id="pp_in" accept="image/*" multiple hidden><div class="row" style="margin-top:12px"><button class="btn sp" data-act="camOpen">${ic('camera',20)} Take photos</button><button class="btn ghost" data-act="bodyAdd">Upload</button></div>
  <div class="xs mut" style="margin-top:8px">Best results: morning, same spot and light, relaxed, front, side and back. Estimates from photos are about plus or minus 3%.</div></div>`;
 }
+const poseOf=p=>{const m=p.match(/\/(front|side|back)-[^/]*$/);return m?m[1]:'other'};
+function tlEntries(ph,pose){const out=[];ph.forEach(x=>{const ps=pose==='all'?x.ps.slice(0,1):x.ps.filter(p=>poseOf(p)===pose);if(ps.length)out.push({d:x.d,p:ps[ps.length-1]})});return out}
+function timelineHTML(ph){
+ const have=['front','side','back'].filter(z=>ph.some(x=>x.ps.some(p=>poseOf(p)===z)));
+ if(!UI.tlPose||(UI.tlPose!=='all'&&!have.includes(UI.tlPose)))UI.tlPose=have[0]||'all';
+ const es=tlEntries(ph,UI.tlPose);if(!es.length)return '';
+ if(UI.tlIdx==null||UI.tlIdx>=es.length)UI.tlIdx=es.length-1;
+ es.forEach(e=>photoURL(e.p));
+ const e=es[UI.tlIdx];
+ return `<div class="row" style="margin:14px 0 8px"><div class="sp"><b class="sm">Timeline</b> <span class="xs mut">${es.length} session${es.length===1?'':'s'}</span></div><button class="btn ghost sm" data-act="bodyAll">All photos</button></div>
+ ${have.length>1?`<div class="seg sm">${['all'].concat(have).map(z=>`<button data-act="tlPose" data-p="${z}" class="${UI.tlPose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>`:''}
+ <img id="tl_img" class="tlimg" src="${esc(photoURL(e.p))}" alt="" data-act="phView">
+ <div class="row" style="margin-top:8px"><b class="sm sp" id="tl_d">${tlLabel(e)}</b><span class="xs mut" id="tl_m">${tlMeta(e)}</span></div>
+ ${es.length>1?`<input type="range" id="tl_rng" min="0" max="${es.length-1}" value="${UI.tlIdx}" aria-label="Scroll through photos by date"><div class="row xs mut"><span class="sp">${fmtShort(es[0].d)}</span><span>${fmtShort(es[es.length-1].d)}</span></div>`:''}`;
+}
+const tlLabel=e=>fmtLong(e.d)+(e.d===today()?' (today)':'');
+function tlMeta(e){const w=logOf(e.d).weight,b=bfHistory().find(x=>x.d===e.d);return [w!=null?w+' kg':'',b?'~'+b.pct+'%':''].filter(Boolean).join(', ')}
+
+/* ---------- camera with ghost overlay of the last photo for the same pose ---------- */
+const CAM={stream:null,facing:'environment',pose:'front',op:.35,flip:false,timer:0,shot:null,grid:true};
+function camGhostPath(){const ps=[];progPhotos().forEach(x=>x.ps.forEach(p=>{if(poseOf(p)===CAM.pose)ps.push(p)}));return ps.length?ps[ps.length-1]:null}
+async function camOpen(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('This browser cannot open the camera here. Use Upload.');return}
+ let el=$('#cam');if(!el){el=document.createElement('div');el.id='cam';document.body.appendChild(el)}
+ el.innerHTML=`<div class="vw"><video playsinline muted autoplay></video><img class="gh" alt=""><div class="gl"></div><img class="shot" alt="" hidden><div class="cd" hidden></div>
+ <div class="top"><button class="cb" data-act="camClose" aria-label="Close">${ic('x',22)}</button><b id="cam_t"></b><button class="cb" data-act="camGrid" aria-label="Grid">#</button><button class="cb" data-act="camFlipG" aria-label="Mirror ghost">${ic('mirror',20)}</button><button class="cb" data-act="camSwitch" aria-label="Switch camera">${ic('flipc',20)}</button></div></div><div class="bot" id="cam_bot"></div>`;
+ document.body.style.overflow='hidden';
+ await camStart();camUI();
+}
+async function camStart(){
+ if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());
+ try{CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:CAM.facing,width:{ideal:1920},height:{ideal:1920}},audio:false})}
+ catch(e){toast('Camera blocked. Allow camera access for this site in your browser settings, or use Upload.');camClose();return}
+ const v=$('#cam video');if(!v)return;v.srcObject=CAM.stream;v.style.transform=CAM.facing==='user'?'scaleX(-1)':'';try{await v.play()}catch(e){}
+}
+function camClose(){if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(el)el.remove();document.body.style.overflow='';render()}
+function camUI(){
+ const el=$('#cam');if(!el)return;
+ const gp=camGhostPath(),g=el.querySelector('.gh'),src=gp?photoURL(gp):'';
+ g.dataset.p=gp||'';g.src=src||'';g.style.display=src&&!CAM.shot?'':'none';g.style.opacity=CAM.op;g.style.transform=CAM.flip?'scaleX(-1)':'';
+ el.querySelector('.gl').style.display=CAM.grid&&!CAM.shot?'':'none';
+ const sh=el.querySelector('.shot');sh.hidden=!CAM.shot;if(CAM.shot)sh.src=CAM.shot;
+ el.querySelectorAll('.top .cb').forEach(b=>{if(b.dataset.act==='camGrid')b.classList.toggle('on',CAM.grid);if(b.dataset.act==='camFlipG')b.classList.toggle('on',CAM.flip)});
+ $('#cam_t').textContent=CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+(gp?'':' (no earlier photo)');
+ const bot=$('#cam_bot');
+ if(CAM.shot){bot.innerHTML=`<div class="row" style="gap:10px;padding:10px 0"><button class="btn ghost sp" style="color:#fff;border-color:#333" data-act="camRetake">Retake</button><button class="btn sp" data-act="camUse">Save ${CAM.pose}</button></div>`;return}
+ bot.innerHTML=`<div class="pz">${['front','side','back'].map(z=>`<button data-act="camPose" data-p="${z}" class="${CAM.pose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>
+ ${gp?`<div class="row" style="gap:10px"><span class="xs" style="color:#aaa;width:74px">Ghost <b id="cam_opv" style="color:#fff">${Math.round(CAM.op*100)}%</b></span><input type="range" id="cam_op" min="0" max="90" value="${Math.round(CAM.op*100)}" aria-label="Ghost opacity"></div>`:'<div class="xs" style="color:#aaa;text-align:center;margin:6px 0">First ${CAM.pose} photo. Next time this one shows as a ghost to line up with.</div>'}
+ <div class="row" style="justify-content:space-between;margin-top:6px"><button class="cb" style="background:#1a1a1a" data-act="camTimer">${CAM.timer?CAM.timer+'s':'No timer'}</button><button class="shut" data-act="camShoot" aria-label="Take photo"></button><span style="min-width:74px"></span></div>`;
+}
+function camShoot(){
+ const go=()=>{const v=$('#cam video');if(!v||!v.videoWidth)return;const w=v.videoWidth,h=v.videoHeight,k=Math.min(1,1280/Math.max(w,h));
+  const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const x=c.getContext('2d');
+  if(CAM.facing==='user'){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(v,0,0,c.width,c.height);CAM.shot=c.toDataURL('image/jpeg',.82);camUI()};
+ if(!CAM.timer)return go();
+ let n=CAM.timer;const cd=$('#cam .cd');cd.hidden=false;cd.textContent=n;
+ const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);cd.hidden=true;go()}else cd.textContent=n},1000);
+}
+function camUse(){
+ const p='data/progress/'+today()+'/'+CAM.pose+'-'+uid()+'.jpg';DB.photos[p]=CAM.shot.split(',')[1];PHOTOS[p]=CAM.shot;persist();flushSoon(300);
+ toast0(CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+' saved.');CAM.shot=null;
+ const order=['front','side','back'],i=order.indexOf(CAM.pose);if(i<order.length-1){CAM.pose=order[i+1];camUI()}else{UI.tlIdx=null;camClose()}
+}
+
 function bodyAllSheet(){
  const ph=progPhotos().slice().reverse(),h=bfHistory();
  return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`}).join('')}
@@ -741,7 +831,7 @@ function maintCard(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal;
  const train=maintFor(sg,60),rest=maintFor(5000,0);
  const perWeek=Object.values(program().weekdays).filter(x=>x!=='rest').length;
- let sum=0,n=0;for(let i=1;i<=7;i++){const d=addDays(T,-i),l=logOf(d);if(l.steps==null&&!woMinutes(d))continue;sum+=maintFor(l.steps==null?5000:l.steps,woMinutes(d)).total;n++}
+ let sum=0,n=0;for(let i=1;i<=7;i++){const d=addDays(T,-i),l=logOf(d);if(l.steps==null&&!woMinutes(d)&&!dayActKcal(d))continue;sum+=maintFor(l.steps==null?5000:l.steps,woMinutes(d)).total+dayActKcal(d);n++}
  const wk=n?sum/n:null,typ=(train.total*perWeek+rest.total*(7-perWeek))/7;
  const gap=typ-pr.targets.kcal,kgWk=gap*7/7700,ad=adaptiveTDEE();
  const fmt=v=>rnd(v).toLocaleString('en-US');
@@ -781,11 +871,13 @@ function stepsCalCard(){
  const T=today(),pr=profile();if(!UI.pM)UI.pM=ym(T);const m=UI.pM;
  const cur=streakOf(d=>dayFlags(d).hit),best=bestStreak(d=>dayFlags(d).hit,90);
  const hits=monthDates(m).filter(d=>d<=T&&dayFlags(d).hit).length;
- const grid=monthGrid(m,d=>{const l=logOf(d);if(l.steps==null)return {};return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8">${(l.steps/1000).toFixed(1)}k</span>`}},'stepDay');
- return `<div class="card"><div class="row"><div class="sp"><h3>Step streak</h3><div class="mut sm">Days at ${pr.stepGoal.toLocaleString('en-US')} or more</div></div></div>
+ const grid=monthGrid(m,d=>{const l=logOf(d),wo=!!(l.workout&&l.workout.finishedAt),sp=(l.activities||[]).length>0;
+  const dots=wo||sp?`<span class="ds">${wo?'<i style="background:var(--wo)"></i>':''}${sp?'<i style="background:var(--sport)"></i>':''}</span>`:'';
+  if(l.steps==null)return {inner:dots};return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8;line-height:1">${(l.steps/1000).toFixed(1)}k</span>${dots}`}},'stepDay');
+ return `<div class="card"><div class="row"><div class="sp"><h3>Activity</h3><div class="mut sm">Step streak at ${pr.stepGoal.toLocaleString('en-US')}, training and sport</div></div></div>
  <div class="stk"><div><b>${cur}</b><span>current streak</span></div><div><b>${best}</b><span>best (90 days)</span></div><div><b>${hits}</b><span>hit this month</span></div></div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}
- <div class="lg"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>Goal hit</span><span><i style="background:var(--chipb)"></i>Logged, under goal</span></div></div>`;
+ <div class="lg"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>Goal hit</span><span><i style="background:var(--chipb)"></i>Under goal</span><span><i style="background:var(--wo)"></i>Workout</span><span><i style="background:var(--sport)"></i>Sport</span></div></div>`;
 }
 
 /* ---------- Setup + settings ---------- */
@@ -830,6 +922,12 @@ function settingsSheet(){
  <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
  <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.2.0${DEMO?' (demo mode)':''}</div>`;
 }
+let actK='basketball';
+function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
+ <div class="fld"><label>What</label><div class="chips" id="act_k">${ACTS.map(([k,n])=>`<button class="chip ${k===actK?'b':''}" style="height:34px;padding:0 12px" data-act="actKind" data-k="${k}">${n}</button>`).join('')}</div></div>
+ <div class="fld"><label>Minutes</label><input id="act_min" inputmode="numeric" placeholder="60"></div>
+ <button class="btn full" data-act="actSave">Add</button>
+ ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}
 function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2><div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">Phones do not let web pages read the step counter, so type the number from your phone or ask Claude to log it from a screenshot.</div><button class="btn full" data-act="stepsSave">Save</button>`}
 function weightSheet(){const w=logOf(UI.date).weight;return `<h2>Weight</h2><div class="fld"><label>Kilograms</label><input id="v_weight" inputmode="decimal" value="${w==null?'':w}" placeholder="85.0"></div><button class="btn full" data-act="weightSave">Save</button>`}
 
@@ -879,6 +977,22 @@ document.addEventListener('click',async e=>{
   case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
   case 'phPick':$('#f_photo').click();break;
   case 'bodyAdd':$('#pp_in').click();break;
+  case 'camOpen':camOpen();break;
+  case 'camClose':camClose();break;
+  case 'camPose':CAM.pose=D.p;camUI();break;
+  case 'camGrid':CAM.grid=!CAM.grid;camUI();break;
+  case 'camFlipG':CAM.flip=!CAM.flip;camUI();break;
+  case 'camSwitch':CAM.facing=CAM.facing==='user'?'environment':'user';await camStart();camUI();break;
+  case 'camTimer':CAM.timer=CAM.timer===0?3:CAM.timer===3?10:0;camUI();break;
+  case 'camShoot':camShoot();break;
+  case 'camRetake':CAM.shot=null;camUI();break;
+  case 'camUse':camUse();break;
+  case 'tlPose':UI.tlPose=D.p;UI.tlIdx=null;render();break;
+  case 'actOpen':openSheet(actSheet(),actSheet);break;
+  case 'actKind':actK=D.k;document.querySelectorAll('#act_k button').forEach(b=>b.classList.toggle('b',b.dataset.k===D.k));break;
+  case 'actSave':{const m=Math.round(num($('#act_min').value));if(!m){toast('Add the minutes.');break}
+   const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
+  case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
   case 'gotoFood':UI.tab='food';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
   case 'gotoBody':UI.tab='progress';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
@@ -916,6 +1030,10 @@ document.addEventListener('click',async e=>{
    openSheet(`<h2>Swap ${esc(exName(slot))}</h2><div class="mut sm" style="margin-bottom:10px">Only for today. Your sets move over.</div>${opts.length?opts.map(x=>`<button class="item" data-act="doSwap" data-slot="${slot}" data-to="${x}"><div class="sp"><div class="n">${esc(exName(x))}${x===slot?' (original)':''}</div><div class="xs mut">${esc((exdb().exercises[x]||{}).eq||'')}</div></div></button>`).join(''):'<div class="empty">No alternatives listed for this exercise.</div>'}`);break}
   case 'doSwap':{const wo=logOf(T).workout;const from=effEx(wo,D.slot);mutate(logP(T),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
  }
+});
+document.addEventListener('input',e=>{
+ if(e.target.id==='cam_op'){CAM.op=+e.target.value/100;const g=document.querySelector('#cam .gh');if(g)g.style.opacity=CAM.op;const v=$('#cam_opv');if(v)v.textContent=e.target.value+'%';return}
+ if(e.target.id==='tl_rng'){UI.tlIdx=+e.target.value;const es=tlEntries(progPhotos(),UI.tlPose),x=es[UI.tlIdx];if(!x)return;const i=$('#tl_img');i.src=photoURL(x.p)||i.src;$('#tl_d').textContent=tlLabel(x);$('#tl_m').textContent=tlMeta(x)}
 });
 document.addEventListener('change',async e=>{
  if(e.target.id==='pp_in'&&e.target.files&&e.target.files.length){
