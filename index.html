@@ -26,8 +26,8 @@
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
-.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pgi{position:relative}.pgdel{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}.pgdel.sure{width:auto;padding:0 10px;background:var(--bad,#e11d48)}.pg img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--inset);display:block}
-.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp.tlgrid{grid-template-columns:repeat(3,1fr);gap:6px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pgi{position:relative}.pgdel{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}.pgdel.sure{width:auto;padding:0 10px;background:var(--bad,#e11d48)}.pg img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:10px;background:var(--inset);display:block}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp.tlgrid{grid-template-columns:repeat(3,1fr);gap:6px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
 .bfbar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),var(--warn) 60%,var(--bad));margin:14px 0 18px;opacity:.85}
 .bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
 .bfbar s{position:absolute;top:0;height:8px;border-radius:4px;background:rgba(255,255,255,.35);text-decoration:none}
@@ -36,7 +36,7 @@
 .cl:first-of-type{border-top:0}.cl .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--chk);display:grid;place-items:center;flex:none;color:transparent}
 .cl.ok .ck{background:var(--ok);border-color:var(--ok);color:#fff}.cl.ok .n{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--faint)}
 .cl .n{flex:1;font-weight:500}.cl .s{font-size:12px;color:var(--mut);white-space:nowrap}
-.tlimg{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:14px;background:var(--inset);display:block}
+.tlimg{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:14px;background:var(--inset);display:block}
 input[type=range]{min-height:auto;padding:0;border:0;background:none;accent-color:var(--acc);width:100%;height:32px}
 .seg.sm button{min-height:30px;font-size:13px}
 #cam{position:fixed;inset:0;background:#000;z-index:70;display:flex;flex-direction:column;color:#fff}
@@ -262,7 +262,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3dad48a2e8fc7489545cd43ff6c7ab548e19f3a2';let verChecked=0;
+const BUILD='149d8cfcc573a09c4f7f19bc592c986e86d0b995';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
