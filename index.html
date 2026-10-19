@@ -261,7 +261,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3f9bd5bfb564fd9647c489fe6c46b157916493fa';let verChecked=0;
+const BUILD='3779e068ae6aebda0d7c2fd1bdb9354e29366a95';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1020,13 +1020,19 @@ function camUI(){
  ${gp?`<div class="row" style="gap:10px"><span class="xs" style="color:#aaa;width:74px">Ghost <b id="cam_opv" style="color:#fff">${Math.round(CAM.op*100)}%</b></span><input type="range" id="cam_op" min="0" max="90" value="${Math.round(CAM.op*100)}" aria-label="Ghost opacity"></div>`:'<div class="xs" style="color:#aaa;text-align:center;margin:6px 0">First ${CAM.pose} photo. Next time this one shows as a ghost to line up with.</div>'}
  <div class="row" style="justify-content:space-between;margin-top:6px"><button class="cb" style="background:#1a1a1a" data-act="camTimer">${CAM.timer?CAM.timer+'s':'No timer'}</button><button class="shut" data-act="camShoot" aria-label="Take photo"></button><span style="min-width:74px"></span></div>`;
 }
+/* Camera sounds: a tick each second of the self-timer (higher for the last 3) and a two-part shutter click with a white flash. */
+function camTick(n){if(LS.get('forma.sound',1)===0)return;const c=actx();if(c)tone(c,n<=3?1320:880,0,n<=3?.12:.07,.55,'sine')}
+function shutterSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;
+ const len=Math.round(c.sampleRate*.05),buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+ [[0,2600,.9],[.075,1700,.7]].forEach(([t,f,v])=>{const sN=c.createBufferSource(),bp=c.createBiquadFilter(),g=c.createGain();sN.buffer=buf;bp.type='bandpass';bp.frequency.value=f;bp.Q.value=.8;g.gain.value=v;sN.connect(bp).connect(g).connect(c.destination);sN.start(c.currentTime+t)})}
+function camFlash(){const vw=$('#cam .vw');if(!vw)return;const f=document.createElement('div');f.style.cssText='position:absolute;inset:0;background:#fff;opacity:.85;pointer-events:none;transition:opacity .35s ease-out;z-index:5';vw.appendChild(f);requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.opacity='0'}));setTimeout(()=>f.remove(),450)}
 function camShoot(){
- const go=()=>{const v=$('#cam video');if(!v||!v.videoWidth)return;const w=v.videoWidth,h=v.videoHeight,k=Math.min(1,1280/Math.max(w,h));
+ const go=()=>{const v=$('#cam video');if(!v||!v.videoWidth)return;shutterSound();camFlash();try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}const w=v.videoWidth,h=v.videoHeight,k=Math.min(1,1280/Math.max(w,h));
   const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);const x=c.getContext('2d');
   if(CAM.facing==='user'){x.translate(c.width,0);x.scale(-1,1)}x.drawImage(v,0,0,c.width,c.height);CAM.shot=c.toDataURL('image/jpeg',.82);camUI()};
  if(!CAM.timer)return go();
- let n=CAM.timer;const cd=$('#cam .cd');cd.hidden=false;cd.textContent=n;
- const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);cd.hidden=true;go()}else cd.textContent=n},1000);
+ let n=CAM.timer;const cd=$('#cam .cd');cd.hidden=false;cd.textContent=n;camTick(n);
+ const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);cd.hidden=true;go()}else{cd.textContent=n;camTick(n)}},1000);
 }
 function camUse(){
  const p='data/progress/'+today()+'/'+CAM.pose+'-'+uid()+'.jpg';DB.photos[p]=CAM.shot.split(',')[1];PHOTOS[p]=CAM.shot;persist();flushSoon(300);
