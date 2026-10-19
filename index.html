@@ -243,7 +243,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='686fad97a94e8bf629f55739e109d777e48b0f95';let verChecked=0;
+const BUILD='17d312735f0dd79240e79b1086d9df827dfd1e4a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -774,7 +774,7 @@ function startWorkout(id){
  day.exercises.forEach(e=>{sets[e.ex]=Array.from({length:e.sets},()=>({w:0,r:0,done:false}))});
  mutate(logP(today()),{k:'wStart',dayId:id,t:new Date().toISOString(),sets},{delay:300});
 }
-function tickSet(ex,i){
+function tickSet(ex,i,how){
   const T=today();let on=false;
   editSets(ex,s=>{const x=s[i];x.done=!x.done;on=x.done;
    if(on){
@@ -787,7 +787,12 @@ function tickSet(ex,i){
     const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
    }
   },{delay:2000,t:new Date().toISOString()});
-  if(on){UI.curEx=ex;startRest(restFor(ex),(exdb().exercises[ex]||{}).n)}else{UI.rest=null;}render();return on}
+  if(on){UI.curEx=ex;const all=(((logOf(T).workout||{}).sets||{})[ex]||[]).every(z=>z.done);setFeedback(all,how);startRest(restFor(ex),(exdb().exercises[ex]||{}).n)}else{UI.rest=null;}render();return on}
+/* Feedback when a set is ticked (tap, Set done or shake): a short two-note ding and a buzz for a set, a rising
+   four-note fanfare and a longer buzz when that was the exercise's last set. Both differ from the rest-over chime. */
+function setSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;tone(c,784,0,.12,.7,'sine');tone(c,1175,.1,.2,.7,'sine')}
+function exSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;[[523,0],[659,.11],[784,.22]].forEach(([f,t])=>tone(c,f,t,.14,.75,'sine'));tone(c,1047,.33,.45,.85,'sine');tone(c,1319,.33,.45,.4,'sine')}
+function setFeedback(all,how){all?exSound():setSound();try{navigator.vibrate&&navigator.vibrate(all?[90,60,90,60,250]:how==='shake'?[70,60,140]:60)}catch(e){}}
 /* Next set = the next open set of the exercise you last ticked, else the next exercise in order with an open set. */
 function nextSet(){
  const wo=logOf(today()).workout;if(!wo||wo.finishedAt)return null;const day=program().days.find(d=>d.id===wo.dayId);if(!day)return null;
@@ -799,11 +804,10 @@ let sdTimer=null;
 function doneNext(how){
  const nx=nextSet();if(!nx){toast0('All sets are done. Tap Finish.');return}
  const before=clone(((logOf(today()).workout||{}).sets||{})[nx.ex]||[]);
- if(!tickSet(nx.ex,nx.i))return;
- try{navigator.vibrate&&navigator.vibrate(how==='shake'?[60,60,120]:40)}catch(e){}
+ if(!tickSet(nx.ex,nx.i,how))return;
  const x=((logOf(today()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
  let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';
- el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done</div><div class="sd-s">${esc(nm)}<br>${x.w?x.w+' kg x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
+ el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done${nx.i+1===nx.n?'<br>Exercise complete':''}</div><div class="sd-s">${esc(nm)}<br>${x.w?x.w+' kg x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
  <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
  el._undo={ex:nx.ex,before};el.addEventListener('click',e=>{if(!e.target.closest('.sd-undo'))el.remove()});
  document.body.appendChild(el);clearTimeout(sdTimer);sdTimer=setTimeout(()=>{const z=$('#sdone');if(z)z.remove()},3000);
@@ -1395,7 +1399,7 @@ document.addEventListener('click',async e=>{
   case 'cues':UI.cues[D.ex]=!UI.cues[D.ex];render();break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
   case 'rmSet':editSets(D.ex,s=>{if(s.length>1)s.pop()},{delay:2000});break;
-  case 'chk':tickSet(D.ex,+D.i);break;
+  case 'chk':tickSet(D.ex,+D.i,'tap');break;
   case 'setDone':askMotion();doneNext('tap');break;
   case 'sdUndo':undoDone();break;
   case 'shakeTog':{const on=LS.get('forma.shake',1)!==0;LS.set('forma.shake',on?0:1);askMotion();render();toast0(on?'Shake is off.':'Shake on: shake your phone firmly to finish a set.');break}
