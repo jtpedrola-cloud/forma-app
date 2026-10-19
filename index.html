@@ -206,7 +206,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='9775244d1c7b5f8110dcdf3e0ffedbaf2733f825';let verChecked=0;
+const BUILD='53ec60d8e1d7e76c9541889ba2be0a82494cd24a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -262,6 +262,7 @@ function applyOp(d,o){
   case 'wFinish':w().finishedAt=o.t;break;
   case 'wReopen':w().finishedAt=null;break;
   case 'wClear':d.workout=null;break;
+  case 'wMark':if(!d.workout)d.workout={dayId:o.dayId,startedAt:o.t,finishedAt:o.t,sets:{},swaps:{},marked:true};break;
   case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
   case 'actDel':d.activities=(d.activities||[]).filter(a=>a.id!==o.id);if(!d.activities.length)delete d.activities;break;
  }
@@ -658,12 +659,12 @@ function workoutView(){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=dn.exercises.map(e=>{const ex=effEx(swo,e.ex),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
    return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(x=>(x.w?x.w+' x ':'')+x.r).join(', ')}${u==='SEC'?' s':u==='M'?' m':''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
-  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${ns} sets - ${mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
-  <div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`;
+  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)}</div></div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:''}${isT?'<button class="btn ghost sm" data-act="wReopen">Reopen</button>':''}</div></div>
+  ${swo.marked?'':`<div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
  }else{
-  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div></div>
+  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>${!isT&&sel<T?`<button class="btn full" style="margin-top:12px" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}</div>
   <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?pv[0].w+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
  }
  const chips=isT&&!swo?`<div class="xs mut" style="margin:2px 0 8px">${td?'Not doing '+esc(td.name)+' today? Pick another day:':'Train anyway. Pick a day:'}</div><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}</button>`).join('')}</div>`:'';
@@ -906,17 +907,35 @@ function progressView(){
  <div class="row"><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Workouts this week</div><div class="big">${did}<span class="mut sm" style="font-weight:400"> of ${planned}</span></div></div><div class="card sp" style="margin:0 0 12px"><div class="xs mut">Logging streak</div><div class="big">${streak}<span class="mut sm" style="font-weight:400"> day${streak===1?'':'s'}</span></div></div></div>`;
 }
 
+/* Consistency: a day is on schedule if its planned workout was finished, or it was a rest day.
+   Tracking starts at profile.startDate, so days before the app existed never count as missed. */
+const trackStart=()=>profile().startDate||today();
+const woDone=d=>{const w=logOf(d).workout;return !!(w&&w.finishedAt)};
+const onSchedule=d=>woDone(d)||!progDay(d);
+function schedStreak(){const T=today(),st=trackStart();let n=0,d=onSchedule(T)?T:addDays(T,-1);while(d>=st&&onSchedule(d)){n++;d=addDays(d,-1)}return n}
+function schedBest(){const T=today(),st=trackStart();let b=0,c=0;for(let d=st;d<=T;d=addDays(d,1)){if(onSchedule(d)){c++;if(c>b)b=c}else if(d<T)c=0}return b}
 function stepsCalCard(){
- const T=today(),pr=profile();if(!UI.pM)UI.pM=ym(T);const m=UI.pM;
- const cur=streakOf(d=>dayFlags(d).hit),best=bestStreak(d=>dayFlags(d).hit,90);
- const hits=monthDates(m).filter(d=>d<=T&&dayFlags(d).hit).length;
- const grid=monthGrid(m,d=>{const l=logOf(d),wo=!!(l.workout&&l.workout.finishedAt),sp=(l.activities||[]).length>0;
-  const dots=wo||sp?`<span class="ds">${wo?'<i style="background:var(--wo)"></i>':''}${sp?'<i style="background:var(--sport)"></i>':''}</span>`:'';
-  if(l.steps==null)return {inner:dots};return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8;line-height:1">${(l.steps/1000).toFixed(1)}k</span>${dots}`}},'stepDay');
- return `<div class="card"><div class="row"><div class="sp"><h3>Activity</h3><div class="mut sm">Step streak at ${pr.stepGoal.toLocaleString('en-US')}, training and sport</div></div></div>
- <div class="stk"><div><b>${cur}</b><span>current streak</span></div><div><b>${best}</b><span>best (90 days)</span></div><div><b>${hits}</b><span>hit this month</span></div></div>
+ const T=today(),pr=profile(),st=trackStart();if(!UI.pM)UI.pM=ym(T);const m=UI.pM;
+ const sS=streakOf(d=>dayFlags(d).hit),tS=schedStreak(),tB=schedBest();
+ const md=monthDates(m).filter(d=>d<=T);
+ const planned=md.filter(d=>d>=st&&progDay(d)&&(d<T||woDone(d))).length,did=md.filter(d=>woDone(d)).length;
+ const sportDays=md.filter(d=>actsOf(d).length).length,stepDays=md.filter(d=>dayFlags(d).hit).length,logged=md.filter(d=>logOf(d).steps!=null).length;
+ const ring=c=>`<i style="background:transparent;box-shadow:inset 0 0 0 1.5px ${c}"></i>`,dot=c=>`<i style="background:${c}"></i>`;
+ const grid=monthGrid(m,d=>{const l=logOf(d),p=progDay(d),done=woDone(d),sp=actsOf(d).length>0;
+  let mk='';
+  if(done)mk+=dot('var(--wo)');else if(p&&d>T)mk+=ring('color-mix(in srgb,var(--wo) 55%,transparent)');else if(p&&d===T)mk+=ring('var(--wo)');else if(p&&d>=st)mk+=ring('var(--bad)');else if(!p&&d>=st)mk+=ring('var(--faint)');
+  if(sp)mk+=dot('var(--sport)');
+  const marks=mk?`<span class="ds">${mk}</span>`:'';
+  if(l.steps==null)return {inner:marks};
+  return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8;line-height:1">${(l.steps/1000).toFixed(1)}k</span>${marks}`}},'stepDay');
+ const fut=monthDates(m).filter(d=>d>T);
+ return `<div class="card"><div class="row"><div class="sp"><h3>Consistency</h3><div class="mut sm">Training schedule, steps and sport</div></div></div>
+ <div class="stk"><div><b>${tS}</b><span>days on schedule</span></div><div><b>${sS}</b><span>day step streak</span></div><div><b>${sportDays}</b><span>sport day${sportDays===1?'':'s'} this month</span></div></div>
+ <div class="row sm" style="gap:8px;flex-wrap:wrap;margin:-2px 0 6px">${planned?`<span class="chip" style="background:color-mix(in srgb,var(--wo) 18%,transparent);color:var(--wo)">Workouts ${did} / ${planned}</span>`:''}<span class="chip" style="background:var(--okbg);color:var(--oktx)">Step goal ${stepDays} / ${logged||md.length} days</span>${tB>tS?`<span class="chip">Best schedule streak ${tB}</span>`:''}</div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}
- <div class="lg"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>Goal hit</span><span><i style="background:var(--chipb)"></i>Under goal</span><span><i style="background:var(--wo)"></i>Workout</span><span><i style="background:var(--sport)"></i>Sport</span></div></div>`;
+ <div class="lg"><span>${dot('var(--wo)')}Trained</span><span>${ring('var(--bad)')}Missed</span><span>${ring('color-mix(in srgb,var(--wo) 55%,transparent)')}Planned</span><span>${ring('var(--faint)')}Rest day</span><span>${dot('var(--sport)')}Sport</span></div>
+ <div class="lg" style="margin-top:4px"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>${(pr.stepGoal/1000)}k steps hit</span><span><i style="background:var(--chipb)"></i>Under step goal</span></div>
+ <div class="xs mut" style="margin-top:8px">Rest days and finished workouts keep the schedule streak going. Only a skipped training day breaks it.</div></div>`;
 }
 
 /* ---------- Setup + settings ---------- */
@@ -1073,6 +1092,8 @@ document.addEventListener('click',async e=>{
   case 'wStart':if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':mutate(logP(T),{k:'wFinish',t:new Date().toISOString()},{delay:0});UI.rest=null;break;
   case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});break;
+  case 'wMark':mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
+  case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
   case 'wCancel':if(confirm('Discard this workout and all its sets?'))mutate(logP(T),{k:'wClear'},{delay:300});break;
   case 'cues':UI.cues[D.ex]=!UI.cues[D.ex];render();break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
