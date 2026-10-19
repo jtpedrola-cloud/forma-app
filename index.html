@@ -168,6 +168,7 @@ svg{display:block}
 .cal .c{aspect-ratio:1;border-radius:10px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:var(--soft);border:2px solid transparent;width:100%;min-height:40px}
 .cal .c.fut{color:var(--faint)}.cal .c.today{border-color:var(--acc)}.cal .c.sel{border-color:var(--txt)}
 .cal .c.hit{background:var(--okbg);color:var(--oktx)}.cal .c.part{background:var(--chipb);color:var(--chipbtx)}
+.cal .c.l1,.lg .sw.l1{background:color-mix(in srgb,var(--acc) 18%,var(--inset))}.cal .c.l2,.lg .sw.l2{background:color-mix(in srgb,var(--acc) 38%,var(--inset))}.cal .c.l3,.lg .sw.l3{background:color-mix(in srgb,var(--acc) 62%,var(--inset))}.cal .c.l4,.lg .sw.l4{background:var(--grad)}.cal .c.l2,.cal .c.l3,.cal .c.l4{color:var(--onacc)}.cal .c.l4{font-weight:800}.cal .c.l4 .ds i{box-shadow:0 0 0 1px rgba(0,0,0,.25)}.lg .sw{border-radius:3px;background:var(--inset)}
 .cal .ds{display:flex;gap:3px;height:5px}.cal .ds i{width:5px;height:5px;border-radius:50%;display:block}
 .stk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 12px}
 .stk div{background:var(--inset);border-radius:12px;padding:10px 6px;text-align:center}.stk b{font-size:22px;display:block;line-height:1.1}.stk span{font-size:11px;color:var(--mut)}
@@ -269,7 +270,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='45e288600f1f1f0ce05048e3fa4449c95f03dea1';let verChecked=0;
+const BUILD='d4aa5ba91cb7fb5d16216602d4d11e4875edb07b';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1206,28 +1207,35 @@ const woDone=d=>{const w=logOf(d).workout;return !!(w&&w.finishedAt)};
 const onSchedule=d=>woDone(d)||!progDay(d);
 function schedStreak(){const T=today(),st=trackStart();let n=0,d=onSchedule(T)?T:addDays(T,-1);while(d>=st&&onSchedule(d)){n++;d=addDays(d,-1)}return n}
 function schedBest(){const T=today(),st=trackStart();let b=0,c=0;for(let d=st;d<=T;d=addDays(d,1)){if(onSchedule(d)){c++;if(c>b)b=c}else if(d<T)c=0}return b}
+/* Consistency calendar: every day fills up as its checklist gets ticked (weigh-in, food, steps, the planned workout,
+   Sunday photos; only the modules that are on). A full day gets the gradient. Nothing is painted red: a planned workout
+   that did not happen is a hollow ring, and tapping a day opens it on Today to see what was missing. */
+function dayScore(d){const c=checklist(d);return {done:c.filter(x=>x.ok).length,all:c.length}}
+const dayFull=d=>{const sc=dayScore(d);return sc.all>0&&sc.done===sc.all};
 function stepsCalCard(){
  const T=today(),pr=profile(),st=trackStart();if(!UI.pM)UI.pM=ym(T);const m=UI.pM;
- const sS=streakOf(d=>dayFlags(d).hit),tS=schedStreak(),tB=schedBest();
- const md=monthDates(m).filter(d=>d<=T);
- const planned=md.filter(d=>d>=st&&progDay(d)&&(d<T||woDone(d))).length,did=md.filter(d=>woDone(d)).length;
- const sportDays=md.filter(d=>actsOf(d).length).length,stepDays=md.filter(d=>dayFlags(d).hit).length,logged=md.filter(d=>logOf(d).steps!=null).length;
+ const md=monthDates(m).filter(d=>d<=T&&d>=st);
+ const full=md.filter(dayFull).length,fullStreak=streakOf(d=>d>=st&&dayFull(d));
+ let best=0,c=0;for(let d=st;d<=T;d=addDays(d,1)){if(dayFull(d)){c++;if(c>best)best=c}else if(d<T)c=0}
+ const planned=md.filter(d=>progDay(d)&&(d<T||woDone(d))).length,did=md.filter(d=>woDone(d)).length;
+ const stepDays=md.filter(d=>dayFlags(d).hit).length,foodDays=md.filter(d=>dayFlags(d).food).length,wDays=md.filter(d=>dayFlags(d).weight).length,sportDays=md.filter(d=>actsOf(d).length).length;
  const ring=c=>`<i style="background:transparent;box-shadow:inset 0 0 0 1.5px ${c}"></i>`,dot=c=>`<i style="background:${c}"></i>`;
- const grid=monthGrid(m,d=>{const l=logOf(d),p=progDay(d),done=woDone(d),sp=actsOf(d).length>0;
+ const grid=monthGrid(m,d=>{const p=progDay(d),done=woDone(d),sp=actsOf(d).length>0;
   let mk='';
-  if(done)mk+=dot('var(--wo)');else if(p&&d>T)mk+=ring('color-mix(in srgb,var(--wo) 55%,transparent)');else if(p&&d===T)mk+=ring('var(--wo)');else if(p&&d>=st)mk+=ring('var(--bad)');else if(!p&&d>=st)mk+=ring('var(--faint)');
+  if(done)mk+=dot('var(--wo)');else if(p&&d>T)mk+=ring('color-mix(in srgb,var(--wo) 55%,transparent)');else if(p&&d>=st)mk+=ring(d===T?'var(--wo)':'var(--faint)');
   if(sp)mk+=dot('var(--sport)');
   const marks=mk?`<span class="ds">${mk}</span>`:'';
-  if(l.steps==null)return {inner:marks};
-  return {cls:l.steps>=pr.stepGoal?'hit':'part',inner:`<span class="xs" style="font-size:9px;opacity:.8;line-height:1">${(l.steps/1000).toFixed(1)}k</span>${marks}`}},'stepDay');
- const fut=monthDates(m).filter(d=>d>T);
- return `<div class="card"><div class="row"><div class="sp"><h3>Consistency</h3><div class="mut sm">Training schedule, steps and sport</div></div></div>
- <div class="stk"><div><b>${tS}</b><span>days on schedule</span></div><div><b>${sS}</b><span>day step streak</span></div><div><b>${sportDays}</b><span>sport day${sportDays===1?'':'s'} this month</span></div></div>
- <div class="row sm" style="gap:8px;flex-wrap:wrap;margin:-2px 0 6px">${planned?`<span class="chip" style="background:color-mix(in srgb,var(--wo) 18%,transparent);color:var(--wo)">Workouts ${did} / ${planned}</span>`:''}<span class="chip" style="background:var(--okbg);color:var(--oktx)">Step goal ${stepDays} / ${logged||md.length} days</span>${tB>tS?`<span class="chip">Best schedule streak ${tB}</span>`:''}</div>
+  if(d>T||d<st)return {inner:marks};
+  const sc=dayScore(d),lv=sc.all?Math.round(sc.done/sc.all*4):0;
+  return {cls:'l'+lv,inner:marks}},'stepDay');
+ const sw=(l,t)=>`<span><i class="sw l${l}"></i>${t}</span>`;
+ return `<div class="card"><div class="row"><div class="sp"><h3>Consistency</h3><div class="mut sm">A day fills up as you tick its checklist</div></div></div>
+ <div class="stk"><div><b>${fullStreak}</b><span>day streak</span></div><div><b>${full}<small class="mut" style="font-size:12px;font-weight:500">/${md.length}</small></b><span>full days this month</span></div><div><b>${best}</b><span>best streak</span></div></div>
+ <div class="row sm" style="gap:6px;flex-wrap:wrap;margin:-2px 0 6px">${planned?`<span class="chip" style="background:color-mix(in srgb,var(--wo) 18%,transparent);color:var(--wo)">Workouts ${did}/${planned}</span>`:''}${modOn('activity')?`<span class="chip" style="background:var(--okbg);color:var(--oktx)">${(pr.stepGoal/1000)}k steps ${stepDays}/${md.length}</span>`:''}${modOn('food')?`<span class="chip">Food ${foodDays}/${md.length}</span>`:''}<span class="chip">Weigh-ins ${wDays}/${md.length}</span>${sportDays?`<span class="chip" style="background:color-mix(in srgb,var(--sport) 18%,transparent);color:var(--sport)">Sport ${sportDays}</span>`:''}</div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}
- <div class="lg"><span>${dot('var(--wo)')}Trained</span><span>${ring('var(--bad)')}Missed</span><span>${ring('color-mix(in srgb,var(--wo) 55%,transparent)')}Planned</span><span>${ring('var(--faint)')}Rest day</span><span>${dot('var(--sport)')}Sport</span></div>
- <div class="lg" style="margin-top:4px"><span><i style="background:var(--okbg);outline:1px solid var(--ok)"></i>${(pr.stepGoal/1000)}k steps hit</span><span><i style="background:var(--chipb)"></i>Under step goal</span></div>
- <div class="xs mut" style="margin-top:8px">Rest days and finished workouts keep the schedule streak going. Only a skipped training day breaks it.</div></div>`;
+ <div class="lg">${sw(0,'Nothing yet')}${sw(1,'Started')}${sw(2,'Half')}${sw(3,'Almost')}${sw(4,'Full day')}</div>
+ <div class="lg" style="margin-top:4px"><span>${dot('var(--wo)')}Trained</span><span>${ring('var(--faint)')}Planned, not done</span><span>${dot('var(--sport)')}Sport</span></div>
+ <div class="xs mut" style="margin-top:8px">The checklist is weigh-in, food, steps and the workout on training days (Sunday adds photos). Rest days need less to be full. Tap a day to see what it was missing.</div></div>`;
 }
 
 /* ---------- Setup questionnaire (works without Claude; maths in plan.js) ---------- */
