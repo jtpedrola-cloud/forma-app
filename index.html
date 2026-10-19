@@ -38,7 +38,14 @@ svg{display:block}
 .bar>i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .3s}
 .bar.over>i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
 .mac{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
-.mac .bar{height:6px;margin:5px 0}
+.mac>div{display:flex;flex-direction:column;align-items:center;text-align:center}
+.ring{position:relative;width:84px;height:84px;margin:6px 0 4px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.ring .tr{stroke:#0f1829}.ring .pg{stroke:url(#ringGrad);transition:stroke-dashoffset .3s}
+.ring.over .pg{stroke:url(#ringOver)}
+.ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1}
+.ring .v small{display:block;font-size:10px;font-weight:500;color:var(--mut);margin-top:2px}
 .chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:#22304f;color:#b9c6e6;font-size:12px;font-weight:600;white-space:nowrap}
 .chip.b{background:#1c3566;color:#8fbaff}.chip.p{background:#3a2a66;color:#c4a8ff}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -365,12 +372,17 @@ const exName=id=>(exdb().exercises[id]||{n:id}).n;
 function weekDates(d){const ws=(profile().weekStart||0);const dow=parseD(d).getDay();const s=addDays(d,-((dow-ws+7)%7));return Array.from({length:7},(_,i)=>addDays(s,i))}
 const hasData=d=>{const f=view(foodP(d)),l=view(logP(d));return !!((f&&f.items.length)||(l&&(l.steps!=null||l.weight!=null||l.workout)))};
 
+/* ---------- Macro rings ---------- */
+const RING_DEFS=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient><linearGradient id="ringOver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs></svg>`;
+function ring(l,v,g,opt){
+ opt=opt||{};const r=36,c=2*Math.PI*r,p=g>0?Math.min(1,v/g):0,over=opt.over!==false&&v>g,shown=opt.remaining?Math.max(0,g-v):v;
+ return `<div><div class="ring ${over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/><circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div></div>`}
+
 /* ---------- Today ---------- */
 function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today();
  const rem=T.kcal-t.kcal,pct=Math.min(100,t.kcal/T.kcal*100);
  const wk=weekDates(d).map(x=>{const dw=parseD(x).getDay();return `<button class="wd ${x===today()?'today':''} ${x===d?'sel':''}" data-act="day" data-d="${x}"><span>${'SMTWTFS'[dw]}</span><b>${parseD(x).getDate()}${hasData(x)?'<i></i>':''}</b></button>`}).join('');
- const mac=(l,v,g)=>`<div><div class="xs mut">${l}</div><div class="bar ${v>g?'over':''}"><i style="width:${Math.min(100,v/g*100)}%"></i></div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div></div>`;
  const pd=progDay(d),wo=lg.workout;
  let wcard;
  if(!pd)wcard=`<div class="card"><div class="row"><div class="sp"><h3>Rest day</h3><div class="mut sm">Nothing planned. Recover, walk, eat.</div></div></div></div>`;
@@ -383,7 +395,7 @@ function todayView(){
  return header(fmtLong(d))+`<div class="week">${wk}</div>
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'#fff':'#ff8a8a'}">${Math.abs(rnd(rem))}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
- <div class="mac">${mac('Protein',t.protein,T.protein)}${mac('Carbs',t.carbs,T.carbs)}${mac('Fat',t.fat,T.fat)}</div>
+ ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
  ${t.kcal===0?'<div class="xs mut" style="margin-top:10px">Nothing logged yet. Open the Food tab to add a meal or ask Claude.</div>':''}</div>
  ${wcard}
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Steps</div><div class="big">${st==null?'-':st.toLocaleString('en-US')} <span class="mut sm" style="font-weight:400">/ ${sg.toLocaleString('en-US')}</span></div></div><div style="text-align:right"><div class="chip b">${st==null?0:Math.round(st/sg*100)}%</div></div><button class="btn ghost sm" data-act="stepsEdit">${st==null?'Add':'Edit'}</button></div>
@@ -396,7 +408,6 @@ const MEALS=[['breakfast','Breakfast'],['lunch','Lunch'],['dinner','Dinner'],['s
 function foodView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),items=food(d).items,isCons=UI.mode==='consumed';
  const big=isCons?rnd(t.kcal):rnd(T.kcal-t.kcal);
- const mc=(l,v,g)=>`<div><div class="xs mut">${l}</div><div class="bar ${v>g&&isCons?'over':''}"><i style="width:${Math.min(100,v/g*100)}%"></i></div><div class="xs"><b>${rnd(isCons?v:g-v)}</b> <span class="mut">/ ${g} g</span></div></div>`;
  const secs=MEALS.map(([k,l])=>{
   const its=items.filter(i=>i.meal===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="chip b">${rnd(mt.kcal)} Cal</span><span class="chip p">${rnd(mt.protein)} P</span><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
@@ -404,7 +415,7 @@ function foodView(){
  return header('Food Log')+`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="ib" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left')}</button><b>${d===today()?'Today, ':''}${fmtShort(d)}</b><button class="ib" data-act="dnav" data-n="1" aria-label="Next day">${ic('right')}</button></div>
  <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
- <div class="mac">${mc('Protein',t.protein,T.protein)}${mc('Carbs',t.carbs,T.carbs)}${mc('Fat',t.fat,T.fat)}</div></div>
+ ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
  <div class="card" style="padding:4px 16px">${secs}</div>
  <div class="card"><h3>Log meals with Claude</h3><div class="mut sm" style="margin:4px 0 12px">Tell Claude what you ate or attach a photo. It writes to your repo and shows up here after a refresh.</div><button class="btn full" data-act="claude">Copy prompt and open Claude</button><div class="xs mut" style="margin-top:8px">Example: "Log lunch: chicken adobo with 1 cup rice"</div></div>`;
 }
