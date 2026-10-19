@@ -203,6 +203,16 @@ const rnd=n=>Math.round(n);
 const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return (h?h+':'+pad(m):m)+':'+pad(s%60)};
 const DEMO=/[?&]demo=1/.test(location.search);
+/* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
+   for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
+   reloads under a new ?v= URL, which skips the stale cached copy. */
+const BUILD='4360b54348905ddf9ac5d8bcdb00c6a195449bb4';let verChecked=0;
+async function checkVersion(){
+ if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
+ if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
+ try{const r=await fetch('version.txt?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
+  if(v&&v!==BUILD){const u=new URL(location.href);if(u.searchParams.get('v')===v.slice(0,7))return;u.searchParams.set('v',v.slice(0,7));location.replace(u.toString())}}catch(e){}
+}
 const THEMES=[['ember','Ember','Black, orange, red','#070605','#121010','linear-gradient(90deg,#ff9a1f,#ff5a1f 45%,#e11d48)'],
  ['midnight','Midnight','Navy, blue, violet','#0E1525','#172033','linear-gradient(90deg,#3B82F6,#8B5CF6)'],
  ['daylight','Daylight','Light, indigo, sky','#f3f4f7','#ffffff','linear-gradient(90deg,#4f46e5,#0ea5e9)']];
@@ -459,9 +469,9 @@ async function loadDays(ds){
 }
 window.addEventListener('online',()=>{flush();refresh()});
 window.addEventListener('offline',()=>setSync('offline','No connection.'));
-document.addEventListener('visibilitychange',()=>{if(document.hidden){KEEP=true;flush();setTimeout(()=>KEEP=false,1500)}else{if(UI.date<today()&&false)UI.date=today();refresh()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){KEEP=true;flush();setTimeout(()=>KEEP=false,1500)}else{if(UI.date<today()&&false)UI.date=today();checkVersion();refresh()}});
 window.addEventListener('pagehide',()=>{KEEP=true;flush()});
-window.addEventListener('focus',()=>refresh());
+window.addEventListener('focus',()=>{checkVersion();refresh()});
 
 /* ---------- ui plumbing ---------- */
 const root=$('#root');
@@ -982,7 +992,7 @@ document.addEventListener('click',async e=>{
   case 'day':UI.date=D.d;loadDay(D.d);render();break;
   case 'dnav':UI.date=addDays(UI.date,+D.n);loadDay(UI.date);render();break;
   case 'mode':UI.mode=D.m;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();break;
-  case 'refresh':refresh(true);break;
+  case 'refresh':verChecked=0;checkVersion();refresh(true);break;
   case 'retry':if(UI.sync==='error'||UI.sync==='offline'){toast(UI.syncMsg||'Retrying...');await flush();refresh()}break;
   case 'settings':openSheet(settingsSheet());break;
   case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
@@ -1084,12 +1094,13 @@ document.addEventListener('input',e=>{
 });
 let ty=null;
 document.addEventListener('touchstart',e=>{ty=window.scrollY===0?e.touches[0].clientY:null},{passive:true});
-document.addEventListener('touchend',e=>{if(ty!=null&&e.changedTouches[0].clientY-ty>110&&!UI.sheet)refresh(true);ty=null},{passive:true});
+document.addEventListener('touchend',e=>{if(ty!=null&&e.changedTouches[0].clientY-ty>110&&!UI.sheet){verChecked=0;checkVersion();refresh(true)}ty=null},{passive:true});
 
 /* ---------- boot ---------- */
 (async function boot(){
  if(DEMO){await DEMOB.init();render();await refresh(true);return}
  render();
+ checkVersion();
  if(cfg.token){await refresh();if(pendCount())flushSoon(200)}
 })();
 </script>
