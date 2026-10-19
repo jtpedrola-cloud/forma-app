@@ -32,6 +32,10 @@
 .bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
 .bfbar s{position:absolute;top:0;height:8px;border-radius:4px;background:rgba(255,255,255,.35);text-decoration:none}
 .bfbar span{position:absolute;top:12px;font-size:10px;color:var(--mut);transform:translateX(-50%)}
+.cl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 0;border-top:1px solid var(--line);min-height:50px}
+.cl:first-of-type{border-top:0}.cl .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--chk);display:grid;place-items:center;flex:none;color:transparent}
+.cl.ok .ck{background:var(--ok);border-color:var(--ok);color:#fff}.cl.ok .n{color:var(--mut);text-decoration:line-through;text-decoration-color:var(--faint)}
+.cl .n{flex:1;font-weight:500}.cl .s{font-size:12px;color:var(--mut);white-space:nowrap}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -511,6 +515,17 @@ function calSheet(){
  <div class="xs mut" style="margin-top:10px">Tap a day to open it.</div>`;
 }
 
+function checklist(d){
+ const l=logOf(d),pr=profile(),f=food(d).items,pd=progDay(d),dow=parseD(d).getDay();
+ const meals=new Set(f.map(mealNo)).size,pk=Math.round(f.reduce((a,i)=>a+num(i.protein),0));
+ const out=[{l:'Weigh in',ok:l.weight!=null,s:l.weight!=null?l.weight+' kg':'',act:'weightEdit'},
+  {l:'Track food',ok:meals>0,s:meals?meals+' meal'+(meals===1?'':'s')+', '+pk+'g protein':'',act:'gotoFood'},
+  {l:(pr.stepGoal/1000)+'k steps',ok:l.steps!=null&&l.steps>=pr.stepGoal,s:l.steps!=null?l.steps.toLocaleString('en-US'):'',act:'stepsEdit'}];
+ if(pd)out.push({l:'Workout: '+esc(pd.name),ok:!!(l.workout&&l.workout.finishedAt),s:l.workout&&!l.workout.finishedAt?'in progress':'',act:'gotoWorkout'});
+ if(dow===0)out.push({l:'Progress photos',ok:progPhotos().some(x=>x.d===d),s:'Sundays',act:'gotoBody'});
+ return out;
+}
+
 /* ---------- Today ---------- */
 function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today();
@@ -527,7 +542,10 @@ function todayView(){
  const sg=pr.stepGoal,st=lg.steps;
  const sStk=streakOf(x=>dayFlags(x).hit);
  const needW=isT&&lg.weight==null;
- return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>
+ const chk=checklist(d);const nDone=chk.filter(x=>x.ok).length,allDone=nDone===chk.length;
+ const chkCard=`<div class="card ${allDone?'':''}" style="padding:12px 16px"><div class="row" style="margin-bottom:4px"><div class="sp"><h3 style="margin:0">${isT?'Today':fmtShort(d)}'s checklist</h3></div><span class="chip" style="${allDone?'background:var(--okbg);color:var(--oktx)':''}">${allDone?'All done':nDone+' / '+chk.length}</span></div>
+ ${chk.map(x=>`<button class="cl ${x.ok?'ok':''}" data-act="${x.act}"><span class="ck">${ic('check',16)}</span><span class="n">${x.l}</span><span class="s">${x.s||''}</span></button>`).join('')}</div>`;
+ return header(DOW[parseD(d).getDay()].slice(0,3)+", "+fmtShort(d),`<button class="ib" data-act="cal" aria-label="Calendar">${ic('cal',22)}</button>`)+`<div class="week">${wk}</div>${chkCard}
  <div class="card"><div class="row"><div class="sp"><div class="xs mut">Calories eaten</div><div class="big">${rnd(t.kcal)} <span class="mut sm" style="font-weight:400">/ ${T.kcal}</span></div></div><div style="text-align:right"><div class="xs mut">${rem>=0?'Remaining':'Over by'}</div><div style="font-size:20px;font-weight:700;color:${rem>=0?'var(--txt)':'var(--badtx)'}">${Math.abs(rnd(rem))}</div></div></div>
  <div class="bar ${rem<0?'over':''}"><i style="width:${pct}%"></i></div>
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein)}${ring('Carbs',t.carbs,T.carbs)}${ring('Fat',t.fat,T.fat)}</div>
@@ -861,6 +879,8 @@ document.addEventListener('click',async e=>{
   case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
   case 'phPick':$('#f_photo').click();break;
   case 'bodyAdd':$('#pp_in').click();break;
+  case 'gotoFood':UI.tab='food';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render();break;
+  case 'gotoBody':UI.tab='progress';LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
   case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
   case 'phView':{const src=t.getAttribute('src');if(!src)break;let ov=$('#ov');const full=document.createElement('div');full.id='ov';full.className='full';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>full.remove());document.body.appendChild(full);break}
