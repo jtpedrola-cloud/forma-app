@@ -231,7 +231,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='6ac9edc8ee686e31c382836636c286229a11ac2d';let verChecked=0;
+const BUILD='64cbab66c568f0a2404870a5d9cdf9305ef7c25c';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -774,7 +774,12 @@ function restFor(ex){const o=LS.get('forma.rest',{});if(o[ex])return o[ex];const
 const RIR=[[3,'3+ left'],[2,'1-2 left'],[0,'Failure']];
 const rirTxt=x=>x.rir==null?'':x.rir===0?' F':x.rir===3?' (3+)':' (1-2)';
 const setTxt=x=>(x.w?x.w+' x ':'')+x.r+rirTxt(x)+((x.drops||[]).length?' + drop '+x.drops.map(d=>(d.w?d.w+' x ':'')+d.r).join(', '):'');
-let audioCtx=null;function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();[0,.25,.5].forEach(t=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,audioCtx.currentTime+t);g.gain.exponentialRampToValueAtTime(.3,audioCtx.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+t+.18);o.connect(g).connect(audioCtx.destination);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.2)})}catch(e){}}
+/* Rest timer sound: a loud rising chime when rest ends, short ticks for the last 3 seconds. Uses media volume. */
+let audioCtx=null;
+function actx(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){return null}}
+function tone(c,f,t,d,vol,type){const o=c.createOscillator(),g=c.createGain();o.type=type||'triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,c.currentTime+t);g.gain.exponentialRampToValueAtTime(vol,c.currentTime+t+.015);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+t+d);o.connect(g).connect(c.destination);o.start(c.currentTime+t);o.stop(c.currentTime+t+d+.05)}
+function beep(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;[0,.62].forEach(b=>[[880,0],[1175,.14],[1568,.28]].forEach(([f,t])=>tone(c,f,b+t,.34,.9)))}
+function restTick(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(c)tone(c,660,0,.07,.5,'square')}
 document.addEventListener('pointerdown',()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}},{once:true});
 /* keep the screen on during a live workout so the rest timer can ring */
 let wakeLock=null;async function syncWake(){const wo=logOf(today()).workout,live=UI.tab==='workout'&&wo&&!wo.finishedAt&&!document.hidden;
@@ -785,8 +790,9 @@ function updateRest(){
  const live=UI.tab==='workout'&&r&&cfg.token;
  if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;try{navigator.vibrate&&navigator.vibrate([300,120,300,120,300])}catch(e){}beep();if(live)toast0('Rest over. Next set.')}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
- if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div style="min-width:54px"><b id="rt">0:00</b><div class="xs mut" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'Rest')}</div></div><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest15m">-15</button><button class="btn ghost sm" data-act="rest30">+30</button><button class="btn ghost sm" data-act="restSkip">Skip</button></div></div>`}
+ if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div style="min-width:54px"><b id="rt">0:00</b><div class="xs mut" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'Rest')}</div></div><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest15m">-15</button><button class="btn ghost sm" data-act="rest30">+30</button><button class="btn ghost sm" data-act="restSkip">Skip</button><button class="btn ghost sm" data-act="soundTog" aria-label="Timer sound">${LS.get('forma.sound',1)===0?'Muted':'Sound'}</button></div></div>`}
  $('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
+ const sec=Math.ceil(left);if(sec<=3&&sec>=1&&r.lastTick!==sec){r.lastTick=sec;restTick()}
 }
 setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
 setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest()},500);
@@ -1323,6 +1329,7 @@ document.addEventListener('click',async e=>{
    },{delay:2000,t:new Date().toISOString()});
    if(on)startRest(restFor(D.ex),(exdb().exercises[D.ex]||{}).n);else{UI.rest=null;}render();break}
   case 'restSet':{const o=LS.get('forma.rest',{}),cur=restFor(D.ex),i=REST_PRESETS.indexOf(cur);o[D.ex]=REST_PRESETS[(i+1)%REST_PRESETS.length];LS.set('forma.rest',o);render();break}
+  case 'soundTog':{const on=LS.get('forma.sound',1)!==0;LS.set('forma.sound',on?0:1);t.textContent=on?'Muted':'Sound';if(!on)beep();break}
   case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
   case 'rir':editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const v=+D.v;if(x.rir===v)delete x.rir;else x.rir=v},{delay:1500});render();break;
   case 'dropAdd':{let w0=0;editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const base=(x.drops&&x.drops.length?x.drops[x.drops.length-1].w:x.w)||0;w0=base>=20?Math.round(base*.8/2.5)*2.5:Math.round(base*.8);(x.drops=x.drops||[]).push({w:w0,r:0})},{delay:1500});UI.rest=null;updateRest();render();break}
