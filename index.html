@@ -271,7 +271,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='5875945d75a0dc13907fe2d0998d62fa6edee46f';let verChecked=0;
+const BUILD='8c2d4eeaf5815e5215f7748ac7981d8d131b8fea';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -316,10 +316,11 @@ const profile=()=>cur(P_PROFILE),program=()=>cur(P_PROG),exdb=()=>cur(P_EX);
 const KG=0.45359237;
 const unitsNow=()=>{if(typeof INT!=='undefined'&&INT.a&&INT.a.units&&document.getElementById('intake'))return INT.a.units;const p=profile();return p&&p.units==='lb'?'lb':'kg'};
 const imperial=()=>unitsNow()==='lb',wU=()=>imperial()?'lb':'kg';
+const hUnitNow=()=>{if(typeof INT!=='undefined'&&INT.a&&INT.a.hUnit&&document.getElementById('intake'))return INT.a.hUnit;const p=profile();return p&&p.hUnit==='ft'?'ft':'cm'};
 const kg2u=kg=>imperial()?kg/KG:kg,u2kg=v=>imperial()?v*KG:v;
 const fw=(kg,dp=1)=>kg==null||kg===''?'':String(+kg2u(+kg).toFixed(dp));
 const fwu=(kg,dp=1)=>kg==null?'-':fw(kg,dp)+' '+wU();
-const fh=cm=>{if(cm==null||cm==='')return '';if(!imperial())return cm+' cm';const t=Math.round(cm/2.54);return Math.floor(t/12)+"'"+(t%12)+'"'};
+const fh=cm=>{if(cm==null||cm==='')return '';if(hUnitNow()!=='ft')return cm+' cm';const t=Math.round(cm/2.54);return Math.floor(t/12)+"'"+(t%12)+'"'};
 const toKg=v=>(typeof v==='number'&&imperial())?+(v*KG).toFixed(2):v;
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
 const blank=p=>{const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
@@ -1264,7 +1265,7 @@ const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function intakeDefaults(){
  const pr=profile(),b=pr.body||{},ik=pr.intake||{},bf=latestBF(),P=program();
  const trainDays=Object.entries(P.weekdays||{}).filter(([,v])=>v!=='rest').map(([k])=>+k);
- return Object.assign({units:pr.units==='lb'?'lb':'kg',sex:b.sex||'male',age:b.assumed?'':b.age||'',heightCm:b.assumed?'':b.heightCm||'',weight:latestWeight(),
+ return Object.assign({units:pr.units==='lb'?'lb':'kg',hUnit:pr.hUnit==='ft'?'ft':'cm',sex:b.sex||'male',age:b.assumed?'':b.age||'',heightCm:b.assumed?'':b.heightCm||'',weight:latestWeight(),
   bfMode:bf?'photo':'',bf:bf?bf.pct:null,goal:'lose',rateShare:null,stepGoal:pr.stepGoal||10000,job:'desk',sportPerWeek:0,
   experience:'under1',trainDays:trainDays.length?trainDays:[1,3,5],minutes:60,focus:[],injuries:'',equipPreset:'gym',equipment:FormaPlan.PRESETS.gym.slice(),
   meals:3,habits:[],avoid:'',replaceProgram:!(P.days&&P.days.length)},ik.answers||{},{date:today()});
@@ -1280,9 +1281,9 @@ function intakeStep(){
  const a=INT.a,st=IN_STEPS[INT.step];
  if(st==='body')return `<h2>About you</h2><div class="lead">Used to estimate how many calories you burn.</div>
   <div class="qlabel">Sex</div><div class="pills">${pill('sex','male','Male',a.sex==='male')}${pill('sex','female','Female',a.sex==='female')}</div>
-  <div class="qlabel">Units</div><div class="pills">${pill('units','kg','kg and cm',a.units!=='lb')}${pill('units','lb','lb, ft and in',a.units==='lb')}</div>
-  ${(()=>{const lb=a.units==='lb',ti=lb&&a.heightCm!==''&&a.heightCm!=null?Math.round(+a.heightCm/2.54):null,hft=ti!=null?Math.floor(ti/12):'',hin=ti!=null?ti%12:'';
-  return `<div class="g2"><div class="fld"><label>Age</label><input id="in_age" inputmode="numeric" value="${esc(a.age)}" placeholder="30"></div>${lb?`<div class="fld"><label>Height</label><div class="row" style="gap:6px"><input id="in_hft" inputmode="numeric" value="${hft}" placeholder="5" aria-label="Feet" style="flex:1;min-width:0"><span class="mut sm">ft</span><input id="in_hin" inputmode="numeric" value="${hin}" placeholder="9" aria-label="Inches" style="flex:1;min-width:0"><span class="mut sm">in</span></div></div>`:`<div class="fld"><label>Height (cm)</label><input id="in_heightCm" inputmode="decimal" value="${esc(a.heightCm)}" placeholder="170"></div>`}</div>
+  <div class="g2"><div><div class="qlabel">Weight in</div><div class="pills">${pill('units','kg','kg',a.units!=='lb')}${pill('units','lb','lb',a.units==='lb')}</div></div><div><div class="qlabel">Height in</div><div class="pills">${pill('hUnit','cm','cm',a.hUnit!=='ft')}${pill('hUnit','ft','ft',a.hUnit==='ft')}</div></div></div>
+  ${(()=>{const lb=a.units==='lb',ft=a.hUnit==='ft',ti=ft&&a.heightCm!==''&&a.heightCm!=null?Math.round(+a.heightCm/2.54):null,hft=ti!=null?Math.floor(ti/12):'',hin=ti!=null?ti%12:'';
+  return `<div class="g2"><div class="fld"><label>Age</label><input id="in_age" inputmode="numeric" value="${esc(a.age)}" placeholder="30"></div>${ft?`<div class="fld"><label>Height</label><div class="row" style="gap:6px"><input id="in_hft" inputmode="numeric" value="${hft}" placeholder="5" aria-label="Feet" style="flex:1;min-width:0"><span class="mut sm">ft</span><input id="in_hin" inputmode="numeric" value="${hin}" placeholder="9" aria-label="Inches" style="flex:1;min-width:0"><span class="mut sm">in</span></div></div>`:`<div class="fld"><label>Height (cm)</label><input id="in_heightCm" inputmode="decimal" value="${esc(a.heightCm)}" placeholder="170"></div>`}</div>
   <div class="fld"><label>Weight today (${lb?'lb':'kg'})</label><input id="${lb?'in_weightLb':'in_weight'}" inputmode="decimal" value="${lb?(a.weight!==''&&a.weight!=null?+(+a.weight/KG).toFixed(1):''):esc(a.weight)}" placeholder="${lb?'175':'80'}"></div>`})()}`;
  if(st==='bf'){const lv=FormaPlan.BF_LEVELS,f=a.sex==='female',bf=latestBF();
   return `<h2>Body fat</h2><div class="lead">Pick the one that looks most like you right now. A rough guess is fine.</div>
@@ -1353,7 +1354,7 @@ function intakeSave(){
  const {t,p,x}=intakeCalc(),a=INT.a,T=today(),pr=profile();
  const gl={lose:'Lose fat',recomp:'Lose fat and build muscle',build:'Build muscle',maintain:'Maintain'}[a.goal];
  const answers=Object.assign({},a);delete answers.date;
- const data={units:a.units==='lb'?'lb':'kg',body:{sex:a.sex,age:+a.age,heightCm:+a.heightCm},intake:{date:T,answers}};
+ const data={units:a.units==='lb'?'lb':'kg',hUnit:a.hUnit==='ft'?'ft':'cm',body:{sex:a.sex,age:+a.age,heightCm:+a.heightCm},intake:{date:T,answers}};
  if(a.saveTargets!==false)Object.assign(data,{targets:{kcal:t.kcal,protein:t.protein,carbs:t.carbs,fat:t.fat},stepGoal:x.stepGoal,goalRate:t.kgWk,goal:gl+', about '+fw(Math.abs(t.kgWk),2)+' '+wU()+' a week'+(a.focus.length?'. Focus: '+a.focus.join(', '):'')});
  if(!pr.startWeight)data.startWeight=+a.weight;
  mutate(P_PROFILE,{k:'merge',data},{quiet:true});
@@ -1398,7 +1399,7 @@ function settingsSheet(){
  return `<h2>Settings</h2>
  <button class="btn full" style="margin-bottom:14px" data-act="inOpen">${ic('check',18)} ${pr&&pr.intake?'Redo setup questionnaire':'Set up my plan'}</button>
  <div class="fld"><label>What you track</label><div class="mods">${MODS.map(([k,l])=>`<button data-act="modTog" data-m="${k}" class="${modOn(k)?'on':''}">${modOn(k)?ic('check',16)+' ':''}${l}</button>`).join('')}</div><div class="xs mut" style="margin-top:6px">Turn off what you do not use: its tab, Today card, checklist rows and reminders go away. Today and Progress always stay.</div></div>
- <div class="fld"><label>Units</label><div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg and cm</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb, ft and in</button></div></div>
+ <div class="g2"><div class="fld"><label>Weight in</label><div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div></div><div class="fld"><label>Height in</label><div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div></div></div>
  <div class="fld"><label>Style</label><div class="thm">${THEMES.map(([id,n,d,bg,card,g])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}"><div class="sw" style="background:${bg};border:1px solid rgba(128,128,128,.25)"><i style="background:${g}"></i><i style="background:${card};bottom:20px;right:30%;height:8px"></i></div><b>${n}</b><span>${d}</span></button>`).join('')}</div></div>
  <div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -1525,6 +1526,7 @@ document.addEventListener('click',async e=>{
   case 'goto':navTab(D.t);if(D.s)setSub(D.t,D.s);window.scrollTo(0,0);render();break;
   case 'actNew':UI.date=today();openSheet(actSheet(),actSheet);break;
   case 'actDay':UI.date=D.d;openSheet(actSheet(),actSheet);break;
+  case 'hUnitSet':mutate(P_PROFILE,{k:'merge',data:{hUnit:D.u}},{delay:300});openSheet(settingsSheet());render();break;
   case 'unitsSet':mutate(P_PROFILE,{k:'merge',data:{units:D.u}},{delay:300});openSheet(settingsSheet());render();break;
   case 'modTog':{const ms=Object.assign({food:true,workout:true,activity:true},profile().modules||{});ms[D.m]=!ms[D.m];if(!ms.food&&!ms.workout&&!ms.activity){toast('Keep at least one.');break}
    mutate(P_PROFILE,{k:'merge',data:{modules:ms}},{delay:300});if(UI.tab===D.m&&!ms[D.m])UI.tab='today';openSheet(settingsSheet());render();break}
