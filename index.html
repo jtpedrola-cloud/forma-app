@@ -69,6 +69,18 @@ input[type=range]{min-height:auto;padding:0;border:0;background:none;accent-colo
 .qlabel{font-size:13px;font-weight:700;color:var(--soft);margin:14px 0 8px}
 .sumrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}.sumrow:first-child{border:0}.sumrow span:last-child{text-align:right;font-weight:700;white-space:nowrap}
 .why{font-size:12px;color:var(--mut);margin-top:2px;font-weight:400}
+#setdone{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:24;pointer-events:none}
+#setdone>div{max-width:480px;margin:0 auto;padding:0 16px;display:flex;gap:8px;pointer-events:auto}
+#setdone .btn{flex:1;min-height:56px;font-size:16px;box-shadow:0 8px 24px -10px var(--acc)}
+#setdone .sk{flex:none;min-width:56px;padding:0 10px;font-size:12px}
+body.live #rest{bottom:calc(128px + env(safe-area-inset-bottom))}
+#sdone{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;animation:sdin .15s ease-out}
+@keyframes sdin{from{opacity:0}to{opacity:1}}
+#sdone .sd-in{text-align:center;color:#fff;padding:24px}
+#sdone .sd-ck{width:112px;height:112px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 18px;color:#fff}
+#sdone .sd-t{font-size:28px;font-weight:800}#sdone .sd-s{font-size:17px;color:#ddd;margin-top:6px;line-height:1.4}#sdone .sd-r{font-size:14px;color:#aaa;margin-top:10px}
+#sdone .sd-undo{margin-top:26px;min-width:200px;min-height:60px;border-radius:30px;border:2px solid #fff;color:#fff;font-size:18px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,.08)}
+#sdone .sd-undo:active{background:rgba(255,255,255,.25)}
 .thm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .thm button{border:2px solid var(--line);border-radius:14px;padding:8px;text-align:left;background:var(--inset)}
 .thm button.on{border-color:var(--acc)}
@@ -231,7 +243,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='9defdff249f77d6252f54ab7e910c80848fb2f07';let verChecked=0;
+const BUILD='231c4711b726c9837be5444d4ce2835493cd8e0a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -255,7 +267,7 @@ const IC={
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
- left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
+ left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
 };
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 
@@ -532,6 +544,7 @@ function render(){
   const v={today:todayView,food:foodView,workout:workoutView,progress:progressView}[UI.tab];
   h=v();
  }
+ {const wo=profile()&&logOf(today()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt))}
  root.innerHTML=h+tabbar();
  renderSheet();updateRest();
  if(sc)window.scrollTo(0,sc);
@@ -724,7 +737,8 @@ function liveView(wo,lg){
   <div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="addSet" data-ex="${ex}">+ Add Set</button>${sets.length>1?`<button class="btn ghost" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">-</button>`:''}</div></div>`}).join('');
  const stt=woStats(wo),long=Date.now()-new Date(wo.startedAt)>3*3600000;
  return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><button class="sp" style="text-align:left" data-act="wStarted" aria-label="Change start time"><div class="xs mut">Elapsed - ${stt.done}/${stt.all} sets</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></button><button class="btn ghost sm" data-act="wCancel">Discard</button><button class="btn" data-act="wFinish">Finish</button></div></div>
- ${long?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}<div style="height:50px"></div>`;
+ ${long?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}<div style="height:${130}px"></div>
+ <div id="setdone"><div><button class="btn" data-act="setDone">${ic('check',22)} ${(()=>{const n=nextSet();return n?'Set done: '+esc((exdb().exercises[n.ex]||{}).n||'')+' '+(n.i+1)+'/'+n.n:'All sets done'})()}</button><button class="btn ghost sk" data-act="shakeTog" title="Shake to finish a set">${LS.get('forma.shake',1)===0?'Shake off':'Shake on'}</button></div></div>`;
 }
 /* workout times and totals */
 const hhmm=iso=>{const d=new Date(iso);return pad(d.getHours())+':'+pad(d.getMinutes())};
@@ -760,6 +774,53 @@ function startWorkout(id){
  day.exercises.forEach(e=>{sets[e.ex]=Array.from({length:e.sets},()=>({w:0,r:0,done:false}))});
  mutate(logP(today()),{k:'wStart',dayId:id,t:new Date().toISOString(),sets},{delay:300});
 }
+function tickSet(ex,i){
+  const T=today();let on=false;
+  editSets(ex,s=>{const x=s[i];x.done=!x.done;on=x.done;
+   if(on){
+    /* autofill: previous set today, else last session, else the program's rep target */
+    const ii=i,before=s.slice(0,i).reverse().find(z=>z.w||z.r),pv=prevFor(ex),last=pv&&(pv[i]||pv[pv.length-1]);
+    const src=before||last;
+    if(!x.w&&src&&src.w)x.w=src.w;
+    if(!x.r){if(src&&src.r)x.r=src.r;else{const wo=logOf(T).workout,dd=program().days.find(d=>d.id===wo.dayId),slot=dd&&dd.exercises.find(q=>effEx(wo,q.ex)===ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
+    /* prefill the next set with the same numbers */
+    const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
+   }
+  },{delay:2000,t:new Date().toISOString()});
+  if(on){UI.curEx=ex;startRest(restFor(ex),(exdb().exercises[ex]||{}).n)}else{UI.rest=null;}render();return on}
+/* Next set = the next open set of the exercise you last ticked, else the next exercise in order with an open set. */
+function nextSet(){
+ const wo=logOf(today()).workout;if(!wo||wo.finishedAt)return null;const day=program().days.find(d=>d.id===wo.dayId);if(!day)return null;
+ const order=day.exercises.map(e=>effEx(wo,e.ex));let st=Math.max(0,order.indexOf(UI.curEx));
+ for(let k=0;k<order.length;k++){const ex=order[(st+k)%order.length],a=(wo.sets||{})[ex]||[],i=a.findIndex(z=>!z.done);if(i>=0)return {ex,i,n:a.length}}
+ return null;
+}
+let sdTimer=null;
+function doneNext(how){
+ const nx=nextSet();if(!nx){toast0('All sets are done. Tap Finish.');return}
+ const before=clone(((logOf(today()).workout||{}).sets||{})[nx.ex]||[]);
+ if(!tickSet(nx.ex,nx.i))return;
+ try{navigator.vibrate&&navigator.vibrate(how==='shake'?[60,60,120]:40)}catch(e){}
+ const x=((logOf(today()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
+ let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';
+ el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done</div><div class="sd-s">${esc(nm)}<br>${x.w?x.w+' kg x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
+ <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
+ el._undo={ex:nx.ex,before};el.addEventListener('click',e=>{if(!e.target.closest('.sd-undo'))el.remove()});
+ document.body.appendChild(el);clearTimeout(sdTimer);sdTimer=setTimeout(()=>{const z=$('#sdone');if(z)z.remove()},3000);
+}
+function undoDone(){const el=$('#sdone');if(!el||!el._undo)return;const u=el._undo;editSets(u.ex,s=>{s.length=0;u.before.forEach(z=>s.push(z))},{delay:1500});UI.rest=null;updateRest();el.remove();render();toast0('Undone.')}
+/* Shake: 4 strong jolts within a second, only during a live workout with the app on screen. */
+const SHK={peaks:[],last:0,cool:0};
+function onMotion(e){
+ if(LS.get('forma.shake',1)===0||document.hidden||UI.tab!=='workout'||UI.sheet||$('#cam')||$('#intake'))return;
+ const wo=logOf(today()).workout;if(!wo||wo.finishedAt)return;
+ const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
+ const dev=Math.abs(Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z)-9.81),now=performance.now();
+ if(dev<13||now-SHK.last<110)return;SHK.last=now;SHK.peaks=SHK.peaks.filter(t=>now-t<1000);SHK.peaks.push(now);
+ if(SHK.peaks.length>=4&&now>SHK.cool){SHK.cool=now+3000;SHK.peaks=[];if($('#sdone'))return;doneNext('shake')}
+}
+window.addEventListener('devicemotion',onMotion);
+function askMotion(){try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().catch(()=>{})}catch(e){}}
 function editSets(ex,fn,o){
  const p=logP(today()),wo=logOf(today()).workout;if(!wo)return;
  const sets=clone((wo.sets||{})[ex])||[];fn(sets);
@@ -1297,7 +1358,7 @@ document.addEventListener('click',async e=>{
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
-  case 'wStart':if(UI.wDay&&D.id)startWorkout(D.id);break;
+  case 'wStart':askMotion();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'finKeep':closeSheet();break;
@@ -1322,20 +1383,10 @@ document.addEventListener('click',async e=>{
   case 'cues':UI.cues[D.ex]=!UI.cues[D.ex];render();break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
   case 'rmSet':editSets(D.ex,s=>{if(s.length>1)s.pop()},{delay:2000});break;
-  case 'chk':{
-   let on=false;
-   editSets(D.ex,s=>{const x=s[+D.i];x.done=!x.done;on=x.done;
-    if(on){
-     /* autofill: previous set today, else last session, else the program's rep target */
-     const i=+D.i,before=s.slice(0,i).reverse().find(z=>z.w||z.r),pv=prevFor(D.ex),last=pv&&(pv[i]||pv[pv.length-1]);
-     const src=before||last;
-     if(!x.w&&src&&src.w)x.w=src.w;
-     if(!x.r){if(src&&src.r)x.r=src.r;else{const wo=logOf(T).workout,dd=program().days.find(d=>d.id===wo.dayId),slot=dd&&dd.exercises.find(q=>effEx(wo,q.ex)===D.ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
-     /* prefill the next set with the same numbers */
-     const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
-    }
-   },{delay:2000,t:new Date().toISOString()});
-   if(on)startRest(restFor(D.ex),(exdb().exercises[D.ex]||{}).n);else{UI.rest=null;}render();break}
+  case 'chk':tickSet(D.ex,+D.i);break;
+  case 'setDone':askMotion();doneNext('tap');break;
+  case 'sdUndo':undoDone();break;
+  case 'shakeTog':{const on=LS.get('forma.shake',1)!==0;LS.set('forma.shake',on?0:1);askMotion();render();toast0(on?'Shake is off.':'Shake on: shake your phone firmly to finish a set.');break}
   case 'restSet':{const o=LS.get('forma.rest',{}),cur=restFor(D.ex),i=REST_PRESETS.indexOf(cur);o[D.ex]=REST_PRESETS[(i+1)%REST_PRESETS.length];LS.set('forma.rest',o);render();break}
   case 'soundTog':{const on=LS.get('forma.sound',1)!==0;LS.set('forma.sound',on?0:1);t.textContent=on?'Muted':'Sound';if(!on)beep();break}
   case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
