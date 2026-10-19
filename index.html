@@ -27,7 +27,7 @@
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
 .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pg img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--inset);display:block}
-.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp.tlgrid{grid-template-columns:repeat(3,1fr);gap:6px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
 .bfbar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),var(--warn) 60%,var(--bad));margin:14px 0 18px;opacity:.85}
 .bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
 .bfbar s{position:absolute;top:0;height:8px;border-radius:4px;background:rgba(255,255,255,.35);text-decoration:none}
@@ -261,7 +261,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='1b9c65416d82fa0dc9c0126ea125063bd65d4a90';let verChecked=0;
+const BUILD='516390cd9d7e696f13a3b585834cf041a7911894';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -941,7 +941,11 @@ function lineChart(pts,startW){
 }
 /* ---------- body: progress photos (data/progress/<date>/<id>.jpg) and body fat estimates (log.bodyFat) ---------- */
 function progPhotos(){const m={};Object.keys(DB.tree).concat(Object.keys(DB.photos)).forEach(p=>{const x=p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\/[^/]+\.(jpe?g|png|webp)$/);if(x)(m[x[1]]=m[x[1]]||[]).includes(p)||m[x[1]].push(p)});
- return Object.keys(m).sort().map(d=>({d,ps:m[d].sort()}))}
+ return Object.keys(m).sort().map(d=>({d,ps:m[d].sort(phOrder)}))}
+/* a day's photos in pose order (front, side, back), oldest to newest within a pose (ids start with a letter then a base-36 time) */
+const POSES=['front','side','back','other'];
+function phOrder(a,b){const pa=POSES.indexOf(poseOf(a)),pb=POSES.indexOf(poseOf(b));if(pa!==pb)return pa-pb;const ka=a.split('/').pop().replace(/^[a-z]+-/,'').slice(1),kb=b.split('/').pop().replace(/^[a-z]+-/,'').slice(1);return ka<kb?-1:ka>kb?1:0}
+const dayLatest=ps=>POSES.map(z=>ps.filter(p=>poseOf(p)===z).pop()).filter(Boolean);
 function bfHistory(){return Object.keys(DB.files).filter(p=>p.startsWith('data/log/')).map(p=>view(p)).filter(l=>l&&l.bodyFat&&typeof l.bodyFat.pct==='number').map(l=>({d:l.date,...l.bodyFat})).sort((a,b)=>a.d<b.d?-1:1)}
 const latestBF=()=>{const h=bfHistory();return h.length?h[h.length-1]:null};
 let bodyLoaded=false;
@@ -958,25 +962,26 @@ function bodyCard(){
   ${bf.note?`<div class="sm" style="padding:10px 12px;border-radius:12px;background:var(--inset);color:var(--soft)">${esc(bf.note)}</div>`:''}`;
  }else top=`<div class="sm mut" style="margin:6px 0 10px">No estimate yet. Send Claude front, side and back photos and ask for a body fat estimate.</div>`;
  const chart=h.length>=2?`<div class="sm" style="margin:16px 0 4px"><b>Body fat over time</b></div>${bfChart(h)}`:'';
- const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null;
+ const last=ph.length?ph[ph.length-1]:null,first=ph.length>1?ph[0]:null,cmpP=x=>dayLatest(x.ps)[0];
  const gal=last?timelineHTML(ph):'';
- const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(first.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(last.ps[0]))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
+ const cmp=first?`<div class="sm" style="margin:14px 0 8px"><b>First vs latest</b></div><div class="cmp"><div><img src="${esc(photoURL(cmpP(first)))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(first.d)}</div></div><div><img src="${esc(photoURL(cmpP(last)))}" alt="" data-act="phView"><div class="xs mut">${fmtShort(last.d)}</div></div></div>`:'';
  return `<div class="card"><div class="row"><div class="sp"><h3>Body</h3><div class="mut sm">Body fat estimate and progress photos</div></div></div>${top}${chart}${gal}${cmp}
  <input type="file" id="pp_in" accept="image/*" multiple hidden><div class="row" style="margin-top:12px"><button class="btn sp" data-act="camOpen">${ic('camera',20)} Take photos</button><button class="btn ghost" data-act="bodyAdd">Upload</button></div>
  <div class="xs mut" style="margin-top:8px">Best results: morning, same spot and light, relaxed, front, side and back. Estimates from photos are about plus or minus 3%.</div></div>`;
 }
 const poseOf=p=>{const m=p.match(/\/(front|side|back)-[^/]*$/);return m?m[1]:'other'};
-function tlEntries(ph,pose){const out=[];ph.forEach(x=>{const ps=pose==='all'?x.ps.slice(0,1):x.ps.filter(p=>poseOf(p)===pose);if(ps.length)out.push({d:x.d,p:ps[ps.length-1]})});return out}
+function tlEntries(ph,pose){const out=[];ph.forEach(x=>{if(pose==='all'){const all=dayLatest(x.ps);if(all.length)out.push({d:x.d,p:all[0],all});return}const ps=x.ps.filter(p=>poseOf(p)===pose);if(ps.length)out.push({d:x.d,p:ps[ps.length-1]})});return out}
+const tlGrid=e=>e.all.map(p=>`<div><img src="${esc(photoURL(p))}" alt="" data-act="phView"><div class="xs mut">${poseOf(p)}</div></div>`).join('');
 function timelineHTML(ph){
  const have=['front','side','back'].filter(z=>ph.some(x=>x.ps.some(p=>poseOf(p)===z)));
- if(!UI.tlPose||(UI.tlPose!=='all'&&!have.includes(UI.tlPose)))UI.tlPose=have[0]||'all';
+ if(!UI.tlPose||(UI.tlPose!=='all'&&!have.includes(UI.tlPose)))UI.tlPose='all';
  const es=tlEntries(ph,UI.tlPose);if(!es.length)return '';
  if(UI.tlIdx==null||UI.tlIdx>=es.length)UI.tlIdx=es.length-1;
- es.forEach(e=>photoURL(e.p));
+ es.forEach(e=>(e.all||[e.p]).forEach(photoURL));
  const e=es[UI.tlIdx];
  return `<div class="row" style="margin:14px 0 8px"><div class="sp"><b class="sm">Timeline</b> <span class="xs mut">${es.length} session${es.length===1?'':'s'}</span></div><button class="btn ghost sm" data-act="bodyAll">All photos</button></div>
  ${have.length>1?`<div class="seg sm">${['all'].concat(have).map(z=>`<button data-act="tlPose" data-p="${z}" class="${UI.tlPose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>`:''}
- <img id="tl_img" class="tlimg" src="${esc(photoURL(e.p))}" alt="" data-act="phView">
+ ${e.all&&e.all.length>1?`<div class="cmp tlgrid" id="tl_grid">${tlGrid(e)}</div>`:`<img id="tl_img" class="tlimg" src="${esc(photoURL(e.p))}" alt="" data-act="phView">`}
  <div class="row" style="margin-top:8px"><b class="sm sp" id="tl_d">${tlLabel(e)}</b><span class="xs mut" id="tl_m">${tlMeta(e)}</span></div>
  ${es.length>1?`<input type="range" id="tl_rng" min="0" max="${es.length-1}" value="${UI.tlIdx}" aria-label="Scroll through photos by date"><div class="row xs mut"><span class="sp">${fmtShort(es[0].d)}</span><span>${fmtShort(es[es.length-1].d)}</span></div>`:''}`;
 }
@@ -1465,7 +1470,7 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('input',e=>{
  if(e.target.id==='cam_op'){CAM.op=+e.target.value/100;const g=document.querySelector('#cam .gh');if(g)g.style.opacity=CAM.op;const v=$('#cam_opv');if(v)v.textContent=e.target.value+'%';return}
- if(e.target.id==='tl_rng'){UI.tlIdx=+e.target.value;const es=tlEntries(progPhotos(),UI.tlPose),x=es[UI.tlIdx];if(!x)return;const i=$('#tl_img');i.src=photoURL(x.p)||i.src;$('#tl_d').textContent=tlLabel(x);$('#tl_m').textContent=tlMeta(x)}
+ if(e.target.id==='tl_rng'){UI.tlIdx=+e.target.value;const es=tlEntries(progPhotos(),UI.tlPose),x=es[UI.tlIdx];if(!x)return;const g=$('#tl_grid'),i=$('#tl_img');if(x.all&&x.all.length>1&&g)g.innerHTML=tlGrid(x);else if(i)i.src=photoURL(x.p)||i.src;else{render();return}$('#tl_d').textContent=tlLabel(x);$('#tl_m').textContent=tlMeta(x)}
 });
 document.addEventListener('change',async e=>{
  if(e.target.id==='pp_in'&&e.target.files&&e.target.files.length){
