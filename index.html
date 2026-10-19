@@ -26,7 +26,7 @@
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:inset 0 1px 0 rgba(255,140,60,.06)}
 :root[data-theme="ember"] .big{background:linear-gradient(180deg,#fff,#f3d9c8);-webkit-background-clip:text;background-clip:text;color:transparent}
 :root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
-.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pg img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--inset);display:block}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pgi{position:relative}.pgdel{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}.pgdel.sure{width:auto;padding:0 10px;background:var(--bad,#e11d48)}.pg img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:var(--inset);display:block}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp.tlgrid{grid-template-columns:repeat(3,1fr);gap:6px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
 .bfbar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),var(--warn) 60%,var(--bad));margin:14px 0 18px;opacity:.85}
 .bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
@@ -262,7 +262,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='472f58518411bd2621ecbf196a68476a85e0eb5e';let verChecked=0;
+const BUILD='3dad48a2e8fc7489545cd43ff6c7ab548e19f3a2';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -286,7 +286,7 @@ const IC={
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
- left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
+ left:'<path d="M15 5l-7 7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>'
 };
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 
@@ -295,6 +295,7 @@ let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:
 let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});DB.photos=DB.photos||{};
 if(!DB.files)DB={files:{},pend:{},tree:{}};
 const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
+const delQ=()=>DB.delQ||(DB.delQ=[]);
 const TABS=['today','food','workout','progress'],savedUI=LS.get('forma.ui',{});
 const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null};
 const P_CHK='data/checkins.json';const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json';
@@ -390,6 +391,7 @@ const GH={
   const r=await gh('PUT','/contents/'+encPath(p),body);
   if(!r.ok)throw new HttpErr(r.status);
  },
+ async delBin(p,msg){const sha=await this.meta0(p);if(!sha)return;const r=await gh('DELETE','/contents/'+encPath(p),{message:msg,sha,branch:'main'});if(!r.ok&&r.status!==404)throw new HttpErr(r.status)},
  async meta0(p){const r=await gh('GET','/contents/'+encPath(p)+'?ref=main');if(r.status===404)return null;if(!r.ok)throw new HttpErr(r.status);return (await r.json()).sha},
  async blobURL(p){
   const r=await gh('GET','/contents/'+encPath(p)+'?ref=main',null,true);
@@ -415,6 +417,7 @@ function photoURL(p){
  return '';
 }
 async function flushPhotos(){
+ for(const p of delQ().slice()){await B.delBin(p,'app: delete photo '+p.split('/').slice(2).join('/'));DB.delQ=delQ().filter(x=>x!==p);(DB.gone=DB.gone||{})[p]=Date.now();persist()}
  for(const p of Object.keys(DB.photos)){
   await B.putBin(p,DB.photos[p],'app: photo '+p.split('/').slice(2).join('/'));
   PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];DB.tree[p]=DB.tree[p]||'uploaded';delete DB.photos[p];persist();
@@ -451,6 +454,7 @@ const DEMOB={
   JSON.parse(text);DEMOFILES.F[p]=text;DEMOFILES.sha[p]='s'+(demoN++);return {sha:DEMOFILES.sha[p]}},
  /* test hook: change a file "from outside" (as Claude would) */
  async putBin(p,b64){DEMOFILES.F[p]=b64;DEMOFILES.sha[p]='s'+(demoN++)},
+ async delBin(p){await tick();delete DEMOFILES.F[p];delete DEMOFILES.sha[p]},
  async blobURL(p){if(!DEMOFILES.F[p])throw new HttpErr(404);return 'data:image/jpeg;base64,'+DEMOFILES.F[p]},
  external(p,fn){const cur=DEMOFILES.F[p]?JSON.parse(DEMOFILES.F[p]):blank(p);DEMOFILES.F[p]=JSON.stringify(fn(cur),null,2)+'\n';DEMOFILES.sha[p]='s'+(demoN++)}
 };
@@ -462,7 +466,7 @@ if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
 let flushT=null,flushing=false,again=false,lastErr='';
 function setSync(s,msg){UI.sync=s;UI.syncMsg=msg||'';const d=$('#sd');if(d){d.className='dot '+s;d.parentElement.title=s+(msg?': '+msg:'')}}
 const isNet=e=>!(e instanceof HttpErr)&&!(e&&e.status);
-const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length;
+const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length+delQ().length;
 function errText(e){
  if(isNet(e))return 'No connection. Your changes are saved on this phone and will sync when you are back online.';
  if(e.status===401||e.status===403)return 'GitHub rejected the token. Open settings and paste a new one.';
@@ -941,7 +945,7 @@ function lineChart(pts,startW){
  <div class="xs mut">Dots are daily weigh-ins, the line is the smoothed trend.</div>`;
 }
 /* ---------- body: progress photos (data/progress/<date>/<id>.jpg) and body fat estimates (log.bodyFat) ---------- */
-function progPhotos(){const m={};Object.keys(DB.tree).concat(Object.keys(DB.photos)).forEach(p=>{const x=p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\/[^/]+\.(jpe?g|png|webp)$/);if(x)(m[x[1]]=m[x[1]]||[]).includes(p)||m[x[1]].push(p)});
+function progPhotos(){const m={},gone=delQ(),g2=DB.gone||{};Object.keys(DB.tree).concat(Object.keys(DB.photos)).forEach(p=>{if(gone.includes(p)||Date.now()-(g2[p]||0)<36e5)return;const x=p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\/[^/]+\.(jpe?g|png|webp)$/);if(x)(m[x[1]]=m[x[1]]||[]).includes(p)||m[x[1]].push(p)});
  return Object.keys(m).sort().map(d=>({d,ps:m[d].sort(phOrder)}))}
 /* a day's photos in pose order (front, side, back), oldest to newest within a pose (ids start with a letter then a base-36 time) */
 const POSES=['front','side','back','other'];
@@ -1066,8 +1070,8 @@ function bfChart(h){
 }
 function bodyAllSheet(){
  const ph=progPhotos().slice().reverse(),h=bfHistory();
- return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<img src="${esc(photoURL(p))}" alt="" data-act="phView">`).join('')}</div>`}).join('')}
- <div class="xs mut" style="margin-top:12px">To delete a photo, ask Claude.</div>`;
+ return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<div class="pgi"><img src="${esc(photoURL(p))}" alt="" data-act="phView"><button class="pgdel" data-act="phDel" data-p="${esc(p)}" aria-label="Delete photo">${ic('trash',18)}</button></div>`).join('')}</div>`}).join('')}
+ ${ph.length?'':'<div class="sm mut">No progress photos.</div>'}<div class="xs mut" style="margin-top:12px">Tap the bin on a photo, then tap again to delete it.</div>`;
 }
 
 /* ---------- maintenance (TDEE) estimate ----------
@@ -1422,6 +1426,8 @@ document.addEventListener('click',async e=>{
   case 'gotoFood':navTab('food');window.scrollTo(0,0);render();break;
   case 'gotoBody':navTab('progress');render();{const h=[...document.querySelectorAll('.card h3')].find(x=>x.textContent==='Body');if(h)h.scrollIntoView({block:'start'})}break;
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
+  case 'phDel':if(!t.classList.contains('sure')){document.querySelectorAll('.pgdel.sure').forEach(b=>{b.classList.remove('sure');b.innerHTML=ic('trash',18)});t.classList.add('sure');t.textContent='Delete';break}
+   {const p=D.p;if(DB.photos[p])delete DB.photos[p];else if(!delQ().includes(p))delQ().push(p);delete DB.tree[p];delete PHOTOS[p];UI.tlIdx=null;persist();flushSoon(300);openSheet(bodyAllSheet(),bodyAllSheet);render();toast0('Photo deleted.')}break;
   case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
   case 'phView':{const src=t.getAttribute('src');if(!src||$('#phv'))break;const full=document.createElement('div');full.id='phv';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>phvClose());document.body.appendChild(full);navPush({l:'photo'});break}
   case 'foodSave':{
