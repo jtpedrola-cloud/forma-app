@@ -231,7 +231,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='64cbab66c568f0a2404870a5d9cdf9305ef7c25c';let verChecked=0;
+const BUILD='9defdff249f77d6252f54ab7e910c80848fb2f07';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&UI.sheet)||document.getElementById('cam'))return;verChecked=Date.now();
@@ -715,9 +715,9 @@ function liveView(wo,lg){
   <button class="btn ghost sm" data-act="cues" data-ex="${ex}">Notes</button>${(inf.a||[]).length||swapped?`<button class="btn ghost sm" data-act="swap" data-slot="${e.ex}">Swap</button>`:''}</div>
   ${UI.cues[ex]?`<ul class="cues">${(inf.c||['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}
   <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">KG</div><div style="text-align:center">${u}</div><div></div></div>
-  ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]);return `<div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?pv.w+' x ':'')+pv.r:'-'}</div>
-  <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?s.w:''}" placeholder="${pv&&pv.w?pv.w:'0'}" aria-label="Kilograms set ${i+1}">
-  <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${pv?pv.r:'0'}" aria-label="${u} set ${i+1}">
+  ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?ps.w:(pv&&pv.w?pv.w:'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?pv.w+' x ':'')+pv.r:'-'}</div>
+  <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?s.w:''}" placeholder="${hw}" aria-label="Kilograms set ${i+1}">
+  <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
   <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-label="Mark set ${i+1} done">${ic('check',20)}</button></div>
   ${s.done&&u==='REPS'?`<div class="sx">${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?d.w:''}" placeholder="0" aria-label="Drop kilograms"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
@@ -1325,7 +1325,15 @@ document.addEventListener('click',async e=>{
   case 'chk':{
    let on=false;
    editSets(D.ex,s=>{const x=s[+D.i];x.done=!x.done;on=x.done;
-    if(on&&!x.w&&!x.r){const pv=prevFor(D.ex),p=pv&&(pv[+D.i]||pv[pv.length-1]);if(p){x.w=p.w;x.r=p.r}else{const wo=logOf(T).workout,slot=program().days.find(d=>d.id===wo.dayId).exercises.find(q=>effEx(wo,q.ex)===D.ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
+    if(on){
+     /* autofill: previous set today, else last session, else the program's rep target */
+     const i=+D.i,before=s.slice(0,i).reverse().find(z=>z.w||z.r),pv=prevFor(D.ex),last=pv&&(pv[i]||pv[pv.length-1]);
+     const src=before||last;
+     if(!x.w&&src&&src.w)x.w=src.w;
+     if(!x.r){if(src&&src.r)x.r=src.r;else{const wo=logOf(T).workout,dd=program().days.find(d=>d.id===wo.dayId),slot=dd&&dd.exercises.find(q=>effEx(wo,q.ex)===D.ex);const m=slot&&String(slot.reps).match(/\d+/g);x.r=m?+m[m.length-1]:0}}
+     /* prefill the next set with the same numbers */
+     const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
+    }
    },{delay:2000,t:new Date().toISOString()});
    if(on)startRest(restFor(D.ex),(exdb().exercises[D.ex]||{}).n);else{UI.rest=null;}render();break}
   case 'restSet':{const o=LS.get('forma.rest',{}),cur=restFor(D.ex),i=REST_PRESETS.indexOf(cur);o[D.ex]=REST_PRESETS[(i+1)%REST_PRESETS.length];LS.set('forma.rest',o);render();break}
