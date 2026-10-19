@@ -847,7 +847,7 @@ function adaptiveTDEE(){
 }
 function maintCard(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal;
- const train=maintFor(sg,60),rest=maintFor(5000,0);
+ const train=maintFor(sg,60),rest=maintFor(sg,0);
  const perWeek=Object.values(program().weekdays).filter(x=>x!=='rest').length;
  let sum=0,n=0;for(let i=1;i<=7;i++){const d=addDays(T,-i),l=logOf(d);if(l.steps==null&&!woMinutes(d)&&!dayActKcal(d))continue;sum+=maintFor(l.steps==null?5000:l.steps,woMinutes(d)).total+dayActKcal(d);n++}
  const wk=n?sum/n:null,typ=(train.total*perWeek+rest.total*(7-perWeek))/7;
@@ -856,7 +856,7 @@ function maintCard(){
  const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--faint)">${sub}</div>`:''}</span><span>${v}</span></div>`;
  return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance</h3><div class="mut sm">Calories you burn in a day (TDEE)</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(typ)}</b><div class="xs mut">per day, your week</div></div></div>
  <div style="margin-top:8px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+train.w+' kg'+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
- ${row('<b style="color:var(--txt)">Training day, '+(sg/1000)+'k steps</b>','<b>'+fmt(train.total)+'</b>')}${row('Rest day, 5k steps',fmt(rest.total))}
+ ${row('<b style="color:var(--txt)">Lifting day</b>','<b>'+fmt(train.total)+'</b>',(sg/1000)+'k steps + about 60 min lifting')}${row('Rest day',fmt(rest.total),(sg/1000)+'k steps, no lifting')}
  ${wk?row('Last 7 days, from your logs',fmt(wk),n+' day'+(n===1?'':'s')+' with steps or a workout'):''}
  ${row('From your weight trend',ad.ready?'<b>'+fmt(ad.tdee)+'</b>':'<span class="mut">'+ad.days+' / 14 days</span>',ad.ready?'eating '+fmt(ad.intake)+', weight '+(ad.rate>0?'+':'')+ad.rate.toFixed(2)+' kg a week':'most accurate once 14 days of food and weight are logged')}</div>
  <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset)">Target ${fmt(pr.targets.kcal)} is ${gap>=0?'about <b>'+fmt(gap)+' below</b>':'about <b>'+fmt(-gap)+' above</b>'} maintenance: roughly ${gap>=0?'-':'+'}${Math.abs(kgWk).toFixed(1)} kg a week.</div>
