@@ -531,7 +531,9 @@ function progressView(){
 /* ---------- Setup + settings ---------- */
 function setupView(){
  const owner=esc((cfg.repo||'jtpedrola-cloud/forma').split('/')[0]);
- const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=Forma&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
+ const ua=navigator.userAgent,dev=/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iPhone':'PC',d=new Date();
+ const keyName=encodeURIComponent(`Forma ${dev} ${d.toISOString().slice(0,10)} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`);
+ const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=${keyName}&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
  return `<div class="setup"><h1>Forma</h1><div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>
  <div class="card"><h3>Step 1: make your key</h3>
  <a class="btn full" style="text-decoration:none;margin:10px 0 14px" href="${keyUrl}" target="_blank" rel="noopener">Create my key on GitHub</a>
