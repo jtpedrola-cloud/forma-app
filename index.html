@@ -41,7 +41,8 @@ input[type=range]{min-height:auto;padding:0;border:0;background:none;accent-colo
 .seg.sm button{min-height:30px;font-size:13px}
 #cam{position:fixed;inset:0;background:#000;z-index:70;display:flex;flex-direction:column;color:#fff}
 #cam .vw{position:relative;flex:1;overflow:hidden;background:#000}
-#cam video,#cam .gh,#cam .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam .fr{position:absolute;left:0;top:0;width:100%;height:100%}
+#cam video,#cam .gh,#cam .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 #cam .gh{pointer-events:none}
 #cam .gl{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent calc(50% - .5px),rgba(255,255,255,.25) 50%,transparent calc(50% + .5px)),linear-gradient(transparent calc(33.3% - .5px),rgba(255,255,255,.18) 33.3%,transparent calc(33.3% + .5px),transparent calc(66.6% - .5px),rgba(255,255,255,.18) 66.6%,transparent calc(66.6% + .5px))}
 #cam .top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 18px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
@@ -261,7 +262,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3779e068ae6aebda0d7c2fd1bdb9354e29366a95';let verChecked=0;
+const BUILD='cae7c2ad5693778428eaf0700d10be9ace95dfe0';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -994,7 +995,7 @@ function camGhostPath(){const ps=[];progPhotos().forEach(x=>x.ps.forEach(p=>{if(
 async function camOpen(){
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('This browser cannot open the camera here. Use Upload.');return}
  let el=$('#cam');if(!el){el=document.createElement('div');el.id='cam';document.body.appendChild(el)}
- el.innerHTML=`<div class="vw"><video playsinline muted autoplay></video><img class="gh" alt=""><div class="gl"></div><img class="shot" alt="" hidden><div class="cd" hidden></div>
+ el.innerHTML=`<div class="vw"><div class="fr"><video playsinline muted autoplay></video><img class="gh" alt=""><div class="gl"></div><img class="shot" alt="" hidden></div><div class="cd" hidden></div>
  <div class="top"><button class="cb" data-act="camClose" aria-label="Close">${ic('x',22)}</button><b id="cam_t"></b><button class="cb" data-act="camGrid" aria-label="Grid">#</button><button class="cb" data-act="camFlipG" aria-label="Mirror ghost">${ic('mirror',20)}</button><button class="cb" data-act="camSwitch" aria-label="Switch camera">${ic('flipc',20)}</button></div></div><div class="bot" id="cam_bot"></div>`;
  document.body.style.overflow='hidden';navPush({l:'cam'});
  await camStart();camUI();
@@ -1003,11 +1004,17 @@ async function camStart(){
  if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());
  try{CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:CAM.facing,width:{ideal:1920},height:{ideal:1920}},audio:false})}
  catch(e){toast('Camera blocked. Allow camera access for this site in your browser settings, or use Upload.');camClose();return}
- const v=$('#cam video');if(!v)return;v.srcObject=CAM.stream;v.style.transform=CAM.facing==='user'?'scaleX(-1)':'';try{await v.play()}catch(e){}
+ const v=$('#cam video');if(!v)return;v.srcObject=CAM.stream;v.style.transform=CAM.facing==='user'?'scaleX(-1)':'';v.onloadedmetadata=v.onresize=camFit;try{await v.play()}catch(e){}camFit()
 }
+/* The preview frame has the camera's exact shape, so what you see (and the grid and ghost) is exactly the photo. */
+function camFit(){const v=$('#cam video'),vw=$('#cam .vw'),fr=$('#cam .fr');if(!v||!vw||!fr||!v.videoWidth)return;
+ const ar=v.videoWidth/v.videoHeight,W=vw.clientWidth,H=vw.clientHeight,w=W/H>ar?H*ar:W,h=W/H>ar?H:W/ar;
+ Object.assign(fr.style,{left:(W-w)/2+'px',top:(H-h)/2+'px',width:w+'px',height:h+'px'})}
+window.addEventListener('resize',()=>camFit());
 function camClose(fromPop){if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
 function camUI(){
  const el=$('#cam');if(!el)return;
+ requestAnimationFrame(camFit);
  const gp=camGhostPath(),g=el.querySelector('.gh'),src=gp?photoURL(gp):'';
  g.dataset.p=gp||'';g.src=src||'';g.style.display=src&&!CAM.shot?'':'none';g.style.opacity=CAM.op;g.style.transform=CAM.flip?'scaleX(-1)':'';
  el.querySelector('.gl').style.display=CAM.grid&&!CAM.shot?'':'none';
@@ -1017,7 +1024,7 @@ function camUI(){
  const bot=$('#cam_bot');
  if(CAM.shot){bot.innerHTML=`<div class="row" style="gap:10px;padding:10px 0"><button class="btn ghost sp" style="color:#fff;border-color:#333" data-act="camRetake">Retake</button><button class="btn sp" data-act="camUse">Save ${CAM.pose}</button></div>`;return}
  bot.innerHTML=`<div class="pz">${['front','side','back'].map(z=>`<button data-act="camPose" data-p="${z}" class="${CAM.pose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>
- ${gp?`<div class="row" style="gap:10px"><span class="xs" style="color:#aaa;width:74px">Ghost <b id="cam_opv" style="color:#fff">${Math.round(CAM.op*100)}%</b></span><input type="range" id="cam_op" min="0" max="90" value="${Math.round(CAM.op*100)}" aria-label="Ghost opacity"></div>`:'<div class="xs" style="color:#aaa;text-align:center;margin:6px 0">First ${CAM.pose} photo. Next time this one shows as a ghost to line up with.</div>'}
+ ${gp?`<div class="row" style="gap:10px"><span class="xs" style="color:#aaa;width:74px">Ghost <b id="cam_opv" style="color:#fff">${Math.round(CAM.op*100)}%</b></span><input type="range" id="cam_op" min="0" max="90" value="${Math.round(CAM.op*100)}" aria-label="Ghost opacity"></div>`:'<div class="xs" style="color:#aaa;text-align:center;margin:6px 0">First '+CAM.pose+' photo. Next time this one shows as a ghost to line up with.</div>'}
  <div class="row" style="justify-content:space-between;margin-top:6px"><button class="cb" style="background:#1a1a1a" data-act="camTimer">${CAM.timer?CAM.timer+'s':'No timer'}</button><button class="shut" data-act="camShoot" aria-label="Take photo"></button><span style="min-width:74px"></span></div>`;
 }
 /* Camera sounds: a tick each second of the self-timer (higher for the last 3) and a two-part shutter click with a white flash. */
