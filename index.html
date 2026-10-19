@@ -115,6 +115,7 @@ input:focus{border-color:var(--acc)}
 .wrap{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:8px;padding:14px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px}
 header.hwrap{flex-wrap:wrap}.mods{display:flex;gap:8px}.mods button{flex:1;min-height:42px;border-radius:12px;background:var(--inset);color:var(--mut);font-weight:600;font-size:14px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:4px}.mods button.on{background:var(--chipb);color:var(--chipbtx);border-color:var(--acc)}header .psub{flex-basis:100%;order:9}header .psub .seg{margin:4px 0 0}
+.fst{position:fixed;left:0;right:0;z-index:19;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 16px 8px;animation:sdin .15s ease-out;text-align:left}.fst>div{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap}.fst b{font-size:18px;font-weight:800;margin-right:2px}.fst .chip{padding:2px 8px}
 .ovg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .ovt{position:relative;text-align:left;background:var(--card);border:1px solid var(--line,transparent);border-radius:16px;padding:12px 14px;min-height:96px;display:flex;flex-direction:column;gap:2px;overflow:hidden;color:var(--txt)}
 .ovt:active{transform:scale(.98)}.ovt b{font-size:22px;font-weight:800;line-height:1.2}.ovt b small{font-size:13px;font-weight:500;color:var(--mut)}
@@ -270,7 +271,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='52a63cb6f2d4d8b9d93acd46fb19c3c5e50b1c6a';let verChecked=0;
+const BUILD='98cd8fcef3b9fb7e81a941120322d78d5dc69bcd';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -585,7 +586,7 @@ function render(){
  }
  {const wo=profile()&&logOf(today()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt))}
  root.innerHTML=h+tabbar();
- renderSheet();updateRest();
+ renderSheet();updateRest();foodSticky();
  if(sc)window.scrollTo(0,sc);
 }
 
@@ -684,6 +685,12 @@ function stepsTodayCard(d){const pr=profile(),sg=pr.stepGoal,st=logOf(d).steps,s
 
 /* ---------- Food ---------- */
 const FOOD_SUBS=[['log','Log'],['insights','Insights']];
+/* Floating totals: once the big calories card scrolls off, a slim strip with calories and P/C/F pins under the header. */
+let fstIO=null;
+function foodSticky(){if(fstIO){fstIO.disconnect();fstIO=null}
+ const main=$('#fmain'),st=$('#fst');if(!main||!st||!window.IntersectionObserver)return;
+ fstIO=new IntersectionObserver(([e])=>{const show=!e.isIntersecting&&e.boundingClientRect.top<0;if(show){const hd=document.querySelector('header');st.style.top=Math.max(0,hd?hd.getBoundingClientRect().bottom:0)+'px'}st.hidden=!show},{threshold:0});
+ fstIO.observe(main)}
 /* Deficit or surplus for a day: maintenance (the adaptive estimate) plus that day's sport, minus what was eaten. */
 function dayBurn(d){const sm=smartNow();return rnd(sm.tdee)+actsOf(d).reduce((a,x)=>a+(x.kcal||0),0)}
 function deficitRow(d,kcal){const burn=dayBurn(d),def=burn-kcal,sport=actsOf(d).reduce((a,x)=>a+(x.kcal||0),0);
@@ -705,8 +712,10 @@ function foodView(){
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec ${its.length?'':'empty-meal'}" data-m="${k}" ${open?'open':''}><summary><div class="hd"><span class="t">${l}</span><div class="mc"><span class="chip b">${rnd(mt.kcal)} cal</span><span class="chip p">${rnd(mt.protein)}g P</span><span class="chip c">${rnd(mt.carbs)}g C</span><span class="chip f">${rnd(mt.fat)}g F</span></div></div><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">+</button></summary>
   ${its.length?its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}${i.by==='claude'?'<span class="tag">Claude</span>':''}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r"><div>${rnd(num(i.kcal))} cal</div><div class="xs mut">${rnd(num(i.protein))}g protein</div></div></button>`).join(''):`<div class="empty" style="padding:8px">Nothing here yet. Tap + to add.</div>`}</details>`}).join('');
- return fh+`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="ib" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left')}</button><b>${d===today()?'Today, ':''}${fmtShort(d)}</b><button class="ib" data-act="dnav" data-n="1" aria-label="Next day">${ic('right')}</button></div>
- <div class="card"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
+ const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v);
+ const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${big}</b><span class="mut">${isCons?'/ '+T.kcal+' cal':'cal left'}</span><span class="chip p">P ${mv(t.protein,T.protein)}</span><span class="chip c">C ${mv(t.carbs,T.carbs)}</span><span class="chip f">F ${mv(t.fat,T.fat)}</span></div></button>`;
+ return fh+strip+`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="ib" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left')}</button><b>${d===today()?'Today, ':''}${fmtShort(d)}</b><button class="ib" data-act="dnav" data-n="1" aria-label="Next day">${ic('right')}</button></div>
+ <div class="card" id="fmain"><div class="seg"><button data-act="mode" data-m="consumed" class="${isCons?'on':''}">Consumed</button><button data-act="mode" data-m="remaining" class="${!isCons?'on':''}">Remaining</button></div>
  <div class="big">${big} <span class="mut sm" style="font-weight:400">/ ${T.kcal} cal</span></div><div class="bar ${t.kcal>T.kcal?'over':''}"><i style="width:${Math.min(100,t.kcal/T.kcal*100)}%"></i></div>
  ${t.kcal>0?deficitRow(d,t.kcal):''}
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:isCons})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons})}</div></div>
@@ -1493,6 +1502,7 @@ document.addEventListener('click',async e=>{
   case 'actSave':{const m=Math.round(num($('#act_min').value));if(!m){toast('Add the minutes.');break}
    const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
+  case 'fstTop':window.scrollTo({top:0,behavior:'smooth'});break;
   case 'gotoFood':navTab('food');setSub('food','log');window.scrollTo(0,0);render();break;
   case 'gotoBody':navTab('progress');setSub('progress','photos');window.scrollTo(0,0);render();break;
   case 'sub':setSub(D.t,D.s);window.scrollTo(0,0);render();break;
