@@ -250,7 +250,177 @@
     ],
   };
 
+  /* Simple mode (docs/specs/simple-mode.md): progress without counting. No calorie numbers anywhere in these words. */
+  const simple = {
+    q: {
+      title: 'Do you want to count calories and macros?',
+      lead: 'Counting is the most accurate. If it is not for you, Forma can still tell you each week what to change.',
+      count: 'Yes, count them',
+      countSub: 'Most accurate. You log food and see calories, protein, carbs and fat.',
+      simple: 'No, keep it simple',
+      simpleSub: 'Weigh in, and we tell you what to change.',
+      note: 'You can turn counting on anytime in Settings.',
+      to: 'Next: counting',
+      err: 'Pick one to go on.',
+      tileDays: 'training days',
+      adjusts: 'Every Sunday we read your weight trend and tell you what to change.',
+    },
+    settings: {
+      label: 'Count calories and macros',
+      line: 'Off keeps it simple: weigh in and we tell you what to change. On shows calories, macros and the food log. Your data is kept either way.',
+      on: 'Counting is on',
+      off: 'Counting is off',
+      toastOn: 'Counting is on. Your calories and macros are back.',
+      toastOff: 'Simple mode. Weigh in and we will tell you what to change.',
+    },
+    eat: {
+      tab: 'Eat',
+      strip: 'Want numbers?',
+      stripLink: 'Turn on counting',
+      week: 'This week',
+      habits: 'Habits today',
+      habitsEdit: 'Edit habits',
+      habitsDone: 'Done',
+      habitAdd: 'Add a habit',
+      habitPh: 'Your own habit',
+      habitReset: 'Back to the starter list',
+      learn: 'What to eat',
+      learnSub: 'Plain guidance for your goal',
+      journal: 'Photo journal',
+      journalSub: 'Snap a meal to remember it. No numbers.',
+      journalEmpty: 'No photos yet. Snap a meal and it is kept here, with no numbers.',
+      snap: 'Snap a meal',
+      toastSnap: 'Saved to your journal.',
+      noPhoto: 'Meal photo',
+      journalOne: 'Meal photo',
+      journalDel: 'Delete photo',
+      cmdPh: 'weight 84.9, steps 8200, waist 90',
+      cmdNone: 'Simple mode logs weight, steps, sport and waist. Try: waist 90',
+    },
+    today: {
+      weight: 'Weight trend',
+      weightSub: 'Last 28 days',
+      verdict: 'This week',
+      none: 'No weigh-ins yet. Step on the scale and log it.',
+      perWeek: 'a week',
+    },
+    rate: { down: 'Down {n} {u} a week', up: 'Up {n} {u} a week', flat: 'Flat this month' },
+    protein: {
+      one: 'Aim for a palm of protein at every meal.',
+      two: 'Aim for two palms of protein at every meal.',
+    },
+    waistRecomp: 'Waist down {n} {u}, weight flat: you are recomping. Keep eating and training as you are.',
+    verdict: {
+      collecting: { title: 'Getting to know you', text: 'Weigh in {n} more times and I will tell you what to change.' },
+      collectingDays: { title: 'Almost there', text: 'Keep weighing in. In about {d} more days I will tell you what to change.' },
+      lose_on: { title: 'On track', text: 'Keep eating as you are.' },
+      lose_slow: { title: 'A little slow', text: 'Eat a little less this week: smaller rice portions, no sugary drinks.' },
+      lose_fast: { title: 'Too fast', text: 'You are losing too fast. Add a portion of protein and carbs at one meal.' },
+      lose_up: { title: 'Weight is going up', text: 'Eat less this week. Swap one cup of rice for half a cup and a vegetable, and swap sugary drinks and snacks for water or fruit.' },
+      gain_on: { title: 'On track', text: 'Keep eating as you are.' },
+      gain_slow: { title: 'A little slow', text: 'Eat more this week: add one more meal, or a bigger portion of rice.' },
+      gain_fast: { title: 'Too fast', text: 'You are gaining too fast. Ease off: skip the extra snack and keep the protein.' },
+      gain_down: { title: 'Weight is going down', text: 'Eat more this week. Add a full cup of rice at two meals, and a snack of banana with peanut butter or milk.' },
+      keep_steady: { title: 'Steady', text: 'Your weight is holding. Keep eating as you are.' },
+      keep_down: { title: 'Drifting down', text: 'Eat a little more this week: a bigger portion of rice, or a snack with protein.' },
+      keep_up: { title: 'Drifting up', text: 'Eat a little less this week: smaller rice portions, no sugary drinks.' },
+      recomp: { title: 'Recomping', text: 'Weight is flat and your waist is shrinking. Keep eating and training as you are.' },
+    },
+    tour: {
+      cmd: ['Log anything', 'The round button opens one line to type in, like weight 84.9, steps 8200, waist 90 or basketball 1 hour. You check the preview before anything saves.'],
+      trend: ['Your weight trend', 'The dots are your weigh-ins and the line is the trend. The number under it is how fast you are moving each week.'],
+      verdict: ['This week', 'Once there are enough weigh-ins, this says in plain words whether to eat the same, less or more.'],
+      eat: ['What to change', 'Your weekly instruction sits at the top of Eat. It comes from your weight trend, not from counting.'],
+      habits: ['Habits', 'Tick the small habits you kept today. Tap Edit habits to make the list yours.'],
+      numbers: ['Want numbers?', 'Turn on counting here any time, or in Settings. Nothing you logged is lost.'],
+    },
+    sunday: 'Check-in: {title}. {text}',
+    /* Starter habit list (editable). id is saved on each day's log as habits:{ id:true }. */
+    habitList: [
+      { id: 'protein', label: 'Protein at every meal' },
+      { id: 'veg', label: 'Vegetables twice' },
+      { id: 'water', label: 'Water through the day' },
+      { id: 'sugar', label: 'No sugary drinks' },
+      { id: 'stop', label: 'Stop at 80% full' },
+    ],
+    /* "What to eat": plain guidance per goal. Portions in palms, fists and cups, no calorie numbers. */
+    guide: {
+      plateTitle: 'Build each meal like this',
+      intro: {
+        lose: 'You do not need to count. Build each meal the same way and the scale will follow.',
+        build: 'You need to eat more than you burn, and enough protein. Build each meal the same way.',
+        keep: 'Keep your meals steady and the weight will hold. Build each meal the same way.',
+      },
+      plate: [
+        { h: 'A palm of protein', p: 'The size and thickness of your palm. Two palms if you are a big man.' },
+        { h: 'A fist or two of vegetables', p: 'Half your plate when you can. Cooked or raw.' },
+        { h: 'A cupped hand of rice or other carbs', p: 'About one cup of cooked rice. Less than that when you want to lose, more than that when you want to gain.' },
+        { h: 'A thumb of fat', p: 'Cooking oil, nuts, coconut milk, mayonnaise. The easy one to overdo.' },
+      ],
+      goal: {
+        lose: 'To lose: keep the protein, shrink the rice to a cupped hand or less, and skip sugary drinks. Eat slowly and stop at 80% full.',
+        build: 'To gain: keep the protein, grow the rice to one and a half cups, and add one snack a day: milk, banana, peanut butter, eggs.',
+        keep: 'To hold: keep the plate the same every day and weigh in weekly. Change one thing only if the verdict says so.',
+      },
+      protein: {
+        title: 'Protein sources',
+        items: [
+          { n: 'Chicken breast or thigh, grilled or adobo', s: 'One palm, about 120 g cooked' },
+          { n: 'Fish: bangus, tilapia, galunggong, tuna', s: 'One palm, or one small whole fish' },
+          { n: 'Eggs', s: '2 to 3 eggs' },
+          { n: 'Pork or beef, lean cuts (sinigang, tapa, steak)', s: 'One palm, trim the fat' },
+          { n: 'Tofu, tempeh, lentils, beans', s: 'A fist' },
+          { n: 'Greek yogurt, cottage cheese, milk', s: 'One cup' },
+          { n: 'Canned sardines or tuna', s: 'One small can, cheap and quick' },
+        ],
+      },
+      veg: {
+        title: 'Vegetables',
+        items: [
+          { n: 'Pinakbet, chopsuey, sauteed kangkong, ginisang ampalaya', s: 'A fist or two' },
+          { n: 'Salad, cucumber, tomato', s: 'A big handful' },
+          { n: 'Broccoli, carrots, green beans, cabbage', s: 'A fist' },
+        ],
+      },
+      carbs: {
+        title: 'Rice and carbs',
+        items: [
+          { n: 'Rice, brown or white', s: 'A cupped hand, one cup cooked' },
+          { n: 'Potato, camote, corn, oats, bread', s: 'A fist' },
+          { n: 'Noodles and pasta', s: 'A cupped hand, then add vegetables' },
+        ],
+      },
+      cheap: {
+        title: 'Cheap and easy',
+        items: [
+          { n: 'Eggs, canned sardines, tofu, chicken thighs', s: 'The cheapest protein you can buy' },
+          { n: 'Frozen mixed vegetables, camote, banana', s: 'Cheap, lasts, no prep' },
+          { n: 'Cook rice once, keep protein ready in the fridge', s: 'Makes the easy choice the lazy one' },
+        ],
+      },
+      out: {
+        title: 'Eating out',
+        items: [
+          { n: 'Jollibee: Chickenjoy with rice (no extra gravy), or a burger steak with a side of vegetables', s: 'Skip the large drink and the fries' },
+          { n: 'Mang Inasal: chicken inasal paa or pecho with one cup of rice', s: 'Skip the unli-rice refill and the extra oil' },
+          { n: 'Turo-turo: pick one protein, one vegetable, one cup of rice', s: 'Look for grilled, steamed or sinigang' },
+          { n: 'Global: grilled chicken bowl, a burrito bowl, a sandwich with a side salad', s: 'Water or unsweetened tea' },
+        ],
+      },
+      limit: {
+        title: 'Go easy on',
+        items: [
+          { n: 'Sugary drinks, juice, milk tea', s: 'The biggest quiet source of extra food' },
+          { n: 'Fried foods and chicharon', s: 'Once or twice a week' },
+          { n: 'Dessert and snacks eaten while distracted', s: 'Sit down and enjoy a small one' },
+        ],
+      },
+    },
+  };
+
+  intake.track = simple.q; /* the screen after the goal: counting or simple */
+
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? v[k] : m));
-  root.FormaCopy = { intake, bfScale, fill };
+  root.FormaCopy = { intake, bfScale, simple, fill };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.FormaCopy;
 })(typeof window !== 'undefined' ? window : globalThis);
