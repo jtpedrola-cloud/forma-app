@@ -227,6 +227,14 @@ svg{display:block}
 .hint{font-size:12px;color:var(--ok);margin-top:4px}
 .cues{background:var(--inset);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;color:var(--soft)}
 .cues li{margin:4px 0 4px 16px}
+.xth{position:relative;flex:none;width:var(--s,40px);height:var(--s,40px);border-radius:10px;overflow:hidden;background:var(--inset);display:inline-flex;align-items:center;justify-content:center;color:var(--mut);font-weight:700;font-size:calc(var(--s,40px)*.42);border:1px solid var(--line);padding:0}
+.xth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--inset)}
+.xfr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.xfr figure{margin:0}
+.xfr .fb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--inset);display:flex;align-items:center;justify-content:center;color:var(--mut);font-weight:700;font-size:40px;border:1px solid var(--line)}
+.xfr img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--inset);cursor:zoom-in}
+.xfr figcaption{text-align:center;font-size:12px;color:var(--mut);margin-top:4px}
+.chip.amber{background:transparent;border:1px solid var(--warnline);color:var(--warn)}
+.dchips button small{font-weight:500;opacity:.75;margin-left:5px;font-size:11px}
 #rest{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:25}
 #rest>div{max-width:480px;margin:0 auto;padding:0 16px}
 .cmdbar{display:flex;gap:8px;align-items:center;margin:0 0 12px}.cmdbar input{border-radius:24px;padding:0 16px;min-height:48px;flex:1;min-width:0;text-overflow:ellipsis}
@@ -284,7 +292,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='8be78ff186b86b46a6386d6e5e48ea096544d8d4';let verChecked=0;
+const BUILD='98d7084ad89e8e0526a443f7ea2cbe41a26560e9';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -566,7 +574,7 @@ async function refresh(force){
   persist();
   if(!pendCount())setSync('synced');else flushSoon(200);
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
- refreshing=false;softRender();
+ refreshing=false;firstSync=true;try{autoFinishCheck()}catch(e){}softRender();
 }
 async function loadDay(d){
  const ps=[foodP(d),logP(d)].filter(p=>DB.tree[p]&&!(DB.files[p]&&DB.files[p].sha===DB.tree[p]));
@@ -822,6 +830,22 @@ function musclesOf(day){
  const c={};day.exercises.forEach(e=>((exdb().exercises[e.ex]||{}).p||[]).forEach(m=>c[m]=(c[m]||0)+1));
  return Object.keys(c).sort((a,b)=>c[b]-c[a]).slice(0,6).map(m=>(exdb().muscles[m]||{name:m}).name);
 }
+/* Exercise pictures (data/exercises.json img:[start,end], hosted elsewhere, never copied into the repo) and session length. */
+const exImg=id=>{const e=(exdb().exercises||{})[id],a=e&&e.img;return Array.isArray(a)&&typeof a[0]==='string'&&/^https:\/\//.test(a[0])?a:null};
+const exLetter=id=>(String(exName(id)||'?').trim().charAt(0)||'?').toUpperCase();
+function thumb(id,px,tap){const im=exImg(id),inner=(im?`<img src="${esc(im[0])}" loading="lazy" alt="">`:'')+`<span>${esc(exLetter(id))}</span>`;
+ return tap?`<button class="xth" style="--s:${px}px" data-act="cues" data-ex="${esc(id)}" aria-label="Notes for ${esc(exName(id))}">${inner}</button>`:`<span class="xth" style="--s:${px}px">${inner}</span>`}
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.closest&&t.closest('.xth,.fb'))t.remove()},true);
+function notesSheet(ex){const inf=exdb().exercises[ex]||{n:ex},im=exImg(ex);
+ const fr=(i,l)=>`<figure><div class="fb">${im&&typeof im[i]==='string'&&/^https:\/\//.test(im[i])?`<img src="${esc(im[i])}" loading="lazy" alt="${l} position" data-act="phView">`:''}<span>${esc(exLetter(ex))}</span></div><figcaption>${l}</figcaption></figure>`;
+ return `<h2>${esc(inf.n)}</h2><div class="xs mut" style="margin:-6px 0 10px">${esc(exMeta(ex))}</div>${im?`<div class="xfr">${fr(0,'Start')}${fr(1,'End')}</div><div class="xs mut" style="margin:-6px 0 10px">Tap a picture to see it full screen.</div>`:''}<ul class="cues">${(inf.c&&inf.c.length?inf.c:['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`}
+const sessMax=()=>{const v=+((profile()||{}).sessionMax);return v>0?v:90};
+function dayRaw(day,wo){if(!day)return 0;let m=0;const db=exdb().exercises;
+ const add=(ex,n)=>{m+=Math.max(0,n)*((db[ex]||{}).big?3.5:2.3)+1.5};
+ day.exercises.forEach(e=>{const ex=wo?effEx(wo,e.ex):e.ex;add(ex,wo&&wo.sets&&wo.sets[ex]?wo.sets[ex].length:e.sets)});
+ if(wo)(wo.extra||[]).forEach(x=>{const ex=effEx(wo,x.ex);add(ex,wo.sets&&wo.sets[ex]?wo.sets[ex].length:x.sets)});
+ return m}
+const dayMinutes=(day,wo)=>Math.round(dayRaw(day,wo)/5)*5;
 function workoutView(){
  const T=today(),lg=logOf(T),wo=lg.workout,P=program();
  if(wo&&!wo.finishedAt)return liveView(wo,lg);
@@ -848,10 +872,10 @@ function workoutView(){
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
  }else{
-  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>${!isT&&sel<T?`<button class="btn full" style="margin-top:12px" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}</div>
-  <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item"><div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
+  body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}${!isT&&sel<T?' - not logged':!isT?' - planned':''}</div><h3>${esc(day.name)}</h3><div class="mut sm">${esc(day.focus)}</div><div class="row" style="margin-top:4px;gap:8px;flex-wrap:wrap"><span class="sm">about ${dayMinutes(day)} min</span>${dayMinutes(day)>sessMax()?`<span class="chip amber">over your ${sessMax()} min</span>`:''}</div><div class="chips" style="margin-top:10px">${musclesOf(day).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>${!isT&&sel<T?`<button class="btn full" style="margin-top:12px" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}</div>
+  <div class="card"><h3>${day.exercises.length} Exercises</h3>${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<div class="item">${thumb(e.ex,40)}<div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${esc((exdb().exercises[e.ex]||{}).eq||'')}${pv?' - last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' x ':'')+pv[0].r:''}</div></div><div class="r mut sm">${e.sets} x ${esc(e.reps)}</div></div>`}).join('')}</div>`;
  }
- const chips=isT&&!swo?`<div class="xs mut" style="margin:2px 0 8px">${td?'Not doing '+esc(td.name)+' today? Pick another day:':'Train anyway. Pick a day:'}</div><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}</button>`).join('')}</div>`:'';
+ const chips=isT&&!swo?`<div class="xs mut" style="margin:2px 0 8px">${td?'Not doing '+esc(td.name)+' today? Pick another day:':'Train anyway. Pick a day:'}</div><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}<small>${dayMinutes(x)} min</small></button>`).join('')}</div>`:'';
  return header('Workout')+nav+`<div class="week w2">${strip}</div>`+body+chips+
  (isT&&!swo&&day?`<button class="btn full" data-act="wStart" data-id="${day.id}" style="position:sticky;bottom:calc(70px + env(safe-area-inset-bottom))">Start Workout</button>`:'');
 }
@@ -861,9 +885,8 @@ function liveView(wo,lg){
   const ex=effEx(wo,e.ex),inf=exdb().exercises[ex]||{n:ex},sets=(wo.sets&&wo.sets[ex])||[],prev=prevFor(ex),u=unitOf(ex);
   const swapped=ex!==e.ex,eu=exU(ex);
   const easy=prev&&prev.length&&prev.every(x=>x.rir===3);
-  return `<div class="card" style="padding:12px 12px 14px"><div class="row"><div class="sp"><h3>${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets - '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
+  return `<div class="card" style="padding:12px 12px 14px"><div class="row">${thumb(ex,56,true)}<div class="sp"><h3 data-act="cues" data-ex="${ex}" style="cursor:pointer">${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}</h3><div class="xs mut">${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets - '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
   <button class="btn ghost sm" data-act="cues" data-ex="${ex}">Notes</button><button class="btn ghost sm" data-act="swap" data-slot="${e.ex}">Swap</button></div>
-  ${UI.cues[ex]?`<ul class="cues">${(inf.c||['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}
   <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">${eu.toUpperCase()}</div><div style="text-align:center">${u}</div><div></div></div>
   ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="swr" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="set ${s.done?'dn':''}"><div class="sn">${i+1}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
   <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
@@ -873,8 +896,8 @@ function liveView(wo,lg){
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="addSet" data-ex="${ex}">+ Add Set</button>${sets.length>1?`<button class="btn ghost" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">-</button>`:''}${e.extra?`<button class="btn ghost" data-act="exDel" data-ex="${e.ex}">Remove</button>`:''}</div></div>`}).join('')+`<button class="btn ghost full" style="margin-top:2px" data-act="exAdd">+ Add exercise</button>`;
  const stt=woStats(wo),long=Date.now()-new Date(wo.startedAt)>3*3600000;
- return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><button class="sp" style="text-align:left" data-act="wStarted" aria-label="Change start time"><div class="xs mut">Elapsed - ${stt.done}/${stt.all} sets</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b></button><button class="btn ghost sm" data-act="wCancel">Discard</button><button class="btn" data-act="wFinish">Finish</button></div></div>
- ${long?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}<div style="height:${130}px"></div>
+ return header(esc(day.name))+`<div class="lbar"><div class="row card" style="margin:0;padding:10px 14px"><button class="sp" style="text-align:left" data-act="wStarted" aria-label="Change start time"><div class="xs mut">Elapsed - ${stt.done}/${stt.all} sets</div><b style="font-size:20px" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b> <span class="xs" style="color:${dayMinutes(day,wo)>sessMax()?'var(--warn)':'var(--mut)'}">of about ${dayMinutes(day,wo)}</span></button><button class="btn ghost sm" data-act="wCancel">Discard</button><button class="btn" data-act="wFinish">Finish</button></div></div>
+ ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}<div style="height:${130}px"></div>
  <div id="setdone"><div><button class="btn" data-act="setDone">${ic('check',22)} ${(()=>{const n=nextSet();return n?'Set done: '+esc((exdb().exercises[n.ex]||{}).n||'')+' '+(n.i+1)+'/'+n.n:'All sets done'})()}</button><button class="btn ghost sk" data-act="shakeTog" title="Shake to finish a set">${LS.get('forma.shake',1)===0?'Shake off':'Shake on'}</button></div></div>`;
 }
 /* workout times and totals */
@@ -941,7 +964,7 @@ function nextSet(){
 let PICK={mode:'add',slot:null};
 const inWorkout=wo=>{const day=program().days.find(x=>x.id===wo.dayId)||{exercises:[]};return new Set([...day.exercises.map(e=>effEx(wo,e.ex)),...(wo.extra||[]).map(x=>effEx(wo,x.ex))])};
 function exMeta(id){const e=exdb().exercises[id]||{},m=exdb().muscles||{};return ((e.p||[]).map(k=>(m[k]||{name:k}).name).join(', ')+(e.eq?' - '+e.eq:'')).trim()}
-function exRow(id,tag){return `<button class="item" data-act="pickEx" data-ex="${esc(id)}"><div class="sp"><div class="n">${esc(exName(id))}${tag?' ('+tag+')':''}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(exMeta(id))}</div></div></button>`}
+function exRow(id,tag){return `<button class="item" data-act="pickEx" data-ex="${esc(id)}">${thumb(id,40)}<div class="sp"><div class="n">${esc(exName(id))}${tag?' ('+tag+')':''}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(exMeta(id))}</div></div></button>`}
 function pickSheet(){
  const wo=logOf(today()).workout,db=exdb().exercises,used=inWorkout(wo),swap=PICK.mode==='swap',slot=PICK.slot,eff=swap?effEx(wo,slot):null;
  const day=program().days.find(x=>x.id===wo.dayId)||{exercises:[]};
@@ -950,7 +973,7 @@ function pickSheet(){
  else{day.exercises.forEach(e=>{const x=effEx(wo,e.ex);((db[e.ex]||{}).a||[]).forEach(a=>{if(db[a]&&!used.has(a)&&!rec.includes(a))rec.push(a)});((db[x]||{}).p||[]).forEach(m=>prim.add(m))})}
  const recSet=new Set(rec);
  const same=Object.keys(db).filter(id=>!used.has(id)&&!recSet.has(id)&&id!==eff&&(db[id].p||[]).some(m=>prim.has(m))).sort((a,b)=>exName(a).localeCompare(exName(b)));
- return `<h2>${swap?'Swap '+esc(exName(slot)):'Add exercise'}</h2><div class="mut sm" style="margin-bottom:10px">${swap?'Only for today. Your sets move over.':'Adds 3 sets at the end of today\'s workout.'}</div>
+ return `<h2>${swap?'Swap '+esc(exName(slot)):'Add exercise'}</h2><div class="mut sm" style="margin-bottom:10px">${swap?'Only for today. Your sets move over.':'Adds 3 sets at the end of today\'s workout.'}</div>${(()=>{if(swap)return '';const raw=dayRaw(day,wo),mx=sessMax();return raw>mx?`<div class="sm" style="color:var(--warn);margin:-4px 0 10px">Already about ${dayMinutes(day,wo)} min, over your ${mx} min.</div>`:raw+8.4>mx?`<div class="sm" style="color:var(--warn);margin:-4px 0 10px">Adding one makes it about ${Math.round((raw+8.4)/5)*5} min, over your ${mx} min.</div>`:''})()}
  <div class="xs mut" style="font-weight:600;margin:6px 0 0">Recommended</div>${rec.length?rec.map(x=>exRow(x,x===slot?'original':'')).join(''):'<div class="xs mut" style="padding:8px 0">No recommendations listed.</div>'}
  <div class="xs mut" style="font-weight:600;margin:12px 0 0">Same muscle</div>${same.length?same.map(x=>exRow(x)).join(''):'<div class="xs mut" style="padding:8px 0">Nothing else for that muscle.</div>'}
  <div class="fld" style="margin-top:14px"><label>Search the whole library</label><input id="ex_q" placeholder="Search by name, muscle or equipment" autocomplete="off" autocapitalize="off"><div id="ex_res"></div></div>`}
@@ -1047,6 +1070,48 @@ function editSets(ex,fn,o){
  mutate(p,op,o);
 }
 let finMode='drop';
+/* Forgotten workouts. lastAt is the time of the last ticked set. 20 minutes after it, with the workout still open, a
+   notification (service worker, tag forma-finish) and a banner ask to finish. After 45 minutes without a set, or 3 hours
+   since the start, the app finishes it itself at lastAt + 2 min (startedAt + 60 min if no set was ticked) and says so. */
+const FIN_NUDGE=20*60000,FIN_AUTO=45*60000,FIN_MAX=3*3600000;
+const lastMs=wo=>wo&&wo.lastAt?new Date(wo.lastAt).getTime():null;
+function finStale(wo){const la=lastMs(wo);return !!(la&&!wo.finishedAt&&Date.now()-la>=FIN_NUDGE&&Date.now()>=(UI.finSnooze||0))}
+function finBanner(wo){const m=Math.max(20,Math.floor((Date.now()-lastMs(wo))/60000));
+ return `<div class="card warn" id="finbn" style="margin-top:10px"><b class="sm">No set for ${m} min. Finish?</b><div class="xs mut" style="margin:2px 0 8px">Your last set was at ${clock(wo.lastAt)}. If you finish now the end time is set to just after it.</div><div class="row"><button class="btn sm sp" data-act="wFinish">Finish</button><button class="btn ghost sm sp" data-act="finSnooze">Keep going</button></div></div>`}
+function toastEdit(m,d){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.innerHTML=`<span>${esc(m)}</span><button>Edit</button>`;
+ t.querySelector('button').onclick=()=>{t.remove();openSheet(editWoSheet(d))};document.body.appendChild(t);setTimeout(()=>t.remove(),12000)}
+let autoBusy=false;
+function autoFinishCheck(){
+ if(autoBusy||UI.sheet)return;autoBusy=true;
+ try{const T=today(),now=Date.now();
+  for(const d of [T,addDays(T,-1),addDays(T,-2)]){
+   const wo=logOf(d).workout;if(!wo||wo.finishedAt||wo.marked||!wo.startedAt)continue;
+   const st=new Date(wo.startedAt).getTime(),la=lastMs(wo);
+   if(la&&now-la<=FIN_AUTO)continue;
+   if(!((la&&now-la>FIN_AUTO)||now-st>FIN_MAX))continue;
+   const f=new Date(la?la+2*60000:st+60*60000).toISOString();
+   mutate(logP(d),{k:'wFinalize',mode:'drop'},{quiet:true});
+   mutate(logP(d),{k:'wTimes',f},{quiet:true,delay:300});
+   UI.rest=null;render();
+   toastEdit('Finished your workout for you at '+clock(f)+', edit if wrong',d);
+  }
+ }finally{autoBusy=false}
+}
+let finKey='',finShown='',firstSync=false;
+function notifyFinish(){try{if(!window.Notification||Notification.permission!=='granted')return;
+ (swReg?Promise.resolve(swReg):navigator.serviceWorker.ready).then(g=>g.showNotification('Still training?',{body:'Tap to finish your workout.',tag:'forma-finish',renotify:false,vibrate:[200,100,200],icon:'icon-192.png',data:{tab:'workout'}})).catch(()=>{})}catch(e){}}
+function finTick(){
+ if(firstSync&&!UI.sheet)autoFinishCheck();
+ const wo=logOf(today()).workout,live=wo&&!wo.finishedAt&&lastMs(wo);let key='',at=0;
+ if(live){at=Math.max(lastMs(wo)+FIN_NUDGE,UI.finSnooze||0);key=wo.lastAt+'|'+at}
+ if(key!==finKey){finKey=key;
+  if(key&&at>Date.now())swPost({k:'finish',at});else{swPost({k:'finishCancel'});if(!key)try{if(swReg&&swReg.getNotifications)swReg.getNotifications({tag:'forma-finish'}).then(n=>n.forEach(x=>x.close())).catch(()=>{})}catch(e){}}}
+ if(key&&at<=Date.now()&&document.hidden&&finShown!==key){finShown=key;notifyFinish()}
+ if(live&&UI.tab==='workout'&&!UI.sheet&&finStale(wo)!==!!$('#finbn'))softRender();
+}
+setInterval(finTick,5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)finTick()});
+try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{const d=e.data||{};if(d.k==='goto'&&d.tab==='workout'){navTab('workout');window.scrollTo(0,0);render()}})}catch(e){}
 /* Rest per exercise: big compounds 2:30, jumps 2:00, everything else 1:30. A tap on the chip cycles presets and is
    remembered per exercise on this phone (forma.rest). */
 const REST_PRESETS=[60,90,120,150,180];
@@ -1542,6 +1607,7 @@ function settingsSheet(){
  <div class="fld"><label>What you track</label><div class="mods">${MODS.map(([k,l])=>`<button data-act="modTog" data-m="${k}" class="${modOn(k)?'on':''}">${modOn(k)?ic('check',16)+' ':''}${l}</button>`).join('')}</div><div class="xs mut" style="margin-top:6px">Turn off what you do not use: its tab, Today card, checklist rows and reminders go away. Today and Progress always stay.</div></div>
  <div class="g2"><div class="fld"><label>Weight in</label><div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div></div><div class="fld"><label>Height in</label><div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div></div></div>
  <div class="fld"><label>Style</label><div class="thm">${THEMES.map(([id,n,d,bg,card,g])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}"><div class="sw" style="background:${bg};border:1px solid rgba(128,128,128,.25)"><i style="background:${g}"></i><i style="background:${card};bottom:20px;right:30%;height:8px"></i></div><b>${n}</b><span>${d}</span></button>`).join('')}</div></div>
+ <div class="fld"><label>Longest session, minutes</label><input id="s_smax" inputmode="numeric" value="${sessMax()}"><div class="xs mut" style="margin-top:4px">A day longer than this gets an amber warning. Time is estimated from sets and exercises.</div></div>
  <div class="fld"><label>Notifications</label><div class="card" style="margin:0;padding:12px 14px"><div class="row" style="align-items:center;gap:10px"><div class="sm" style="flex:1">Rest timer alerts: <b>${notifState()}</b></div>${notifState()==='Not asked'?'<button class="btn sm" data-act="notifAllow">Allow</button>':''}<button class="btn ghost sm" data-act="notifTest">Test</button></div>${notifState()==='Blocked'?'<div class="xs mut" style="margin-top:6px">Blocked. Allow notifications for Forma in your phone settings (site settings in Chrome).</div>':''}<div class="xs mut" style="margin-top:8px">Phones can still silence a web app in the background. The Play Store version will fix this properly.</div></div></div>
  <div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -1552,7 +1618,7 @@ function settingsSheet(){
  <div class="xs mut" style="margin:8px 0 12px">Ask Claude to change targets, step goal or units. They live in profile.json.</div>`:''}
  <div class="row" style="flex-wrap:wrap"><button class="btn sp" data-act="cfgSave">Save repo</button><button class="btn ghost sp" data-act="force">Force refresh</button></div>
  <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
- <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.5.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.5.1${DEMO?' (demo mode)':''}</div>`;
 }
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
@@ -1769,6 +1835,7 @@ document.addEventListener('click',async e=>{
   case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
   case 'wStart':askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
+  case 'finSnooze':UI.finSnooze=Date.now()+FIN_NUDGE;finTick();render();break;
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'finKeep':closeSheet();break;
   case 'finSave':{const wo=logOf(T).workout;if(!wo){closeSheet();break}
@@ -1791,7 +1858,7 @@ document.addEventListener('click',async e=>{
   case 'wMark':mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
   case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
   case 'wCancel':openSheet(discardSheet());break;
-  case 'cues':UI.cues[D.ex]=!UI.cues[D.ex];render();break;
+  case 'cues':openSheet(notesSheet(D.ex));break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
   case 'rmSet':editSets(D.ex,s=>{if(s.length>1)s.pop()},{delay:2000});break;
   case 'chk':tickSet(D.ex,+D.i,'tap');break;
@@ -1837,6 +1904,7 @@ document.addEventListener('change',async e=>{
  e.target.value='';
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
+document.addEventListener('change',e=>{if(e.target.id==='s_smax'){let v=parseInt(e.target.value,10);if(!(v>0))v=90;v=Math.max(20,Math.min(240,v));e.target.value=v;mutate(P_PROFILE,{k:'merge',data:{sessionMax:v}},{delay:300})}});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
@@ -1850,6 +1918,7 @@ document.addEventListener('touchend',e=>{if(ty!=null&&e.changedTouches[0].client
 
 /* ---------- boot ---------- */
 (async function boot(){
+ if(/[?&]tab=workout/.test(location.search))UI.tab='workout';
  history.replaceState({tab:'today'},'');if(UI.tab!=='today')history.pushState({tab:UI.tab},'');
  if(DEMO){await DEMOB.init();render();await refresh(true);return}
  render();
