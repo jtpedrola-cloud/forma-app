@@ -131,7 +131,7 @@ header h1{font-size:20px;margin:0;flex:1;font-weight:700;white-space:nowrap;over
 svg{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
 .card h3{margin:0 0 4px;font-size:16px}
-.row{display:flex;align-items:center;gap:10px}.sp{flex:1;min-width:0}
+.row{display:flex;align-items:center;gap:10px}#fs_q[hidden]{display:none}.sp{flex:1;min-width:0}
 .mut{color:var(--mut)}.sm{font-size:13px}.xs{font-size:12px}
 .big{font-size:30px;font-weight:700;letter-spacing:-.5px}
 .btn{background:var(--acc);color:var(--onacc);border-radius:14px;min-height:46px;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
@@ -230,7 +230,7 @@ svg{display:block}
 #rest{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:25}
 #rest>div{max-width:480px;margin:0 auto;padding:0 16px}
 .cmdbar{display:flex;gap:8px;align-items:center;margin:0 0 12px}.cmdbar input{border-radius:24px;padding:0 16px;min-height:48px;flex:1;min-width:0;text-overflow:ellipsis}
-.cmdgo{width:48px;height:48px;border-radius:50%;background:var(--grad);color:var(--onacc);display:grid;place-items:center;flex:none}
+.cmdhist{width:44px;height:48px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--soft)}.cmdhl{margin:-6px 0 12px;display:flex;flex-direction:column;gap:4px}.cmdhl button{text-align:left;padding:10px 14px;border-radius:12px;background:var(--card,rgba(127,127,127,.12));min-height:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.cmdgo{width:48px;height:48px;border-radius:50%;background:var(--grad);color:var(--onacc);display:grid;place-items:center;flex:none}
 .crow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}.crow:first-of-type{border-top:0}.crow .n{font-weight:600}
 .crow .cin{display:flex;align-items:center;gap:4px;flex:none}.crow .cin input{width:78px;min-height:40px;padding:0 8px;text-align:right;border-radius:10px}
 .cunk{background:var(--chipf);border:1px solid var(--warnline);color:var(--chipftx);border-radius:12px;padding:10px 12px;margin-top:8px}.cunk .n{font-weight:600;word-break:break-word}
@@ -284,7 +284,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='1af6997976add9717893110322c0fc73927f7ae3';let verChecked=0;
+const BUILD='9adeb016690c73b1437b40c9e68222f603d22662';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -843,7 +843,7 @@ function workoutView(){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=P.days.find(x=>x.id===swo.dayId)||{name:'Workout',exercises:[]};
   const exs=[...dn.exercises.map(e=>e.ex),...(swo.extra||[]).map(x=>x.ex)].map(sl=>{const ex=effEx(swo,sl),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
    return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(z=>setTxt(z,exU(ex))).join(', ')}${u==='SEC'?' s':u==='M'?' m':exU(ex)!==wU()?' '+exU(ex):''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
-  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+' sets - '+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+' - '+rnd(kg2u(woStats(swo).vol)).toLocaleString('en-US')+' '+wU()}</div>${swo.marked?'':`<div class="xs mut">${clock(swo.startedAt)} to ${clock(swo.finishedAt)}</div>`}${swo.note?`<div class="sm" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}</div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="btn ghost sm" data-act="wEdit" data-d="${sel}">Edit</button>`}</div></div>
+  body=`<div class="card"><div class="row"><div class="sp"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>${esc(dn.name)} <span class="chip" style="background:var(--okbg);color:var(--oktx);vertical-align:middle">Done</span></h3><div class="mut sm">${swo.marked?'Marked done, no sets logged':ns+(ns===1?' set - ':' sets - ')+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+' - '+rnd(kg2u(woStats(swo).vol)).toLocaleString('en-US')+' '+wU()}</div>${swo.marked?'':`<div class="xs mut">${clock(swo.startedAt)} to ${clock(swo.finishedAt)}</div>`}${swo.note?`<div class="sm" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}</div>${!isT&&swo.marked?`<button class="btn ghost sm" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="btn ghost sm" data-act="wEdit" data-d="${sel}">Edit</button>`}</div></div>
   ${swo.marked?'':`<div class="card"><h3>Sets</h3>${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
   body=`<div class="card"><div class="xs mut">${isT?'Today':fmtLong(sel)}</div><h3>Rest day</h3><div class="mut sm">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div></div>`;
@@ -1598,7 +1598,8 @@ function renderSheet(){
 
 /* ---------- Command bar: one typed line becomes weight, steps, sport, note and food actions (app/cmd.js, no AI) ---------- */
 let cmdText='',cmdHi=-1;const CMD={res:null,line:'',date:'',acts:[],wkg:80};
-function cmdBar(){return `<div class="cmdbar"><input id="cmd_in" value="${esc(cmdText)}" placeholder="Log: weight 84.9, steps 8200, 2 eggs 1 cup rice, basketball 1 hr" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log"><button class="cmdgo" data-act="cmdGo" aria-label="Send">${ic('send',20)}</button></div>`}
+let cmdHOpen=false;
+function cmdBar(){const h=LS.get('forma.cmdHist',[]).slice(0,10);return `<div class="cmdbar"><input id="cmd_in" value="${esc(cmdText)}" placeholder="Log: weight 84.9, steps 8200, 2 eggs 1 cup rice, basketball 1 hr" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Send">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}`}
 function cmdRun(){
  const el=$('#cmd_in'),line=(el?el.value:cmdText).trim();if(!line)return;
  if(!window.FormaCmd){toast('The command reader did not load. Refresh the app.');return}
@@ -1671,11 +1672,13 @@ document.addEventListener('click',async e=>{
    openSheet(settingsSheet());
    if(notifState()!=='Allowed'){toast(notifState()==='Blocked'?'Notifications are blocked for Forma.':'Notifications are not available here.');break}
    swPost({k:'rest',end:Date.now()+5000,name:'Test',test:true});toast0('Lock your phone now. A test arrives in 5 seconds.');break}
-  case 'recentPick':{const i=RECENT[+D.i];if(!i)break;FS.f=null;const q=$('#fs_q');if(q)q.hidden=true;
+  case 'recentPick':{const i=RECENT[+D.i];if(!i)break;FS.f=null;FS.q=0;const q=$('#fs_q');if(q)q.hidden=true;const qi=$('#fs_qty');if(qi)qi.value='';
    [['f_name','name'],['f_amount','amount'],['f_kcal','kcal'],['f_protein','protein'],['f_carbs','carbs'],['f_fat','fat']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.value=i[k]==null?'':i[k]});break}
   case 'fsPick':{const f=((foodsdb()||{}).foods||foodsdb()||[]).find(x=>x.id===D.id);if(!f)break;FS.f=f;FS.q=fsDefault(f);$('#fs_q').hidden=false;fsApply();$('#f_res').innerHTML='';$('#f_search').value='';break}
   case 'fsStep':{if(!FS.f)break;const st=fsPiece(FS.f)?.5:(FS.q>=200?25:10);FS.q=Math.max(st,+(FS.q+(+D.d)*st).toFixed(1));fsApply();break}
   case 'cmdGo':cmdRun();break;
+  case 'cmdHist':{const el=$('#cmd_in');if(el)cmdText=el.value;cmdHOpen=!cmdHOpen;render();break}
+  case 'cmdHistPick':{const h=LS.get('forma.cmdHist',[]);if(h[+D.k]==null)break;cmdText=h[+D.k];cmdHOpen=false;cmdHi=-1;render();const el=$('#cmd_in');if(el)el.focus();break}
   case 'cmdCancel':closeSheet();break;
   case 'cmdSave':cmdSave();break;
   case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
@@ -1769,7 +1772,7 @@ document.addEventListener('click',async e=>{
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'finKeep':closeSheet();break;
   case 'finSave':{const wo=logOf(T).workout;if(!wo){closeSheet();break}
-   const s0=atTime(T,$('#fin_s').value||hhmm(wo.startedAt));let f0=atTime(T,$('#fin_f').value||hhmm(new Date().toISOString()));if(f0<=s0)f0=new Date(f0.getTime()+864e5);
+   const s0=atTime(T,$('#fin_s').value||hhmm(wo.startedAt));let f0=atTime(T,$('#fin_f').value||hhmm(new Date().toISOString()));if(f0<s0&&s0-f0>=60000)f0=new Date(f0.getTime()+864e5);else if(f0<s0)f0=s0;
    if(f0-s0>6*3600000){toast('That is over 6 hours. Check the times.');break}
    const st=woStats(wo);if(st.all>st.done)mutate(logP(T),{k:'wFinalize',mode:finMode},{quiet:true});
    const n=$('#fin_n').value.trim();mutate(logP(T),{k:'wNote',v:n},{quiet:true});
