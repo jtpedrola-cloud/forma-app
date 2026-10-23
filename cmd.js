@@ -2,12 +2,14 @@
  * Browser: window.FormaCmd. Node: module.exports.
  *
  *   parse(line, ctx) -> { actions: [], unknown: [], issues: [] }
- *   ctx = { foods, weightKg, date, lastMealAt, lastMealNo, now? }
+ *   ctx = { foods, weightKg, date, lastMealAt, lastMealNo, now?, hUnit? }
+ *     hUnit: "ft" when the person thinks in inches, so "waist 36" is read as inches; default "cm"
  *     foods: the parsed data/foods.json ({ foods: [...] }) or its array
  *     lastMealAt: ISO string or ms of the last logged item; now: ms or ISO (default Date.now())
  *   actions:
  *     { k:"weight", kg }
  *     { k:"steps", n }
+ *     { k:"measure", site, cm }                     tape measurement: waist, hips, chest, arm, thigh or neck, stored in cm
  *     { k:"sport", kind, min, kcal, assumed? }      assumed: no weightKg given, 80 kg used
  *     { k:"note", text }
  *     { k:"food", meal, items:[{ name, amount, kcal, protein, carbs, fat, foodId, assumed? }] }
@@ -503,6 +505,46 @@
     return null;
   }
 
+  // ---------- tape measurements: "waist 92", "hips 38 in", "my neck is 39 cm" ----------
+  var MEASURE_WORDS = { waist: 'waist', waistline: 'waist', hip: 'hips', hips: 'hips', chest: 'chest', arm: 'arm', arms: 'arm', bicep: 'arm', biceps: 'arm', thigh: 'thigh', thighs: 'thigh', neck: 'neck' };
+  // plausible range in cm; a bare number is read in the person's unit first, then in the other one
+  var MEASURE_LIMITS = { waist: [55, 200], hips: [60, 200], chest: [60, 200], arm: [15, 80], thigh: [30, 120], neck: [20, 70] };
+  var MEASURE_LEAD = { my: 1, the: 1, new: 1, current: 1, now: 1, body: 1, measurement: 1, measurements: 1, measure: 1, measured: 1, tape: 1 };
+  var MEASURE_GAP = { is: 1, was: 1, at: 1, of: 1, now: 1, today: 1, about: 1, around: 1, to: 1, measures: 1, measured: 1, 'at': 1 };
+  var CM_WORDS = { cm: 1, cms: 1, centimeter: 1, centimeters: 1, centimetre: 1, centimetres: 1 };
+  var IN_WORDS = { in: 1, inch: 1, inches: 1 };
+
+  function findMeasure(toks) {
+    for (var i = 0; i < toks.length; i++) {
+      var t = toks[i];
+      if (t.k !== 'w' || !MEASURE_WORDS[t.v]) continue;
+      var from = 0, ok = true;
+      for (var b = 0; b < i; b++) { if (toks[b].k !== 'w' || !MEASURE_LEAD[toks[b].v]) { ok = false; break; } }
+      if (!ok) continue; // "chicken thigh 200 g" is food, not a tape
+      var j = i + 1;
+      while (toks[j] && toks[j].k === 'w' && MEASURE_GAP[toks[j].v]) j++;
+      if (!toks[j] || toks[j].k !== 'n' || toks[j].frac) continue;
+      var v = toks[j].v, n = j + 1, unit = null;
+      if (toks[n] && toks[n].k === 'w') {
+        if (CM_WORDS[toks[n].v]) { unit = 'cm'; n++; }
+        else if (IN_WORDS[toks[n].v]) { unit = 'in'; n++; }
+        else if (UNITS[stem(toks[n].v)] || FIXED_UNITS[stem(toks[n].v)]) continue; // "neck 200 g" is not a tape
+      }
+      return { site: MEASURE_WORDS[t.v], v: v, unit: unit, from: from, to: n };
+    }
+    return null;
+  }
+
+  function measureCm(site, v, unit, hUnit) {
+    var lim = MEASURE_LIMITS[site], fits = function (cm) { return cm >= lim[0] && cm <= lim[1]; };
+    var order = unit ? [unit] : (hUnit === 'ft' ? ['in', 'cm'] : ['cm', 'in']);
+    for (var i = 0; i < order.length; i++) {
+      var cm = order[i] === 'in' ? v * 2.54 : v;
+      if (fits(cm)) return Math.round(cm * 10) / 10;
+    }
+    return null;
+  }
+
   // ---------- main ----------
   function parse(line, ctx) {
     ctx = ctx || {};
@@ -610,6 +652,19 @@
         pushAction({ k: 'weight', kg: Math.round(wkg * 10) / 10 });
         used = {};
         for (i = wt.from; i < wt.to; i++) used[i] = true;
+        rest = seg.filter(function (_, n) { return !used[n]; });
+        processSeg(stripLead(rest, STOP), depth + 1);
+        return;
+      }
+
+      // tape measurement
+      var ms = findMeasure(seg);
+      if (ms) {
+        var mcm = measureCm(ms.site, ms.v, ms.unit, ctx.hUnit);
+        if (mcm == null) { bad(pieceText(text, seg), 'that ' + ms.site + ' measurement looks off'); return; }
+        pushAction({ k: 'measure', site: ms.site, cm: mcm });
+        used = {};
+        for (i = ms.from; i < ms.to; i++) used[i] = true;
         rest = seg.filter(function (_, n) { return !used[n]; });
         processSeg(stripLead(rest, STOP), depth + 1);
         return;
