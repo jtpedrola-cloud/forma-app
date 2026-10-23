@@ -216,7 +216,8 @@
       try { var br = parseFloat(getComputedStyle(t).borderTopLeftRadius); if (br > 0) rad = Math.min(28, br + PAD); } catch (e) {}
       rad = Math.min(rad, w / 2, h / 2);
 
-      var below = vh - (y + h) - GAP - EDGE, above = y - GAP - EDGE;
+      var tb = document.querySelector('nav.tabs'), BOT = tb ? Math.max(EDGE, vh - tb.getBoundingClientRect().top + 8) : EDGE;
+      var below = vh - BOT - (y + h) - GAP, above = y - GAP - EDGE;
       var pl = (S.step.placement || 'auto');
       var fitsB = below >= ch, fitsA = above >= ch, place;
       if (pl === 'top' && fitsA) place = 'top';
@@ -226,12 +227,12 @@
       else {
         // target too tall for a card beside it: keep the card whole at the bottom and trim the lit area above it
         place = 'bottom';
-        var maxBottom = vh - EDGE - ch - GAP;
+        var maxBottom = vh - BOT - ch - GAP;
         if (y + h > maxBottom) { y = Math.max(EDGE, y); h = Math.max(48, maxBottom - y); }
       }
       setRect(u, x, y, w, h, rad);
       topPos = place === 'bottom' ? y + h + GAP : y - GAP - ch;
-      if (place === 'bottom' && topPos + ch > vh - EDGE) topPos = vh - EDGE - ch;
+      if (place === 'bottom' && topPos + ch > vh - BOT) topPos = vh - BOT - ch;
       if (topPos < EDGE) topPos = EDGE;
       var cx = x + w / 2;
       left = Math.min(Math.max(cx - cw / 2, EDGE), vw - EDGE - cw);
