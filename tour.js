@@ -13,11 +13,14 @@
  *                for the target to appear).
  *     before?:   async function run after onTab and before the target is looked up (open a sheet, scroll a list...).
  *     placement?: 'auto' (default) | 'top' | 'bottom'. A preference: if the card does not fit on that side it flips.
+ *     actions?:  [{ id, label }] extra buttons stacked on the card (v1.1). Tapping one ends the tour and calls
+ *                opts.onAction(id); the start() promise resolves 'action'.
  *   }
  *   opts = {
  *     onTab(name):  called when a step with `tab` is about to show (may return a Promise).
  *     onDone():     the last step's Done button.
  *     onSkip():     Skip button or Escape.
+ *     onAction(id): a step action button (see step.actions).
  *     theme: { accent }   CSS colour, overrides --acc for the tour only.
  *     startAt?: number    first step index (default 0).
  *   }
@@ -38,7 +41,7 @@
  */
 (function (root) {
   'use strict';
-  var FormaTour = { version: 1, active: false };
+  var FormaTour = { version: 1.1, active: false };
 
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     if (typeof module !== 'undefined' && module.exports) module.exports = FormaTour;
@@ -70,6 +73,9 @@
     '#ft .ft-text{margin:0 0 14px;color:color-mix(in srgb,var(--ft-txt) 78%,transparent)}',
     '#ft .ft-btns{display:flex;align-items:center;gap:8px}',
     '#ft .ft-btns .sp{flex:1}',
+    '#ft .ft-btns .sp{flex:1}',
+    '#ft .ft-acts{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}#ft .ft-acts:empty{display:none}',
+    '#ft button.act{border:1px solid var(--ft-line);background:color-mix(in srgb,var(--ft-txt) 6%,transparent);text-align:center;color:var(--ft-txt)}',
     '#ft button{font:inherit;font-size:14px;font-weight:650;min-height:44px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;',
     'background:transparent;color:var(--ft-txt);-webkit-appearance:none;appearance:none}',
     '#ft button.skip{padding:0 8px;margin-left:-8px;font-weight:550;color:color-mix(in srgb,var(--ft-txt) 62%,transparent)}',
@@ -163,6 +169,7 @@
     var bar = el('div', 'ft-bar', top); var fill = el('i', '', bar);
     var title = el('h2', 'ft-title', body); title.id = 'ft-title';
     var text = el('p', 'ft-text', body); text.id = 'ft-text';
+    var acts = el('div', 'ft-acts', body);
     var btns = el('div', 'ft-btns', body);
     var skip = el('button', 'skip', btns); skip.type = 'button'; skip.textContent = 'Skip';
     el('span', 'sp', btns);
@@ -173,7 +180,7 @@
     document.body.appendChild(host);
     host.style.setProperty('--ft-on', onAccent(host));
     return { host: host, hole: hole, ring: ring, card: card, arrow: arrow, body: body, count: count, fill: fill,
-      title: title, text: text, skip: skip, back: back, next: next };
+      title: title, text: text, acts: acts, skip: skip, back: back, next: next };
   }
 
   function setRect(u, x, y, w, h, rad) {
@@ -271,6 +278,12 @@
     u.fill.style.width = ((i + 1) / S.steps.length * 100) + '%';
     u.title.textContent = step.title || '';
     u.text.textContent = step.text || '';
+    u.text.textContent = step.text || '';
+    u.acts.innerHTML = '';
+    (step.actions || []).forEach(function (a) {
+      var b = el('button', 'act', u.acts); b.type = 'button'; b.textContent = a.label;
+      b.addEventListener('click', function () { finish('action', a.id); });
+    });
     var last = i === S.steps.length - 1;
     u.next.textContent = last ? 'Done' : 'Next';
     u.skip.style.visibility = last ? 'hidden' : '';
@@ -283,7 +296,7 @@
     try { u.card.focus({ preventScroll: true }); } catch (e) {}
   }
 
-  function finish(kind) {
+  function finish(kind, id) {
     if (!S) return;
     var s = S; S = null;
     FormaTour.active = false;
@@ -299,6 +312,7 @@
     try {
       if (kind === 'done' && s.opts.onDone) s.opts.onDone();
       if (kind === 'skip' && s.opts.onSkip) s.opts.onSkip();
+      if (kind === 'action' && s.opts.onAction) s.opts.onAction(id);
     } catch (e) { if (window.console) console.error(e); }
     s.resolve(kind);
   }
@@ -321,7 +335,7 @@
         else if (e.key === 'ArrowLeft') { e.preventDefault(); FormaTour.back(); }
         else if (e.key === 'Enter' && document.activeElement === S.ui.card) { e.preventDefault(); FormaTour.next(); }
         else if (e.key === 'Tab') {
-          var f = [S.ui.skip, S.ui.back, S.ui.next].filter(function (b) { return !b.disabled && b.style.visibility !== 'hidden'; });
+          var f = [S.ui.skip].concat([].slice.call(S.ui.acts.children), [S.ui.back, S.ui.next]).filter(function (b) { return !b.disabled && b.style.visibility !== 'hidden'; });
           e.preventDefault();
           if (!f.length) return;
           var at = f.indexOf(document.activeElement);
