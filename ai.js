@@ -3,6 +3,8 @@
  *
  *   FormaAI.meal({ key, model, imageBase64?, text?, note?, known?, profile?, today?, fetch? })
  *       -> Promise<{ items:[{ name, amount, kcal, protein, carbs, fat }], assumptions:[string] }>
+ *   FormaAI.mealServer({ post, imageBase64?, text?, note?, units, recent? })
+ *       -> Promise<{ items, assumptions, used, limit }>   signed-in path through the ai-meal Edge Function (no key on the phone)
  *   FormaAI.test({ key, model })  -> Promise<{ ok:true, text }>   one tiny request, to check the key
  *   FormaAI.bodyFat / FormaAI.review                              stubs, throw "not built yet"
  *
@@ -196,10 +198,64 @@
     return { ok: true, text: r.text, model: r.model };
   }
 
+  /* Signed-in path: the app calls the ai-meal Edge Function with the user's own token, so no key is on the phone and the
+   * server counts 5 reads a day per person. o.post(body, signal) -> Promise<{ status, data }> is supplied by the app
+   * (FormaBackend supabase callFn). The function answers { items, assumptions, used, limit } or { error, code } and its
+   * own words are shown as they come (429 daily cap, 402 budget). Same item shape as meal(), plus used and limit. */
+  async function mealServer(o) {
+    if (!o || (!o.imageBase64 && !(o.text && String(o.text).trim()))) throw AIError('request', 'Nothing to read. Send a photo or some text.');
+    if (typeof o.post !== 'function') throw AIError('nokey', 'Sign in first.');
+    var body = { units: o.units === 'lb' ? 'lb' : 'kg' };
+    if (o.imageBase64) {
+      var b64 = cleanB64(o.imageBase64);
+      if (b64Bytes(b64) > MAX_IMAGE_BYTES) throw AIError('toolarge', 'That photo is too big (over 5 MB). Try a smaller one.');
+      body.imageBase64 = b64;
+    }
+    if (o.text && String(o.text).trim()) body.text = String(o.text).trim();
+    if (o.note) body.note = String(o.note);
+    if (o.recent && o.recent.length) body.recent = o.recent.slice(0, 20);
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 45000) : null;
+    var res;
+    try {
+      res = await o.post(body, ctl ? ctl.signal : undefined);
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw AIError('timeout', 'The AI took too long. Try again.');
+      if (e && e.status === 401) throw AIError('auth', 'Your sign-in ended. Open Settings and sign in again.');
+      throw AIError('network', 'No connection. Check your internet and try again.');
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+    var st = res && res.status, d = (res && res.data) || {};
+    if (!(st >= 200 && st < 300)) {
+      var msg = typeof d.error === 'string' && d.error ? d.error : st !== 401 && typeof d.message === 'string' && d.message ? d.message : '';
+      var code = d.code && typeof d.code === 'string' ? d.code : st === 401 ? 'auth' : st === 429 ? 'limit' : st === 402 ? 'budget' : st >= 500 ? 'busy' : 'request';
+      if (!msg) msg = st === 401 ? 'Your sign-in ended. Open Settings and sign in again.' : st === 429 ? 'You have used your AI meal reads for today. Add it by hand or try tomorrow.' : st === 402 ? 'AI budget used up for this month.' : 'The AI could not read that (' + st + '). Try again.';
+      var err = AIError(code, msg);
+      err.status = st;
+      throw err;
+    }
+    var items = [];
+    (Array.isArray(d.items) ? d.items : []).forEach(function (it) {
+      if (!it || typeof it !== 'object') return;
+      var name = String(it.name == null ? '' : it.name).replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (!name) return;
+      var p = whole(it.protein), c = whole(it.carbs), f = whole(it.fat), k = whole(it.kcal);
+      if (!k) k = Math.round(4 * p + 4 * c + 9 * f);
+      if (!k && !p && !c && !f) return;
+      var row = { name: name, amount: String(it.amount == null ? '' : it.amount).replace(/\s+/g, ' ').trim().slice(0, 60), kcal: k, protein: p, carbs: c, fat: f };
+      if (it.estimated) row.estimated = true;
+      items.push(row);
+    });
+    var notes = (Array.isArray(d.assumptions) ? d.assumptions : []).map(function (x) { return String(x == null ? '' : x).trim(); }).filter(Boolean).slice(0, 8);
+    return { items: items, assumptions: notes, used: typeof d.used === 'number' ? d.used : null, limit: typeof d.limit === 'number' ? d.limit : null };
+  }
+
   function notBuilt() { throw new Error('not built yet'); }
 
   var api = {
     meal: meal,
+    mealServer: mealServer,
     test: test,
     bodyFat: notBuilt,
     review: notBuilt,

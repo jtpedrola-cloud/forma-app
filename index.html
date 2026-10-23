@@ -362,7 +362,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='59f9970d634861626db16025606745346e466257';let verChecked=0;
+const BUILD='dacab28c111d925d404f86f68afc887b67ef91d9';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -409,7 +409,17 @@ const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="no
 let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:'jtpedrola-cloud/forma'});
 let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});DB.photos=DB.photos||{};
 if(!DB.files)DB={files:{},pend:{},tree:{}};
-const persist=()=>{if(!DEMO)LS.set('forma.db',DB)};
+/* ---------- Accounts (Supabase). SB_DEFAULT is filled in at launch (the anon key is public by design); Settings > Account can override it.
+   Signed in means every read and write goes through the Supabase adapter (app/backend.js); signed out keeps GitHub or the demo as before.
+   Each account caches its files under its own key, so personal mode and account data never mix on one phone. ---------- */
+const SB_DEFAULT={url:'',anonKey:''};
+const sbCfg=()=>{const o=LS.get('forma.sb',{})||{};return {url:String(o.url||SB_DEFAULT.url||'').trim(),anonKey:String(o.anonKey||SB_DEFAULT.anonKey||'').trim(),libBase:'lib/'}};
+const sbOn=()=>{const c=sbCfg();return !!(c.url&&c.anonKey)};
+const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false,used:null,usedDay:'',limit:5};
+const dbKey=()=>SBS.user?'forma.db.sb.'+SBS.user.id:'forma.db';
+const hasAcct=()=>!!(SBS.user||cfg.token);
+const mDay=()=>new Date(Date.now()+8*36e5).toISOString().slice(0,10);
+const persist=()=>{if(!DEMO)LS.set(dbKey(),DB)};
 const delQ=()=>DB.delQ||(DB.delQ=[]);
 const TABS=['today','food','workout','activity','progress'],savedUI=LS.get('forma.ui',{});
 const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null,sub:LS.get('forma.sub',{})||{}};
@@ -494,7 +504,7 @@ const HttpErr=FormaBackend.HttpErr;
 const b64enc=s=>{const u=new TextEncoder().encode(s);let bin='';for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(bin)};
 const b64dec=s=>{const bin=atob(s.replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)};
 let KEEP=false;
-function setKeep(on){KEEP=on;GH.setKeepalive(on)}
+function setKeep(on){KEEP=on;GH.setKeepalive(on);SB.setKeepalive(on)}
 async function gh(method,path,body,raw){
  const r=await fetch('https://api.github.com/repos/'+cfg.repo+path,{method,cache:'no-store',keepalive:KEEP&&!!body,
   headers:Object.assign({Authorization:'Bearer '+cfg.token,Accept:raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body?{'Content-Type':'application/json'}:{}),
@@ -517,7 +527,7 @@ function photoURL(p){
  if(!p)return '';
  if(PHOTOS[p])return PHOTOS[p];
  if(DB.photos[p])return 'data:image/jpeg;base64,'+DB.photos[p];
- if(!PHLOAD[p]&&(DEMO||cfg.token)){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);{const g=document.querySelector('#cam .gh');if(g&&g.dataset.p===p)camUI()}if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
+ if(!PHLOAD[p]&&(DEMO||hasAcct())){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);{const g=document.querySelector('#cam .gh');if(g&&g.dataset.p===p)camUI()}if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
  return '';
 }
 async function flushPhotos(){
@@ -566,7 +576,9 @@ const DEMOB={
  external(p,fn){const cur=DEMOFILES.F[p]?JSON.parse(DEMOFILES.F[p]):blank(p);DEMOFILES.F[p]=JSON.stringify(fn(cur),null,2)+'\n';DEMOFILES.sha[p]='s'+(demoN++)}
 };
 const tick=()=>new Promise(r=>setTimeout(r,30));
-const B=DEMO?DEMOB:GH;
+const SB=FormaBackend.create('supabase',sbCfg);
+let B=DEMO?DEMOB:GH;
+const useBackend=()=>{B=SBS.user?SB:(DEMO?DEMOB:GH)};
 if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
 
 /* ---------- sync engine ---------- */
@@ -576,6 +588,7 @@ const isNet=e=>!(e instanceof HttpErr)&&!(e&&e.status);
 const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length+delQ().length;
 function errText(e){
  if(isNet(e))return 'No connection. Your changes are saved on this phone and will sync when you are back online.';
+ if(B.kind==='supabase'){if(e.status===401||e.status===403)return 'Your sign-in ended. Open Settings and sign in again.';if(e.status!==409&&e.status!==422)return 'The server said no ('+(e.status||e.message)+'). Tap the dot to retry.'}
  if(e.status===401||e.status===403)return 'GitHub rejected the token. Open settings and paste a new one.';
  if(e.status===404)return 'GitHub could not find the repo or branch. Check the repo name in settings.';
  if(e.status===409||e.status===422)return 'Could not merge a change after 3 tries. Tap the dot to retry.';
@@ -618,7 +631,7 @@ async function fetchFile(p,force){
 }
 let refreshing=false;
 async function refresh(force){
- if(!DEMO&&!cfg.token)return;
+ if(!DEMO&&!hasAcct())return;
  if(refreshing)return;refreshing=true;setSync('syncing');
  try{
   if(pendCount())await flush();
@@ -631,7 +644,7 @@ async function refresh(force){
   persist();
   if(!pendCount())setSync('synced');else flushSoon(200);
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
- refreshing=false;firstSync=true;try{autoFinishCheck()}catch(e){}softRender();
+ refreshing=false;firstSync=true;try{autoFinishCheck()}catch(e){}softRender();if(B.kind==='supabase')sbUsage();
 }
 async function loadDay(d){
  const ps=[foodP(d),logP(d)].filter(p=>DB.tree[p]&&!(DB.files[p]&&DB.files[p].sha===DB.tree[p]));
@@ -673,7 +686,7 @@ function tabbar(){
  return `<nav class="tabs"><div>${t.map(([k,l])=>`<button data-act="tab" data-t="${k}" class="${UI.tab===k?'on':''}">${ic(k)}<span>${l}</span></button>`).join('')}</div></nav>`;
 }
 function render(){
- if(!cfg.token){root.innerHTML=setupView();return}
+ if(!hasAcct()){root.innerHTML=setupView();return}
  const sc=window.scrollY;
  let h='';
  if(!profile()||!program()||!exdb()){
@@ -847,7 +860,7 @@ function foodView(){
  ${(()=>{const kv=kcalVerdict(t.kcal,T.kcal);return `<div class="row xs" style="margin-top:8px"><span class="mut sp">Range ${kv.band} cal${tq('range')}</span><b style="color:${kv.c}">${kv.in?'In range':kv.l+' '+kv.v}</b></div>`})()}
  ${t.kcal>0?deficitRow(d,t.kcal):''}
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:false,k:'protein',T})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons,k:'carbs',T})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons,k:'fat',T})}</div></div>
- ${secs}<div id="addblk"><div class="addrow"><button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button><button class="snapbtn" data-act="savedOpen">${ic('save',20)}<span>Saved meal</span></button></div><button class="snapbtn full" data-act="snapPick" aria-label="Snap a meal">${ic('camera',22)}<span>Snap a meal</span></button></div><input type="file" id="snap_in" accept="image/*" hidden>`;
+ ${secs}<div id="addblk"><div class="addrow"><button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button><button class="snapbtn" data-act="savedOpen">${ic('save',20)}<span>Saved meal</span></button></div><button class="snapbtn full" data-act="snapPick" aria-label="Snap a meal">${ic('camera',22)}<span>Snap a meal</span></button>${aiCounter()}</div><input type="file" id="snap_in" accept="image/*" hidden>`;
 }
 /* ---------- Saved meals (data/meals.json { meals:[{ id, name, items:[{ name, amount, kcal, protein, carbs, fat }], by, t }] }) ---------- */
 const savedMeals=()=>((cur(P_MEALS)||{}).meals||[]);
@@ -1450,7 +1463,7 @@ function saveRest(){const k=UI.rest?UI.rest.end+'|'+UI.rest.total:'';if(k===rest
 function startRest(sec=120,name){UI.rest={end:Date.now()+sec*1000,total:sec,name:name||''};askNotify();updateRest()}
 function updateRest(){
  const el=$('#rest'),r=UI.rest;
- const live=UI.tab==='workout'&&r&&cfg.token;
+ const live=UI.tab==='workout'&&r&&hasAcct();
  if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;restDone(r,live)}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
  if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div style="min-width:54px"><b id="rt">0:00</b><div class="xs mut" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name||'Rest')}</div></div><div class="bar"><i id="rb" style="width:100%"></i></div><button class="btn ghost sm" data-act="rest15m">-15</button><button class="btn ghost sm" data-act="rest30">+30</button><button class="btn ghost sm" data-act="restSkip">Skip</button><button class="btn ghost sm" data-act="soundTog" aria-label="Timer sound">${LS.get('forma.sound',1)===0?'Muted':'Sound'}</button></div></div>`}
@@ -1922,7 +1935,7 @@ function intakeSave(){
  if(a.replaceProgram){const old=program();if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
   p.version=fmtLong(T);mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null}
  if(logOf(T).weight==null&&+a.weight)mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
- LS.set('forma.intakeSeen',1);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);flushSoon(300);intakeClose();toast0('Your plan is saved.');setTimeout(tourMaybe,900);
+ LS.set('forma.intakeSeen',1);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);flushSoon(300);intakeClose();toast0('Your plan is saved.');setTimeout(tourMaybe,900);if(SBS.firstRun){SBS.firstRun=false;setTimeout(learnAfterTour,1300)}
 }
 
 /* ---------- Setup + settings ---------- */
@@ -1931,14 +1944,18 @@ function setupView(){
  const ua=navigator.userAgent,dev=/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iPhone':'PC',d=new Date();
  const keyName=encodeURIComponent(`Forma ${dev} ${d.toISOString().slice(0,10)} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`);
  const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=${keyName}&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
- return `<div class="setup"><h1>Forma</h1><div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>
+ const acct=sbOn();
+ return `<div class="setup"><h1>Forma</h1>${acct?`<div class="mut" style="margin-bottom:18px">Track food, workouts and steps. Sign in with your email, no password.</div>
+ <div class="card"><h3>Sign in</h3><div class="sm mut" style="margin:2px 0 10px">We email you a link. Open it on this phone.</div>${sbSignInBox()}${sbServerFields()}</div>
+ <details class="sm" style="margin-top:14px"><summary><b>Personal mode</b> (my own GitHub repo)</summary><div class="mut" style="margin:10px 0 14px">The app needs a key to open your private data on GitHub. It takes about a minute.</div>`
+ :`<div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>`}
  <div class="card"><h3>Step 1: make your key</h3>
  <a class="btn full" style="text-decoration:none;margin:10px 0 14px" href="${keyUrl}" target="_blank" rel="noopener">Create my key on GitHub</a>
  <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>forma</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
  <div class="card"><h3>Step 2: paste it here</h3>
  <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
  <div id="s_err" class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
- <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details></div>`;
+ <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details>${acct?'</details>':`<details class="sm mut" style="margin-top:10px"><summary>Forma account (beta)</summary>${sbServerFields()}</details>`}</div>`;
 }
 async function setupSave(){
  const repo=$('#s_repo').value.trim(),tok=$('#s_tok').value.trim(),err=$('#s_err');
@@ -1970,21 +1987,21 @@ function settingsSheet(){
  <div class="fld"><label>Default rest, seconds</label><input id="s_rest" inputmode="numeric" value="${restDefault()||''}" placeholder="Auto: 150 big lifts, 90 others"><div class="xs mut" style="margin-top:4px">Used when an exercise has no rest of its own. Set a rest per exercise in Edit program. Tap the clock on an exercise to change it for today.</div></div>
  ${aiSettings()}
  <div class="fld"><label>Notifications</label><div class="card" style="margin:0;padding:12px 14px"><div class="row" style="align-items:center;gap:10px"><div class="sm" style="flex:1">Rest timer alerts: <b>${notifState()}</b></div>${notifState()==='Not asked'?'<button class="btn sm" data-act="notifAllow">Allow</button>':''}<button class="btn ghost sm" data-act="notifTest">Test</button></div>${notifState()==='Blocked'?'<div class="xs mut" style="margin-top:6px">Blocked. Allow notifications for Forma in your phone settings (site settings in Chrome).</div>':''}<div class="xs mut" style="margin-top:8px">Phones can still silence a web app in the background. The Play Store version will fix this properly.</div></div></div>
- <div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
+ ${SBS.user?'':`<div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
- <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Forma Steps</a></div></div>
+ <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Forma Steps</a></div></div>`}
  <button class="btn ghost full" style="margin-bottom:14px" data-act="tourShow">${ic('help',18)} Show the tour</button>
  <div class="fld"><label>Calendar icons</label><div class="chips" style="gap:6px">${CAL_KINDS.map(([k,l])=>`<button class="chip ${calKinds().includes(k)?'b':''}" style="height:34px;padding:0 12px" data-act="calKind" data-k="${k}" aria-pressed="${calKinds().includes(k)}">${calKinds().includes(k)?ic('check',12)+' ':''}${l}</button>`).join('')}</div>
  <label style="margin-top:10px">Show in each day</label><div class="mods">${CAL_NUMS.map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div><div class="xs mut" style="margin-top:6px">Activity, Calendar. One icon per day for what you ticked here, and one small number under it.</div></div>
- <div class="fld"><label>Account</label><div class="card" style="margin:0;padding:12px 14px"><div class="row" style="align-items:center;gap:10px"><div class="sp"><div class="sm"><b>${acctName()}</b></div><div class="xs mut">${acctLine()}</div></div><button class="btn ghost sm" data-act="acctOpen">Sign in</button></div></div></div>
+ <div class="fld"><label>Account</label><div class="card" style="margin:0;padding:12px 14px"><div class="row" style="align-items:center;gap:10px"><div class="sp"><div class="sm"><b>${acctName()}</b></div><div class="xs mut">${acctLine()}</div></div>${SBS.user?'<button class="btn ghost sm" data-act="sbOut">Sign out</button>':'<button class="btn ghost sm" data-act="acctOpen">Sign in</button>'}</div></div></div>
  <div class="fld"><label>Your data</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Download every data file as a zip, plus food.csv and workouts.csv you can open in a spreadsheet.</div><button class="btn ghost full" style="margin-top:10px" data-act="exportGo">${ic('save',18)} Export my data</button></div></div>
- <div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div>
- <div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div>
+ ${SBS.user?'':`<div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div>
+ <div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div>`}
  ${pr?`<div class="kv"><span class="mut">Calories</span><span>${pr.targets.kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div><div class="kv"><span class="mut">Step goal</span><span>${pr.stepGoal.toLocaleString('en-US')}</span></div><div class="kv"><span class="mut">Units</span><span>${esc(pr.units)}</span></div>
- <div class="xs mut" style="margin:8px 0 12px">Ask Claude to change targets, step goal or units. They live in profile.json.</div>`:''}
- <div class="row" style="flex-wrap:wrap"><button class="btn sp" data-act="cfgSave">Save repo</button><button class="btn ghost sp" data-act="force">Force refresh</button></div>
- <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
- <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.8.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin:8px 0 12px">${SBS.user?'Change targets, step goal and units by redoing the setup questionnaire above.':'Ask Claude to change targets, step goal or units. They live in profile.json.'}</div>`:''}
+ <div class="row" style="flex-wrap:wrap">${SBS.user?'':'<button class="btn sp" data-act="cfgSave">Save repo</button>'}<button class="btn ghost sp" data-act="force">Force refresh</button></div>
+ <button class="btn red full" style="margin-top:10px" data-act="${SBS.user?'sbOut':'signout'}">Sign out</button>
+ <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.9.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -2138,7 +2155,11 @@ function tourRun(steps,o){o=o||{};
  return FormaTour.start(steps,{onTab:tourTab,onAction:id=>{act=id}}).then(k=>{tourEnd();if(act&&o.action)o.action(act);return k});
 }
 function tourMini(screen){tourRun(tourMiniSteps(screen),{kind:'mini',action:id=>{if(id==='full')setTimeout(tourFull,350);else if(id==='learn')learnOpen({id:TOUR_LESSON[screen]})}})}
-function tourFull(){tourRun(tourFullSteps(),{kind:'full'}).then(()=>learnAfterTour())}
+/* A signed-in first open goes straight to the tour, then the setup questionnaire, then (for beginners) the Learn start-here path. */
+function tourFull(){tourRun(tourFullSteps(),{kind:'full'}).then(k=>{
+ const p=profile();
+ if(k!=='stop'&&SBS.user&&p&&!p.intake&&!LS.get('forma.intakeSeen',0)){SBS.firstRun=true;setTimeout(()=>{if(!document.getElementById('intake')&&!FormaTour.active)intakeOpen()},450);return}
+ learnAfterTour()})}
 function tourHelp(){let s=UI.tab;if(s==='workout'){const wo=logOf(today()).workout;if(wo&&!wo.finishedAt)s='live'}tourMini(s)}
 function tourMaybe(){if(!window.FormaTour||FormaTour.active||TOUR.on)return;if(LS.get('forma.tourSeen',0)||!LS.get('forma.tourPending',0))return;
  if(UI.sheet||['intake','cam','lib','ped','hist','gym'].some(i=>document.getElementById(i)))return;if(!profile()||!program()||!exdb())return;
@@ -2265,13 +2286,64 @@ function learnCard(){const ls=lrnList(),n=lrnCount();
 function learnAfterTour(){if(!lrnNew()||LRNS().start)return;lrnSet('start','pending');setTimeout(()=>learnOpen({}),400)}
 /* ---------- Account (skeleton): shows which backend holds the data. Sign in is a placeholder until Supabase accounts exist (docs/specs/backend.md). ---------- */
 const acctKind=()=>B.kind||'demo';
-const acctName=()=>({github:'GitHub',supabase:'Forma account',demo:'Demo'})[acctKind()]||'GitHub';
-const acctLine=()=>acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':acctKind()==='supabase'?'Signed in.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
-function acctSheet(){return `<h2>Sign in</h2><div class="mut sm" style="margin-bottom:12px">Forma accounts are coming. You will sign in with an email and your data will live in your own Forma account, with no GitHub token to paste. Photos, programs and history will come with you.</div>
- <div class="fld"><label>Email</label><input type="email" placeholder="you@example.com" disabled></div>
- <button class="btn full" disabled style="opacity:.45">Send sign-in link (coming soon)</button>
- <div class="xs mut" style="margin-top:12px">Until then nothing changes: Forma keeps using ${acctKind()==='demo'?'the demo data in this tab':'your GitHub repo ('+esc(cfg.repo)+')'}.</div>
+const acctName=()=>SBS.user?esc(SBS.user.email||'Forma account'):({github:'GitHub',supabase:'Forma account',demo:'Demo'})[acctKind()]||'GitHub';
+const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Forma account.':acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
+/* Sign in with email (a magic link). supabase-js is loaded from cdnjs by the adapter only when this is used. */
+function sbServerFields(){const c=sbCfg();
+ return `<details class="sm mut" style="margin-top:12px"><summary>Server (advanced)</summary><div class="fld" style="margin-top:10px"><label>Supabase URL</label><input id="sb_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co" autocapitalize="off" autocorrect="off" spellcheck="false"></div><div class="fld"><label>Anon key (public)</label><input id="sb_key" value="${esc(c.anonKey)}" placeholder="public anon key" autocapitalize="off" autocorrect="off" spellcheck="false"></div><button class="btn ghost sm" data-act="sbCfgSave">Save server</button><div class="xs mut" style="margin-top:6px">Only the public anon key goes here. Never paste a service role key.</div></details>`}
+function sbSignInBox(){
+ if(SBS.sent)return `<div class="card" style="margin:0 0 10px;border-color:var(--acc)"><b>Check your email</b><div class="sm mut" style="margin-top:4px">We sent a sign-in link to ${esc(SBS.sent)}. Open it on this phone and you are in. It can take a minute.</div></div><button class="btn ghost full" data-act="sbAgain">Use another email</button>`;
+ return `<div class="fld"><label>Email</label><input id="sb_email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" placeholder="you@example.com" value="${esc(SBS.email)}"></div>
+ <div id="sb_msg" class="sm" style="color:var(--badtx);min-height:20px;margin:-4px 0 6px">${esc(SBS.msg)}</div>
+ <button class="btn full" data-act="sbSend" ${SBS.busy?'disabled':''}>${SBS.busy?'Sending...':'Email me a sign-in link'}</button>`}
+function acctSheet(){
+ if(SBS.user)return `<h2>Account</h2><div class="card" style="margin:0 0 12px"><div class="sm"><b>${esc(SBS.user.email||'')}</b></div><div class="xs mut" style="margin-top:2px">Signed in. Your food, workouts, photos and plan are saved in your Forma account.</div></div>
+ <button class="btn ghost full" data-act="exportGo">Export my data</button>
+ <button class="btn red full" style="margin-top:10px" data-act="sbOut">Sign out</button>`;
+ return `<h2>Sign in</h2><div class="mut sm" style="margin-bottom:12px">Sign in with your email. We send you a link, no password. Your data lives in your own Forma account, with 5 AI meal reads a day.</div>
+ ${sbSignInBox()}${sbServerFields()}
+ <div class="xs mut" style="margin-top:12px">Not signed in, Forma keeps using ${acctKind()==='demo'?'the demo data in this tab':'your GitHub repo ('+esc(cfg.repo)+')'}.</div>
  <button class="btn ghost full" style="margin-top:12px" data-act="exportGo">Export my data first</button>`}
+const sbRedraw=()=>{if(UI.sheet&&UI.sheetFn===acctSheet)openSheet(acctSheet(),acctSheet);else if(!hasAcct())render()};
+/* Switch the whole app to a user (or back to personal mode / demo). Returns true when something changed. */
+function sbSwitch(u){
+ if(((SBS.user&&SBS.user.id)||null)===((u&&u.id)||null))return false;
+ SBS.user=u?{id:u.id,email:u.email}:null;useBackend();
+ DB=DEMO?{files:{},pend:{},tree:{},photos:{}}:LS.get(dbKey(),{files:{},pend:{},tree:{}});if(!DB.files)DB={files:{},pend:{},tree:{}};DB.photos=DB.photos||{};
+ Object.keys(PHOTOS).forEach(k=>delete PHOTOS[k]);Object.keys(PHLOAD).forEach(k=>delete PHLOAD[k]);
+ SBS.used=null;try{HIST.warm=false}catch(e){}
+ return true}
+function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setTimeout(()=>{if(!sbSwitch(u)||!SBS.booted)return;
+  SBS.sent='';SBS.msg='';if(UI.sheet&&UI.sheetFn===acctSheet)closeSheet();
+  if(u){if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);sbEnter()}else render()},0)})}
+async function sbEnter(){render();await refresh(true);if(pendCount())flushSoon(200);tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
+function sbHint(){try{if(/[#&?](access_token|error_description)=|[?&]code=/.test(location.hash+location.search))return true;for(let i=0;i<localStorage.length;i++){if(/^sb-.+-auth-token$/.test(localStorage.key(i)))return true}}catch(e){}return false}
+async function sbInit(){
+ if(!sbOn()||!sbHint()){SBS.booted=true;return}
+ try{
+  const m=/error_description=([^&]+)/.exec(location.hash+'&'+location.search);if(m){SBS.msg=decodeURIComponent(m[1].replace(/\+/g,' '));try{history.replaceState(null,'',location.pathname)}catch(e){}}
+  sbWire();const u=await SB.auth.user();if(u){sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}
+ }catch(e){SBS.msg=e instanceof TypeError?'No connection to sign in right now.':String(e&&e.message||'Could not sign in.')}
+ SBS.booted=true}
+async function sbSend(){
+ const el=$('#sb_email'),email=el?el.value.trim():SBS.email;SBS.email=email;
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){SBS.msg='Type your email address.';sbRedraw();return}
+ if(!sbOn()){SBS.msg='Open Server (advanced) and add the server address and key first.';sbRedraw();return}
+ SBS.busy=true;SBS.msg='';sbRedraw();
+ try{sbWire();await SB.auth.signIn(email);SBS.sent=email}
+ catch(e){SBS.msg=e instanceof TypeError?'No connection. Try again when you are online.':e.status===429?'Too many tries. Wait a minute and try again.':String(e&&e.message||'Could not send the link.')}
+ SBS.busy=false;sbRedraw()}
+async function sbOut(){
+ if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))return;
+ const k=dbKey();try{await SB.auth.signOut()}catch(e){}
+ LS.del(k);sbSwitch(null);SBS.sent='';SBS.msg='';closeSheet();render();if(hasAcct())refresh(true)}
+function sbCfgSave(){
+ const u=($('#sb_url')||{value:''}).value.trim().replace(/\/+$/,''),k=($('#sb_key')||{value:''}).value.trim();
+ if(u&&!/^https:\/\/[\w.-]+\.[a-z]{2,}$/i.test(u)){toast('The address should look like https://xxxx.supabase.co');return}
+ if(k&&!/^[\w.-]{20,}$/.test(k)){toast('That does not look like the anon key.');return}
+ if(k.split('.').length===3){try{const r=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).replace(/^﻿/,'')).role;if(r==='service_role'){toast('That is the service role key. Never use it here. Paste the anon key.');return}}catch(e){}}
+ LS.set('forma.sb',{url:u,anonKey:k});toast0('Server saved.');sbRedraw();if(!hasAcct())render()}
+async function sbUsage(){if(B.kind!=='supabase')return;try{const n=await B.aiUsage();SBS.used=n;SBS.usedDay=mDay();softRender()}catch(e){}}
 let JSZ=null;
 function loadJSZip(){return JSZ||(JSZ=new Promise((res,rej)=>{if(window.JSZip)return res(window.JSZip);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
  s.onload=()=>res(window.JSZip);s.onerror=()=>{JSZ=null;rej(new Error('zip tool'))};document.head.appendChild(s)}))}
@@ -2375,18 +2447,18 @@ function cmdSheet(){
  });
  const unk=(CMD.res.issues||[]).map((u,k)=>`<div class="cunk"><div class="n">${esc(u.text)}</div><div class="xs">${esc(u.why||'Not understood.')}</div><button class="btn ghost sm" style="margin-top:8px" data-act="cmdHand" data-k="${k}">Add by hand</button></div>`).join('');
  const n=CMD.acts.reduce((a,x)=>a+(x.k==='food'?x.items.length:1),0);
- const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiKey()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
+ const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiReady()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
  const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
  return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
  <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
  if(!CMD.res||CMD.busy)return;
- if(!aiKey()||!window.FormaAI){CMD.seq++;closeSheet();openSheet(settingsSheet());return}
+ if(!aiReady()){CMD.seq++;closeSheet();openSheet(settingsSheet());return}
  const my=++CMD.seq,known=[];CMD.busy=true;CMD.aiErr='';CMD.aiNotes=[];openSheet(cmdSheet(),cmdSheet);
  CMD.acts.forEach(a=>{if(a.k==='food')a.items.forEach(i=>known.push({name:i.name,amount:i.amount||'',kcal:rnd(i.kcal)}))});
  try{
-  const r=await FormaAI.meal({key:aiKey(),model:aiModel(),text:CMD.line,known,profile:profile(),today:CMD.date});
+  const r=await aiMeal({text:CMD.line,known,today:CMD.date});
   if(my!==CMD.seq||!CMD.res)return;
   CMD.busy=false;CMD.aiNotes=r.assumptions;
   if(!r.items.length)CMD.aiErr='Claude found no food in the part it could not read. Add it by hand.';
@@ -2436,10 +2508,35 @@ const aiModel=()=>LS.get('forma.aiModel','haiku')==='sonnet'?'sonnet':'haiku';
 const AI={testing:false,err:'',msg:''};
 const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.slice(-6)};
 const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
+/* Signed in: the ai-meal function with the user's token, 5 reads a day counted on the server. Signed out: personal mode, the key on this phone. */
+const aiServer=()=>!!SBS.user&&B.kind==='supabase';
+const aiReady=()=>aiServer()||(!!aiKey()&&!!window.FormaAI);
+function recentFoods(){const out=[],seen={};for(let i=0;i<=14&&out.length<20;i++){const f=cur(foodP(addDays(today(),-i)));((f&&f.items)||[]).slice().reverse().forEach(it=>{const k=String(it.name||'').toLowerCase();if(k&&!seen[k]&&out.length<20){seen[k]=1;out.push(String(it.name).slice(0,60))}})}return out}
+async function aiMeal(o){
+ if(!aiServer())return FormaAI.meal(Object.assign({key:aiKey(),model:aiModel(),profile:profile()},o));
+ const known=(o.known||[]).filter(k=>k&&k.name).map(k=>k.name+(k.amount?' ('+k.amount+')':''));
+ const note=[o.note,known.length?'Already logged from this line, do not return them again: '+known.join('; ')+'.':''].filter(Boolean).join(' ')||undefined;
+ try{
+  const r=await FormaAI.mealServer({post:(b,sig)=>B.callFn('ai-meal',b,sig),imageBase64:o.imageBase64,text:o.text,note,units:unitsNow(),recent:recentFoods()});
+  if(r.limit)SBS.limit=r.limit;if(r.used!=null){SBS.used=r.used;SBS.usedDay=mDay()}
+  return r;
+ }catch(e){if(e&&e.code==='limit'){SBS.used=SBS.limit;SBS.usedDay=mDay()}throw e}
+}
+const aiLeft=()=>SBS.used!=null&&SBS.usedDay===mDay()?SBS.used:null;
+function aiCounter(){
+ if(!aiServer())return '';
+ const u=aiLeft(),L=SBS.limit,full=u!=null&&u>=L;
+ return `<div class="xs ${full?'':'mut'}" id="ai_cnt" style="text-align:center;margin:10px 0 0;${full?'color:var(--warn)':''}">${u==null?L+' AI reads a day':u+' of '+L+' AI reads today'}</div>`}
 function aiSettings(){
+ if(aiServer()){const u=aiLeft(),L=SBS.limit;
+  return `<div class="fld"><label>AI (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
+ <div class="sm">Snap a meal and Ask AI are included with your account. No key needed.</div>
+ <div class="sm" style="margin-top:8px"><b>${u==null?L+' reads a day':u+' of '+L+' AI reads used today'}</b></div>
+ <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Forma is unlimited.</div></div></div>`}
  const k=aiKey(),m=aiModel();
  const st=!k?['Not connected','var(--mut)']:AI.testing?['Testing...','var(--mut)']:AI.err?['Not working','var(--badtx)']:aiConnected()?['Connected','var(--ok)']:['Key saved, not tested yet','var(--mut)'];
- return `<div class="fld"><label>AI (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
+ return `<div class="fld"><label>Personal mode key (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
+ <div class="xs mut" style="margin-bottom:8px">Only for personal mode, when you are not signed in. With a Forma account the AI is included and needs no key.</div>
  <div class="sm">Status: <b id="ai_st" style="color:${st[1]}">${st[0]}</b></div>
  ${AI.err?`<div class="xs" style="color:var(--badtx);margin-top:4px;word-break:break-word">${esc(AI.err)}</div>`:AI.msg&&aiConnected()?`<div class="xs mut" style="margin-top:4px;word-break:break-word">${esc(AI.msg)}</div>`:''}
  <div class="fld" style="margin:10px 0 8px"><input id="ai_key" type="password" placeholder="${k?'Key saved (ends '+esc(k.slice(-4))+'). Paste to replace.':'Paste your Claude API key'}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
@@ -2467,12 +2564,12 @@ async function snapStart(file){
  let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
  Object.assign(SNAP,{photo,note:'',items:[],notes:[],raw:'',err:'',status:'',date:UI.date,seq:SNAP.seq+1});
  SNAP.meal=snapMealNo(SNAP.date);
- if(!aiKey()||!window.FormaAI){SNAP.status='nokey';openSheet(snapSheet(),snapSheet);return}
+ if(!aiReady()){SNAP.status='nokey';openSheet(snapSheet(),snapSheet);return}
  SNAP.status='reading';openSheet(snapSheet(),snapSheet);snapAsk();
 }
 async function snapAsk(){
  const my=++SNAP.seq;SNAP.status='reading';SNAP.err='';SNAP.raw='';snapDraw();
- try{const r=await FormaAI.meal({key:aiKey(),model:aiModel(),imageBase64:SNAP.photo,note:SNAP.note.trim()||undefined,profile:profile(),today:SNAP.date});
+ try{const r=await aiMeal({imageBase64:SNAP.photo,note:SNAP.note.trim()||undefined,today:SNAP.date});
   if(my!==SNAP.seq)return;SNAP.items=r.items;SNAP.notes=r.assumptions;SNAP.status='done'}
  catch(e){if(my!==SNAP.seq)return;SNAP.status='error';SNAP.err=aiErr(e);SNAP.raw=e&&e.raw||''}
  snapDraw();
@@ -2492,7 +2589,7 @@ function snapSheet(){
   <div class="fld" style="margin-top:12px"><label>Anything to add? (e.g. half rice, no sauce)</label><div class="row" style="gap:8px"><input id="snap_note" value="${esc(S.note)}" placeholder="half rice, no sauce" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">Ask again</button></div></div>
   <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`;
  }
- return `<h2>Snap a meal</h2><div class="xs mut" style="margin:-6px 0 8px">${fmtLong(S.date)}</div>${img}${body}`;
+ return `<h2>Snap a meal</h2><div class="xs mut" style="margin:-6px 0 8px">${fmtLong(S.date)}</div>${img}${body}${aiCounter()}`;
 }
 function snapSave(){
  const S=SNAP,d=S.date;if(!S.items.length)return;
@@ -2718,7 +2815,11 @@ document.addEventListener('click',async e=>{
   case 'impOpen':openSheet(impPasteSheet());break;
   case 'impGo':{const el=$('#imp_code');if(!el||!el.value.trim()){toast('Paste a code or link first.');break}importOpen(el.value);break}
   case 'impApply':if(PIMP)importApply(D.m);break;
-  case 'acctOpen':openSheet(acctSheet());break;
+  case 'acctOpen':openSheet(acctSheet(),acctSheet);break;
+  case 'sbSend':sbSend();break;
+  case 'sbAgain':SBS.sent='';SBS.msg='';sbRedraw();break;
+  case 'sbCfgSave':sbCfgSave();break;
+  case 'sbOut':sbOut();break;
   case 'learnOpen':learnOpen({});break;
   case 'learnClose':learnClose();break;
   case 'learnBack':LRN.view='home';LRN.path=false;learnDraw();break;
@@ -2813,10 +2914,11 @@ document.addEventListener('touchend',e=>{if(ty!=null&&e.changedTouches[0].client
 (async function boot(){
  if(/[?&]tab=workout/.test(location.search))UI.tab='workout';
  history.replaceState({tab:'today'},'');if(UI.tab!=='today')history.pushState({tab:UI.tab},'');
+ await sbInit();
  if(DEMO){if(/[?&]tour=1/.test(location.search))LS.set('forma.tourPending',1);await DEMOB.init();render();await refresh(true);programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()});return}
  render();
  checkVersion();
- if(cfg.token){await refresh();if(pendCount())flushSoon(200);await programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
+ if(hasAcct()){await refresh();if(pendCount())flushSoon(200);await programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
 })();
 </script>
 </body>

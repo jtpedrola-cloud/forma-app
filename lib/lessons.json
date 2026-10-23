@@ -1,0 +1,788 @@
+{
+  "glossary": [
+    {
+      "id": "set",
+      "term": "Set",
+      "short": "A group of reps done in a row without resting.",
+      "long": "A set is one round of an exercise. You do a number of reps, then you put the weight down and rest. Three sets of 10 reps means ten reps, rest, ten reps, rest, ten reps."
+    },
+    {
+      "id": "rep",
+      "term": "Rep",
+      "short": "One full lift of the weight, up and back down.",
+      "long": "A rep is one complete movement, for example lowering yourself in a push-up and pushing back up. You count reps to know how much work a set was."
+    },
+    {
+      "id": "rir",
+      "term": "RIR (reps in reserve)",
+      "short": "How many more reps you could have done when you stopped.",
+      "long": "If you stop a set and could have done 2 more clean reps, that set was 2 RIR. Most working sets should be 1 to 3 RIR: hard, but not to the point of failure."
+    },
+    {
+      "id": "failure",
+      "term": "Failure",
+      "short": "The point where you cannot do another rep with good form.",
+      "long": "Training to failure means you keep going until the next rep will not move. It is tiring and slows recovery, so use it rarely and mostly on safe exercises."
+    },
+    {
+      "id": "1rm",
+      "term": "1RM (one-rep max)",
+      "short": "The heaviest weight you could lift for exactly one rep.",
+      "long": "Most people never test it. The app can estimate it from a normal set, which is a safer way to compare strength over time."
+    },
+    {
+      "id": "volume",
+      "term": "Volume",
+      "short": "The total amount of work: sets times reps, sometimes times weight.",
+      "long": "More hard sets for a muscle each week usually means more growth, up to the point you can still recover. Three sets of 10 is 30 reps of volume."
+    },
+    {
+      "id": "load",
+      "term": "Load",
+      "short": "The weight you lift.",
+      "long": "Load is the number on the bar, plate stack or dumbbell. Raising load a little over time is how you keep getting stronger."
+    },
+    {
+      "id": "progressive-overload",
+      "term": "Progressive overload",
+      "short": "Doing slightly more over time so the body has a reason to adapt.",
+      "long": "You can add a little weight, add a rep, or do the same weight with better control. Small steps every week or two beat big jumps."
+    },
+    {
+      "id": "deficit",
+      "term": "Calorie deficit",
+      "short": "Eating fewer calories than your body burns.",
+      "long": "A deficit is the gap between what you eat and what you burn. Sustained over weeks, the body covers the gap with stored fat, so you lose weight."
+    },
+    {
+      "id": "surplus",
+      "term": "Calorie surplus",
+      "short": "Eating more calories than your body burns.",
+      "long": "A surplus gives the body spare energy to build muscle and weight. A small one builds muscle with less fat gain than a big one."
+    },
+    {
+      "id": "maintenance",
+      "term": "Maintenance",
+      "short": "The calories at which your weight stays the same.",
+      "long": "Eat at maintenance and your weight holds. Eat below it to lose, above it to gain. It changes with weight, activity and age."
+    },
+    {
+      "id": "tdee",
+      "term": "TDEE",
+      "short": "Total daily energy expenditure: all calories you burn in a day.",
+      "long": "It adds up resting burn, digestion, walking, daily movement and exercise. It is the same idea as maintenance. The app estimates it from your body and refines it from your logs."
+    },
+    {
+      "id": "bmr",
+      "term": "BMR",
+      "short": "The calories your body burns at complete rest.",
+      "long": "This is what you would burn lying in bed all day. It is the biggest part of what you burn, but not all of it."
+    },
+    {
+      "id": "kcal",
+      "term": "kcal (calorie)",
+      "short": "The unit of food energy. Food labels say Calories or kcal, they are the same.",
+      "long": "One kcal is a measure of energy. Everyone says calories in daily talk, and the app writes kcal."
+    },
+    {
+      "id": "macro",
+      "term": "Macro (macronutrient)",
+      "short": "One of the three big nutrients: protein, carbs and fat.",
+      "long": "Every food is made of macros plus water and small things like vitamins. Protein and carbs give 4 kcal per gram, fat gives 9."
+    },
+    {
+      "id": "protein",
+      "term": "Protein",
+      "short": "The nutrient that repairs and builds muscle.",
+      "long": "Meat, fish, eggs, tofu and milk are good sources. Eating enough protein helps you keep muscle while losing fat."
+    },
+    {
+      "id": "carbs",
+      "term": "Carbs (carbohydrates)",
+      "short": "The nutrient that is your body's easiest fuel.",
+      "long": "Rice, bread, noodles, fruit and sugar are carbs. They fuel training and keep energy steady. They are not the enemy, they just need to fit your total."
+    },
+    {
+      "id": "fat",
+      "term": "Fat (dietary fat)",
+      "short": "The densest nutrient, 9 kcal per gram, needed for hormones and health.",
+      "long": "Cooking oil, nuts, fatty meat and coconut milk carry fat. A little goes a long way in calories, so oil and sauces add up fast."
+    },
+    {
+      "id": "fiber",
+      "term": "Fiber",
+      "short": "The part of plants you cannot digest, which keeps you full.",
+      "long": "Vegetables, fruit, beans and whole grains have fiber. It slows hunger and keeps digestion regular."
+    },
+    {
+      "id": "range",
+      "term": "Range",
+      "short": "The band around a target that still counts as on target.",
+      "long": "Hitting one exact number every day is not possible, so the app gives you a band. Inside it, you are In range and the day counts."
+    },
+    {
+      "id": "in-range",
+      "term": "In range",
+      "short": "Your total for the day sits inside the target band.",
+      "long": "The Food screen shows In range when your calories or a macro land inside the band. It means you are on target, not almost on target."
+    },
+    {
+      "id": "body-fat",
+      "term": "Body fat",
+      "short": "The share of your weight that is fat.",
+      "long": "A body fat of 20 percent at 80 kg means about 16 kg of fat. Photos and the trend are used to estimate it."
+    },
+    {
+      "id": "lean-mass",
+      "term": "Lean mass",
+      "short": "Everything in your body that is not fat: muscle, bone, organs, water.",
+      "long": "Lean mass is your weight minus fat mass. In a cut you want to keep it as high as possible."
+    },
+    {
+      "id": "fat-mass",
+      "term": "Fat mass",
+      "short": "The kilograms of fat your body carries.",
+      "long": "Weight times body fat share. It is the number that should fall when a cut works."
+    },
+    {
+      "id": "trend-weight",
+      "term": "Trend weight",
+      "short": "Your weight with the daily ups and downs smoothed out.",
+      "long": "Water, salt and food in your gut move the scale 1 to 2 kg a day. The trend looks at several weeks and shows the real direction."
+    },
+    {
+      "id": "pr",
+      "term": "PR (personal record)",
+      "short": "Your best ever on an exercise.",
+      "long": "A PR can be more weight, more reps or a better version of the same lift. It is a sign you are progressing."
+    },
+    {
+      "id": "superset",
+      "term": "Superset",
+      "short": "Two exercises done back to back with no rest between them.",
+      "long": "You do one set of the first exercise, go straight into the second, then rest. It saves time in a busy gym."
+    },
+    {
+      "id": "drop-set",
+      "term": "Drop set",
+      "short": "Lowering the weight right after a hard set and continuing.",
+      "long": "You reach near failure, drop the weight by about 20 percent and keep going for more reps. It is tiring, so use it at the end of a session."
+    },
+    {
+      "id": "tempo",
+      "term": "Tempo",
+      "short": "How fast you lift and lower the weight.",
+      "long": "A slow, controlled lowering of 2 to 3 seconds makes the same weight harder and teaches control. Do not bounce the weight."
+    },
+    {
+      "id": "warm-up",
+      "term": "Warm-up",
+      "short": "Easy movement and light sets that prepare you to lift heavy.",
+      "long": "A few minutes of light cardio plus 1 or 2 light sets of the first exercise raise your body temperature and practise the movement."
+    },
+    {
+      "id": "deload",
+      "term": "Deload",
+      "short": "A planned easy week to let your body recover.",
+      "long": "You cut the weight or the sets by about half for a week. Many people feel stronger after it."
+    },
+    {
+      "id": "compound",
+      "term": "Compound exercise",
+      "short": "A lift that uses several joints and muscles at once.",
+      "long": "Squat, bench press, row and deadlift are compound. They give the most strength for the time spent."
+    },
+    {
+      "id": "isolation",
+      "term": "Isolation exercise",
+      "short": "A lift that works mainly one muscle and one joint.",
+      "long": "A biceps curl or leg extension are isolation. They finish off a muscle after the big lifts."
+    },
+    {
+      "id": "hypertrophy",
+      "term": "Hypertrophy",
+      "short": "Muscle growth.",
+      "long": "It is the word for making muscles bigger. It happens when you train a muscle hard enough, eat enough protein and recover."
+    },
+    {
+      "id": "strength",
+      "term": "Strength",
+      "short": "How much force you can produce, usually the heaviest weight you can lift.",
+      "long": "Strength mostly improves with heavier weights and lower reps. It also helps growth, as stronger muscles can be trained with more load."
+    },
+    {
+      "id": "cardio",
+      "term": "Cardio",
+      "short": "Exercise that raises your heart rate for a while, like walking, running or cycling.",
+      "long": "Cardio is good for the heart and burns calories. Walking counts, and it is easy to recover from."
+    },
+    {
+      "id": "steps",
+      "term": "Steps",
+      "short": "The count of steps your phone or watch records during the day.",
+      "long": "It is a simple way to measure daily movement. More steps means more calories burned outside the gym."
+    },
+    {
+      "id": "neat",
+      "term": "NEAT",
+      "short": "Calories burned by everyday movement that is not exercise.",
+      "long": "Walking to the jeepney, cooking, cleaning and standing all count. For many people it is a bigger lever than the gym."
+    },
+    {
+      "id": "rest-time",
+      "term": "Rest time",
+      "short": "The pause between sets.",
+      "long": "Rest 1 to 3 minutes for most lifts, longer for heavy ones. The app has a rest timer to track it."
+    },
+    {
+      "id": "swap",
+      "term": "Swap",
+      "short": "Replacing an exercise with a similar one.",
+      "long": "Swap when a machine is busy or something hurts. Pick one that trains the same muscle."
+    },
+    {
+      "id": "recovery",
+      "term": "Recovery",
+      "short": "The time your body uses to repair after training.",
+      "long": "Muscles grow while you rest, not while you lift. Sleep, food and days off are the recovery."
+    },
+    {
+      "id": "form",
+      "term": "Form",
+      "short": "The way you do the movement.",
+      "long": "Good form means controlled movement through the full range with a steady back. It protects joints and works the right muscle."
+    },
+    {
+      "id": "range-of-motion",
+      "term": "Range of motion",
+      "short": "How far a joint moves in an exercise.",
+      "long": "A full range, like a deep squat you can control, usually builds more than short half reps."
+    },
+    {
+      "id": "plateau",
+      "term": "Plateau",
+      "short": "A stretch where progress stalls.",
+      "long": "Weight or strength stops moving for a few weeks. Check sleep, food and whether you are adding load, before changing everything."
+    },
+    {
+      "id": "recomp",
+      "term": "Recomp",
+      "short": "Losing fat and building muscle at the same time.",
+      "long": "Possible for beginners and people returning to training. It works best with high protein, lifting and a small deficit."
+    },
+    {
+      "id": "adherence",
+      "term": "Adherence",
+      "short": "How consistently you follow the plan.",
+      "long": "The best plan is the one you keep doing. A decent plan done for a year beats a perfect plan done for two weeks."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "sets-reps",
+      "title": "What sets and reps are",
+      "level": 1,
+      "minutes": 2,
+      "summary": "The two words behind every workout, in plain language.",
+      "cards": [
+        {
+          "h": "A rep is one lift",
+          "p": "One rep is one full movement: lowering the weight and lifting it back. Lower yourself in a push-up, push back up, and that is one rep.",
+          "example": "Think of scooping rice from the pot: one full scoop is one rep.",
+          "img": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/0.jpg"
+        },
+        {
+          "h": "A set is a group of reps",
+          "p": "A set is a bunch of reps in a row. When you stop and rest, the set is over. 10 reps in a row is one set of 10.",
+          "example": "Ten push-ups, then you catch your breath. That was one set."
+        },
+        {
+          "h": "Reading 3 x 10",
+          "p": "The program says 3 x 10. That means 3 sets of 10 reps: do 10, rest, do 10, rest, do 10. That is 30 reps in total.",
+          "example": "Like three trips carrying 10 bottles of water each from the tindahan."
+        },
+        {
+          "h": "Rest between sets",
+          "p": "Rest 1 to 3 minutes between sets so the next set is also good. The app has a rest timer that counts it for you.",
+          "example": "Rest about as long as it takes to drink water and check your phone, not to scroll for ten minutes."
+        }
+      ],
+      "check": {
+        "q": "What does 4 x 8 mean?",
+        "options": [
+          "4 reps, 8 sets",
+          "4 sets of 8 reps",
+          "4 minutes, 8 times"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Open the Workout tab"
+      }
+    },
+    {
+      "id": "rir",
+      "title": "Reps in reserve and how hard to push",
+      "level": 1,
+      "minutes": 3,
+      "summary": "How to tell if a set was hard enough, and why you should not go to failure every time.",
+      "cards": [
+        {
+          "h": "Reps in reserve (RIR)",
+          "p": "RIR is how many more good reps you could still do when you stop. If you stop and could do 2 more, that set was 2 RIR.",
+          "example": "You carry groceries up the stairs and feel you could still do two more steps with good posture. That is 2 RIR."
+        },
+        {
+          "h": "Where to aim",
+          "p": "Most sets should end at 1 to 3 RIR. That is hard enough to grow, with enough left to stay safe and recover.",
+          "example": "If the last rep felt like a struggle but you stayed in control, you hit it."
+        },
+        {
+          "h": "What failure is",
+          "p": "Failure is when you cannot do another rep. It is 0 RIR. Use it rarely, only on safe exercises, because it is very tiring.",
+          "example": "It is like sprinting for the last jeepney with nothing left. Great once in a while, not every day."
+        },
+        {
+          "h": "How the app uses it",
+          "p": "After each set you can tell the app how many you had left. Several sets at 3 or more mean the weight is too light, so add some next time.",
+          "example": "If every set of bench felt easy this week, go up 2.5 kg next week."
+        }
+      ],
+      "check": {
+        "q": "You finish a set and could have done 2 more reps. What is the RIR?",
+        "options": [
+          "0",
+          "2",
+          "10"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Log a set with RIR"
+      }
+    },
+    {
+      "id": "workout-screen",
+      "title": "Reading the workout screen",
+      "level": 1,
+      "minutes": 3,
+      "summary": "Previous, rest timer, swap and add, what each button does.",
+      "cards": [
+        {
+          "h": "The set row",
+          "p": "Each row is one set. You type the weight and the reps, then tick it. When you tick, the rest timer starts.",
+          "example": "Row 1 says 40 kg x 10. You did it, so you tick it."
+        },
+        {
+          "h": "Previous",
+          "p": "The column called Previous shows what you did last time on this set. It is your target to match or beat.",
+          "example": "Last time you did 40 kg x 8. Today try 40 kg x 9 or 10."
+        },
+        {
+          "h": "Rest timer",
+          "p": "After a tick, the timer counts your rest and beeps when it is over. You can skip it if you feel ready.",
+          "example": "Start the timer, drink water, wipe the machine, and by then it is over."
+        },
+        {
+          "h": "Swap and add",
+          "p": "Swap replaces an exercise with a similar one if the machine is busy or something hurts. Add lets you put in an extra exercise or set.",
+          "example": "The lat pulldown is taken, so swap it for another back exercise."
+        }
+      ],
+      "check": {
+        "q": "What does the Previous column show?",
+        "options": [
+          "What you did last time on this set",
+          "What the app thinks you should lift",
+          "The weight on the empty bar"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Open the Workout tab"
+      }
+    },
+    {
+      "id": "calories-deficit",
+      "title": "Calories and the deficit",
+      "level": 1,
+      "minutes": 4,
+      "summary": "Why calories decide weight, and what a deficit is.",
+      "cards": [
+        {
+          "h": "What a calorie is",
+          "p": "A calorie, or kcal, is a unit of energy in food. Your body burns calories all day, even at rest.",
+          "example": "A cup of cooked rice is about 200 kcal."
+        },
+        {
+          "h": "Maintenance",
+          "p": "Maintenance is how many calories you burn in a day. Eat that and your weight stays the same.",
+          "example": "If you burn 2,200 and eat 2,200, the scale does not move."
+        },
+        {
+          "h": "Deficit and surplus",
+          "p": "Eat less than maintenance and you are in a deficit, so the body uses stored fat. Eat more and you are in a surplus, so you gain.",
+          "example": "Burn 2,200, eat 1,700: a 500 kcal deficit, about half a kilo of fat lost every 2 weeks, roughly."
+        },
+        {
+          "h": "Small and steady",
+          "p": "A moderate deficit keeps your energy and muscle. Crash diets lose muscle and are hard to keep. The app sets a pace for you.",
+          "example": "Skipping rice for one week is not a plan. Eating a bit less rice every day for months is."
+        }
+      ],
+      "check": {
+        "q": "You eat fewer calories than you burn. What is that called?",
+        "options": [
+          "A surplus",
+          "A deficit",
+          "Maintenance"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "food",
+        "label": "Open the Food tab"
+      }
+    },
+    {
+      "id": "protein",
+      "title": "Protein",
+      "level": 1,
+      "minutes": 3,
+      "summary": "The nutrient that protects and builds muscle.",
+      "cards": [
+        {
+          "h": "Why it matters",
+          "p": "Protein repairs muscle after training. In a deficit, enough protein helps you lose fat and keep muscle.",
+          "example": "Chicken breast, eggs, tuna and tofu are all protein."
+        },
+        {
+          "h": "How much",
+          "p": "A common aim is about 1.6 to 2.2 g per kg of body weight a day. The app sets your target and a range that goes above it. More is fine.",
+          "example": "At 80 kg that is roughly 130 to 175 g."
+        },
+        {
+          "h": "Spread it out",
+          "p": "Spread protein across your meals, about 25 to 40 g each. It is easier than eating it all at dinner.",
+          "example": "Itlog at breakfast, adobo at lunch, grilled fish at dinner."
+        },
+        {
+          "h": "Easy sources",
+          "p": "Pick lean and cheap ones: eggs, chicken, tuna, tofu, milk, whey. Check the label for grams of protein, not just the front claim.",
+          "example": "A can of tuna is about 25 g of protein for a few pesos."
+        }
+      ],
+      "check": {
+        "q": "Why do you eat protein when cutting?",
+        "options": [
+          "To keep and build muscle",
+          "To burn more fat directly",
+          "Because rice has none"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "food",
+        "label": "See your protein today"
+      }
+    },
+    {
+      "id": "food-screen",
+      "title": "Reading the Food screen",
+      "level": 1,
+      "minutes": 3,
+      "summary": "Ranges, In range, and what is left for the day.",
+      "cards": [
+        {
+          "h": "The top numbers",
+          "p": "The top shows what you have eaten and what is left of your daily calories, plus protein, carbs and fat.",
+          "example": "After breakfast it says 1,300 kcal left."
+        },
+        {
+          "h": "Ranges, not exact numbers",
+          "p": "You do not need an exact number. Each target has a band around it, and a day inside the band counts as on target.",
+          "example": "If your target is 1,750 and you eat 1,820, you are still in range."
+        },
+        {
+          "h": "In range",
+          "p": "When a number sits inside its band, the app shows In range. Outside, it shows how far you are over or under.",
+          "example": "Protein 160 g with a 165 g target is under. 170 g is in range."
+        },
+        {
+          "h": "Adding food",
+          "p": "Use the command bar to type or say what you ate, or add a photo. Check the numbers, because estimates can be off.",
+          "example": "Type '2 cups rice, adobo 150g' and the app fills it in."
+        }
+      ],
+      "check": {
+        "q": "Your target is 1,750 kcal and you ate 1,800. What does the app show?",
+        "options": [
+          "In range",
+          "Failed",
+          "Over by 1,800"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "food",
+        "label": "Open the Food tab"
+      }
+    },
+    {
+      "id": "steps",
+      "title": "Steps and walking",
+      "level": 1,
+      "minutes": 2,
+      "summary": "Daily steps are the easiest way to burn more.",
+      "cards": [
+        {
+          "h": "Why walk",
+          "p": "Walking burns calories without tiring you for the next workout. It adds up over a whole day.",
+          "example": "Walking to the jeepney stop and back can be 2,000 steps."
+        },
+        {
+          "h": "A step goal",
+          "p": "The app has a daily step goal, often 8,000 to 10,000. It is a target, not a test. Any increase helps.",
+          "example": "If you do 5,000 now, aim for 6,500 first."
+        },
+        {
+          "h": "Easy ways to add",
+          "p": "Take stairs, get off one stop early, walk after meals, take a call on your feet.",
+          "example": "A 10-minute walk after lunch is about 1,000 steps."
+        },
+        {
+          "h": "Where steps come from",
+          "p": "Your phone counts them. You can type them in or send a screenshot, and the Android helper app can sync them each hour.",
+          "example": "Open your health app, copy the number, enter it before bed."
+        }
+      ],
+      "check": {
+        "q": "Which is the simplest way to raise your daily burn?",
+        "options": [
+          "Walk more",
+          "Skip sleep",
+          "Eat less protein"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "today",
+        "label": "Add today's steps"
+      }
+    },
+    {
+      "id": "progressive-overload",
+      "title": "Progressive overload",
+      "level": 2,
+      "minutes": 3,
+      "summary": "The one idea that makes you keep improving.",
+      "cards": [
+        {
+          "h": "The idea",
+          "p": "Your body only grows or gets stronger if it has a reason to. Doing a little more than before gives it that reason. This is progressive overload.",
+          "example": "Carrying one gallon of water is easy. Carrying two every day for a month makes the first one feel light."
+        },
+        {
+          "h": "Three ways to do more",
+          "p": "Add a little weight, add a rep, or do the same thing with better control. Any of them counts.",
+          "example": "Last week 10 reps at 40 kg. This week 11 reps, or 10 reps at 42.5 kg."
+        },
+        {
+          "h": "Small steps",
+          "p": "Go up in small steps. About 2.5 kg for big lifts, 1 to 2 kg for small ones, or one extra rep. Do it when all your sets feel easy.",
+          "example": "If you hit all your reps with 3 RIR, go up a little next time."
+        },
+        {
+          "h": "When it stalls",
+          "p": "If you cannot add anything for two or three weeks, check sleep, food and stress. Do not just add more exercises.",
+          "example": "You slept 5 hours all week on a night shift. That is why the bar did not move."
+        }
+      ],
+      "check": {
+        "q": "All your sets felt easy with 3 reps in reserve. What now?",
+        "options": [
+          "Add a little weight or a rep next time",
+          "Do the same forever",
+          "Train to failure every set"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Check your history"
+      }
+    },
+    {
+      "id": "carbs-fat",
+      "title": "Carbs and fat",
+      "level": 2,
+      "minutes": 3,
+      "summary": "The other two macros and why neither is bad.",
+      "cards": [
+        {
+          "h": "Carbs are fuel",
+          "p": "Carbs give quick energy for training and daily life. Rice, bread, fruit and noodles are carbs.",
+          "example": "1 cup of cooked rice is about 45 g of carbs."
+        },
+        {
+          "h": "Fat is dense",
+          "p": "Fat gives 9 kcal per gram, more than double protein or carbs. A little is needed for health, but it adds up fast.",
+          "example": "One tablespoon of cooking oil is about 120 kcal. Fried foods hide a lot of it."
+        },
+        {
+          "h": "Fill the rest",
+          "p": "After protein, your carbs and fat share the remaining calories. Some people feel better with more carbs, some with more fat.",
+          "example": "Adobo with a cup of rice is a good balance of protein, carbs and fat."
+        },
+        {
+          "h": "Do not cut one out",
+          "p": "Cutting all carbs or all fat is not needed. Stay inside the range for each and your results will come.",
+          "example": "You can keep rice. Just measure it."
+        }
+      ],
+      "check": {
+        "q": "How many kcal does 1 gram of fat have?",
+        "options": [
+          "4",
+          "9",
+          "2"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "food",
+        "label": "Check your macros"
+      }
+    },
+    {
+      "id": "recovery",
+      "title": "Rest, sleep and recovery",
+      "level": 2,
+      "minutes": 3,
+      "summary": "Muscle grows when you rest, not when you lift.",
+      "cards": [
+        {
+          "h": "Training is the signal",
+          "p": "The workout tells the body to grow. The growing itself happens afterward, while you rest and eat.",
+          "example": "You paint a wall in the day. The paint dries overnight."
+        },
+        {
+          "h": "Sleep",
+          "p": "Aim for 7 to 9 hours. Poor sleep means more hunger, less strength and worse mood.",
+          "example": "Two nights of 4 hours and you crave sweets all day. That is normal."
+        },
+        {
+          "h": "Rest days",
+          "p": "Take at least 1 or 2 days a week off from lifting. Easy walking is fine. Sore is normal, sharp pain is not.",
+          "example": "Sunday with the family is a good rest day."
+        },
+        {
+          "h": "Deload",
+          "p": "Every 6 to 10 weeks, if you feel run down, do a lighter week. Use half the weight or half the sets.",
+          "example": "After a busy month at work, a lighter week can bring your strength back."
+        }
+      ],
+      "check": {
+        "q": "When do your muscles actually grow?",
+        "options": [
+          "During the workout",
+          "During rest and sleep",
+          "Only on the weekend"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Look at your weekly plan"
+      }
+    },
+    {
+      "id": "warmup-form",
+      "title": "Warm-up and form basics",
+      "level": 2,
+      "minutes": 3,
+      "summary": "How to start a session and keep lifts safe.",
+      "cards": [
+        {
+          "h": "Warm up first",
+          "p": "Spend 5 minutes on light cardio, then do 1 or 2 light sets of your first exercise. It lets joints move freely.",
+          "example": "Walk briskly for 5 minutes, then do an empty-bar bench press."
+        },
+        {
+          "h": "Control the weight",
+          "p": "Lift with control, lower slowly, do not bounce. If you have to swing, the weight is too heavy.",
+          "example": "Count 'one, two' on the way down."
+        },
+        {
+          "h": "Full range",
+          "p": "Move through a full range you can control. Short half reps give you less.",
+          "example": "Squat as deep as you can without your back rounding.",
+          "img": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg"
+        },
+        {
+          "h": "Stop for pain",
+          "p": "Muscle burn is fine. Sharp or joint pain is a stop sign. Swap the exercise or lower the weight and ask a coach.",
+          "example": "A sharp pinch in your shoulder means stop and pick a different press."
+        }
+      ],
+      "check": {
+        "q": "What should you do on sharp joint pain?",
+        "options": [
+          "Push through it",
+          "Stop and swap or lower the weight",
+          "Add more weight"
+        ],
+        "answer": 1
+      },
+      "tryIt": {
+        "tab": "workout",
+        "label": "Open the Workout tab"
+      }
+    },
+    {
+      "id": "trend-photos",
+      "title": "Weight trend and progress photos",
+      "level": 2,
+      "minutes": 4,
+      "summary": "Why one weigh-in lies, and how to see real change.",
+      "cards": [
+        {
+          "h": "The scale moves daily",
+          "p": "Water, salt and food in your gut can move the scale 1 to 2 kg in a day. One weigh-in tells you very little.",
+          "example": "After salty food and a late dinner, you are heavier by morning. Fat did not grow overnight."
+        },
+        {
+          "h": "The trend",
+          "p": "Weigh in the same way, ideally each morning. The app draws a trend line through several weeks. That line is the real direction.",
+          "example": "The dots jump around, the line goes down slowly. Trust the line."
+        },
+        {
+          "h": "Photos",
+          "p": "Take photos once a week, same light, same pose, same time. They show change that the scale hides, especially when you lose fat and build muscle together.",
+          "example": "Front, side and back, every Sunday morning before breakfast."
+        },
+        {
+          "h": "Be patient",
+          "p": "Real change shows over 3 to 4 weeks. If the trend is flat for 3 to 4 weeks, adjust food a little. Do not change on day three.",
+          "example": "Give the plan a month before you judge it."
+        }
+      ],
+      "check": {
+        "q": "Which is the best way to read your weight?",
+        "options": [
+          "The trend over several weeks",
+          "Today's number alone",
+          "Only the lowest number"
+        ],
+        "answer": 0
+      },
+      "tryIt": {
+        "tab": "progress",
+        "label": "Open the Progress tab"
+      }
+    }
+  ]
+}
