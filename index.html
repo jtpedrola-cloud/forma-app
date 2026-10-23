@@ -146,8 +146,9 @@ svg{display:block}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:8;stroke-linecap:round}
 .ring .tr{stroke:var(--inset)}.ring .pg{stroke:url(#ringGrad);transition:stroke-dashoffset .3s}
-.ring.over .pg{stroke:url(#ringOver)}
-.ring.in .pg{stroke:var(--ok)}
+.ring .bd{stroke:url(#ringGrad);stroke-linecap:butt;opacity:.3}
+.ring.over .pg{stroke:url(#ringOver)}.ring.over .bd{stroke:url(#ringOver)}
+.ring.in .pg{stroke:var(--ok)}.ring.in .bd{stroke:var(--ok)}
 .ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1}
 .ring .v small{display:block;font-size:10px;font-weight:500;color:var(--mut);margin-top:2px}
 .chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:12px;background:var(--chip);color:var(--chiptx);font-size:12px;font-weight:600;white-space:nowrap}
@@ -187,6 +188,9 @@ svg{display:block}
 .sec .item,.sec .empty{padding-left:16px;padding-right:16px}
 .sec .item:first-of-type{border-top:0}
 .addmeal{width:100%;min-height:56px;border-radius:16px;background:var(--grad);color:var(--onacc);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-shadow:0 6px 20px -8px var(--acc)}
+.addrow{display:flex;gap:10px;margin-bottom:12px}.addrow .addmeal{margin-bottom:0;flex:1;min-width:0}
+.snapbtn{min-height:56px;border-radius:16px;padding:0 16px;background:var(--card);border:1px solid var(--line);color:var(--txt);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;flex:none}.snapbtn:active{transform:scale(.98)}
+.spin{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);animation:spn .8s linear infinite;flex:none}@keyframes spn{to{transform:rotate(360deg)}}
 .addmeal span{font-size:24px;line-height:1;font-weight:500}.addmeal:active{transform:scale(.99);opacity:.9}
 .sec summary::-webkit-details-marker{display:none}
 .sec summary .t{flex:1;font-weight:600}
@@ -269,6 +273,7 @@ a{color:var(--acc)}
 <script src="smart.js"></script>
 <script src="plan.js"></script>
 <script src="cmd.js"></script>
+<script src="ai.js"></script>
 <script>
 'use strict';
 /* ---------- helpers ---------- */
@@ -292,7 +297,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='df920fad72ac06fd7ebe6754c75a8a2fdfc00a48';let verChecked=0;
+const BUILD='af462f69c1d88d94d16ee229886f7b0d6e737f03';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -654,10 +659,14 @@ function rangeState(k,v,T){const r=ranges(T)[k],band=fmtN(r.lo)+' to '+fmtN(r.hi
  if(v>0&&v>=r.lo&&v<=r.hi)return {in:true,l:'In range',amt:0,band};
  return v<r.lo?{in:false,l:'Left',amt:rnd(r.t-v),band}:{in:false,l:'Over',amt:rnd(v-r.t),band}}
 function ring(l,v,g,opt){
- opt=opt||{};const r=36,c=2*Math.PI*r,p=g>0?Math.min(1,v/g):0,shown=opt.remaining?Math.max(0,g-v):v;
+ opt=opt||{};const r=36,c=2*Math.PI*r,shown=opt.remaining?Math.max(0,g-v):v;
+ /* With a range the full circle is the top of the range, so the band (lo to hi) is drawn as a lighter arc under the fill
+    and the plain track before it is what is left until the range starts. Without one the circle is the target. */
+ const rg=opt.k&&opt.T?ranges(opt.T)[opt.k]:null,sc=rg&&rg.hi>0?Math.max(rg.hi,g):g,p=sc>0?Math.min(1,v/sc):0;
+ const band=rg&&sc>0?`<circle class="bd" cx="42" cy="42" r="${r}" stroke-dasharray="${(c*Math.max(0,Math.min(1,rg.hi/sc)-Math.min(1,rg.lo/sc))).toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(-c*Math.min(1,rg.lo/sc)).toFixed(1)}"/>`:'';
  const rs=opt.k&&opt.T?rangeState(opt.k,v,opt.T):null,over=!(rs&&rs.in)&&opt.over!==false&&v>g;
  const st=rs?(rs.in?'<div class="xs" style="color:var(--ok);font-weight:700">In range</div>':`<div class="xs" style="font-weight:600">${rs.l} ${fmtN(rs.amt)}</div>`)+`<div class="xs mut" style="font-size:11px">${rs.band} g</div>`:'';
- return `<div><div class="ring ${rs&&rs.in?'in':over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/><circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div>${st}</div>`}
+ return `<div><div class="ring ${rs&&rs.in?'in':over?"over":""}"><svg viewBox="0 0 84 84"><circle class="tr" cx="42" cy="42" r="${r}"/>${band}<circle class="pg" cx="42" cy="42" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}"/></svg><div class="v">${rnd(shown)}<small>${opt.remaining?"left":"g"}</small></div></div><div class="xs mut">${l}</div><div class="xs"><b>${rnd(v)}</b> <span class="mut">/ ${g} g</span></div>${st}</div>`}
 
 /* ---------- calendars and streaks ---------- */
 const ym=d=>d.slice(0,7);
@@ -780,7 +789,7 @@ function foodView(){
  ${(()=>{const kv=kcalVerdict(t.kcal,T.kcal);return `<div class="row xs" style="margin-top:8px"><span class="mut sp">Range ${kv.band} cal</span><b style="color:${kv.c}">${kv.in?'In range':kv.l+' '+kv.v}</b></div>`})()}
  ${t.kcal>0?deficitRow(d,t.kcal):''}
  ${RING_DEFS}<div class="mac">${ring('Protein',t.protein,T.protein,{remaining:!isCons,over:false,k:'protein',T})}${ring('Carbs',t.carbs,T.carbs,{remaining:!isCons,over:isCons,k:'carbs',T})}${ring('Fat',t.fat,T.fat,{remaining:!isCons,over:isCons,k:'fat',T})}</div></div>
- ${secs}<button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button>`;
+ ${secs}<div class="addrow"><button class="addmeal" data-act="foodAdd" data-m="${nextMeal}"><span>+</span> Add meal</button><button class="snapbtn" data-act="snapPick" aria-label="Snap a meal">${ic('camera',22)}<span>Snap a meal</span></button></div><input type="file" id="snap_in" accept="image/*" hidden>`;
 }
 /* Recent foods and database search at the top of the add-meal sheet. Tapping fills the fields below. */
 let FS={f:null,q:0},RECENT=[];
@@ -805,11 +814,11 @@ document.addEventListener('input',e=>{if(e.target.id==='f_search')fsResults();el
 function foodSheet(item,meal,pre){
  const e=!!item,i=item||Object.assign({name:'',amount:'',kcal:'',protein:'',carbs:'',fat:''},pre||{});
  const cur=e?mealNo(item):meal,ms=mealList(UI.date);if(!ms.includes(cur))ms.push(cur);
- const src=e&&item.photo?photoURL(item.photo):'';
+ const phPre=!e&&foodPhoto&&foodPhoto!=='remove'?foodPhoto:'',src=e&&item.photo?photoURL(item.photo):phPre;
  return `<h2>${e?'Edit food':'Add food'}</h2>
  <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${ms.map(k=>`<button data-act="pickMeal" data-m="${k}" class="${cur===k?'on':''}">${k}</button>`).join('')}</div></div>
  ${e?'':foodFinder()}
- <div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${e?esc(item.photo||''):''}" src="${esc(src)}" style="${src?'':'display:none'}" alt="" data-act="phView"><input type="file" id="f_photo" accept="image/*" hidden><div class="row"><button class="btn ghost sm" id="f_phpick" data-act="phPick">${e&&item.photo?'Change photo':'Add photo'}</button><button class="btn ghost sm" id="f_phrm" data-act="phRemove" style="${e&&item.photo?'':'display:none'}">Remove</button></div></div>
+ <div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${e?esc(item.photo||''):''}" src="${esc(src)}" style="${src?'':'display:none'}" alt="" data-act="phView"><input type="file" id="f_photo" accept="image/*" hidden><div class="row"><button class="btn ghost sm" id="f_phpick" data-act="phPick">${(e&&item.photo)||phPre?'Change photo':'Add photo'}</button><button class="btn ghost sm" id="f_phrm" data-act="phRemove" style="${(e&&item.photo)||phPre?'':'display:none'}">Remove</button></div></div>
  <div class="fld"><label>Name</label><input id="f_name" value="${esc(i.name)}" placeholder="Chicken adobo"></div>
  <div class="fld"><label>Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice"></div>
  <div class="g2"><div class="fld"><label>Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label>Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
@@ -1608,6 +1617,7 @@ function settingsSheet(){
  <div class="g2"><div class="fld"><label>Weight in</label><div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div></div><div class="fld"><label>Height in</label><div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div></div></div>
  <div class="fld"><label>Style</label><div class="thm">${THEMES.map(([id,n,d,bg,card,g])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}"><div class="sw" style="background:${bg};border:1px solid rgba(128,128,128,.25)"><i style="background:${g}"></i><i style="background:${card};bottom:20px;right:30%;height:8px"></i></div><b>${n}</b><span>${d}</span></button>`).join('')}</div></div>
  <div class="fld"><label>Longest session, minutes</label><input id="s_smax" inputmode="numeric" value="${sessMax()}"><div class="xs mut" style="margin-top:4px">A day longer than this gets an amber warning. Time is estimated from sets and exercises.</div></div>
+ ${aiSettings()}
  <div class="fld"><label>Notifications</label><div class="card" style="margin:0;padding:12px 14px"><div class="row" style="align-items:center;gap:10px"><div class="sm" style="flex:1">Rest timer alerts: <b>${notifState()}</b></div>${notifState()==='Not asked'?'<button class="btn sm" data-act="notifAllow">Allow</button>':''}<button class="btn ghost sm" data-act="notifTest">Test</button></div>${notifState()==='Blocked'?'<div class="xs mut" style="margin-top:6px">Blocked. Allow notifications for Forma in your phone settings (site settings in Chrome).</div>':''}<div class="xs mut" style="margin-top:8px">Phones can still silence a web app in the background. The Play Store version will fix this properly.</div></div></div>
  <div class="fld"><label>Phone step sync</label><div class="card" style="margin:0;padding:12px 14px"><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -1618,7 +1628,7 @@ function settingsSheet(){
  <div class="xs mut" style="margin:8px 0 12px">Ask Claude to change targets, step goal or units. They live in profile.json.</div>`:''}
  <div class="row" style="flex-wrap:wrap"><button class="btn sp" data-act="cfgSave">Save repo</button><button class="btn ghost sp" data-act="force">Force refresh</button></div>
  <button class="btn red full" style="margin-top:10px" data-act="signout">Sign out</button>
- <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.5.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:12px;text-align:center">Forma v0.6.0${DEMO?' (demo mode)':''}</div>`;
 }
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
@@ -1663,7 +1673,7 @@ function renderSheet(){
 }
 
 /* ---------- Command bar: one typed line becomes weight, steps, sport, note and food actions (app/cmd.js, no AI) ---------- */
-let cmdText='',cmdHi=-1;const CMD={res:null,line:'',date:'',acts:[],wkg:80};
+let cmdText='',cmdHi=-1;const CMD={res:null,line:'',date:'',acts:[],wkg:80,ctx:null,busy:false,aiErr:'',aiNotes:[],seq:0};
 let cmdHOpen=false;
 function cmdBar(){const h=LS.get('forma.cmdHist',[]).slice(0,10);return `<div class="cmdbar"><input id="cmd_in" value="${esc(cmdText)}" placeholder="Log: weight 84.9, steps 8200, 2 eggs 1 cup rice, basketball 1 hr" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Send">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}`}
 function cmdRun(){
@@ -1673,7 +1683,7 @@ function cmdRun(){
  const ctx={foods:foodsdb()||[],weightKg:latestWeight(),date:d,lastMealAt:d===today()?(lastT||null):null,lastMealNo:its.length?Math.max(...its.map(mealNo)):0,now:Date.now()};
  let res;try{res=FormaCmd.parse(line,ctx)}catch(e){toast('Could not read that line.');return}
  if(!res.actions.length&&!(res.issues||[]).length){toast('Nothing to log in that line.');return}
- CMD.res=res;CMD.line=line;CMD.date=d;CMD.wkg=ctx.weightKg||80;CMD.acts=JSON.parse(JSON.stringify(res.actions));
+ CMD.res=res;CMD.line=line;CMD.date=d;CMD.wkg=ctx.weightKg||80;CMD.acts=JSON.parse(JSON.stringify(res.actions));CMD.ctx=ctx;CMD.seq++;CMD.busy=false;CMD.aiErr='';CMD.aiNotes=[];
  openSheet(cmdSheet(),cmdSheet);
 }
 function cmdRow(i,j,title,sub,val,unit,fld){return `<div class="crow"><div class="sp"><div class="n">${esc(title)}</div><div class="xs mut">${sub}</div></div>${fld?`<div class="cin"><input inputmode="decimal" value="${esc(val)}" data-ci="${i}" data-cj="${j}" data-cf="${fld}" aria-label="${esc(title)}"><span class="xs mut">${esc(unit)}</span></div>`:''}<button class="ib" data-act="cmdDrop" data-ci="${i}" data-cj="${j}" aria-label="Remove ${esc(title)}">${ic('x',18)}</button></div>`}
@@ -1688,8 +1698,30 @@ function cmdSheet(){
  });
  const unk=(CMD.res.issues||[]).map((u,k)=>`<div class="cunk"><div class="n">${esc(u.text)}</div><div class="xs">${esc(u.why||'Not understood.')}</div><button class="btn ghost sm" style="margin-top:8px" data-act="cmdHand" data-k="${k}">Add by hand</button></div>`).join('');
  const n=CMD.acts.reduce((a,x)=>a+(x.k==='food'?x.items.length:1),0);
- return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}
+ const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiKey()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
+ const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
+ return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
  <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
+/* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
+async function cmdAI(){
+ if(!CMD.res||CMD.busy)return;
+ if(!aiKey()||!window.FormaAI){CMD.seq++;closeSheet();openSheet(settingsSheet());return}
+ const my=++CMD.seq,known=[];CMD.busy=true;CMD.aiErr='';CMD.aiNotes=[];openSheet(cmdSheet(),cmdSheet);
+ CMD.acts.forEach(a=>{if(a.k==='food')a.items.forEach(i=>known.push({name:i.name,amount:i.amount||'',kcal:rnd(i.kcal)}))});
+ try{
+  const r=await FormaAI.meal({key:aiKey(),model:aiModel(),text:CMD.line,known,profile:profile(),today:CMD.date});
+  if(my!==CMD.seq||!CMD.res)return;
+  CMD.busy=false;CMD.aiNotes=r.assumptions;
+  if(!r.items.length)CMD.aiErr='Claude found no food in the part it could not read. Add it by hand.';
+  else{
+   let fa=CMD.acts.find(x=>x.k==='food');
+   if(!fa){fa={k:'food',meal:window.FormaCmd?FormaCmd.mealNumber(CMD.ctx||{}):1,items:[]};CMD.acts.push(fa)}
+   r.items.forEach(it=>fa.items.push(Object.assign({},it,{assumed:true})));
+   CMD.res.issues=[];CMD.res.unknown=[];
+  }
+ }catch(e){if(my!==CMD.seq)return;CMD.busy=false;CMD.aiErr=aiErr(e)}
+ if(UI.sheet&&UI.sheetFn===cmdSheet)openSheet(cmdSheet(),cmdSheet);
+}
 function cmdEdit(t){
  const a=CMD.acts[+t.dataset.ci];if(!a)return;const v=num(t.value),f=t.dataset.cf;
  if(f==='weight'&&v>0)a.kg=+u2kg(v).toFixed(2);
@@ -1707,7 +1739,7 @@ function cmdSave(){
   else if(a.k==='food'){a.items.forEach(it=>{mutate(foodP(d),{k:'foodAdd',item:{id:uid(),meal:a.meal,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t:new Date().toISOString()}},{quiet:true});n++})}
  });
  const h=LS.get('forma.cmdHist',[]).filter(x=>x!==CMD.line);h.unshift(CMD.line);LS.set('forma.cmdHist',h.slice(0,10));
- cmdText='';cmdHi=-1;CMD.res=null;closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+'.');
+ cmdText='';cmdHi=-1;CMD.res=null;CMD.seq++;CMD.busy=false;closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+'.');
 }
 document.addEventListener('input',e=>{if(e.target.id==='cmd_in'){cmdText=e.target.value;cmdHi=-1}});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cf!==undefined&&CMD.res){cmdEdit(t);openSheet(cmdSheet(),cmdSheet)}});
@@ -1716,6 +1748,92 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Enter'){e.preventDefault();cmdText=e.target.value;cmdRun()}
  else if(e.key==='ArrowUp'||e.key==='ArrowDown'){const h=LS.get('forma.cmdHist',[]);if(!h.length)return;e.preventDefault();
   cmdHi=e.key==='ArrowUp'?Math.min(h.length-1,cmdHi+1):cmdHi-1;e.target.value=cmdHi<0?'':h[cmdHi];cmdText=e.target.value}
+});
+
+/* ---------- AI (Claude): the key lives only in this phone's localStorage, calls go from this page straight to api.anthropic.com (app/ai.js) ---------- */
+const aiKey=()=>{try{return localStorage.getItem('forma.aiKey')||''}catch(e){return ''}};
+const aiKeySet=k=>{try{if(k)localStorage.setItem('forma.aiKey',k);else localStorage.removeItem('forma.aiKey')}catch(e){}};
+const aiModel=()=>LS.get('forma.aiModel','haiku')==='sonnet'?'sonnet':'haiku';
+const AI={testing:false,err:'',msg:''};
+const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.slice(-6)};
+const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
+function aiSettings(){
+ const k=aiKey(),m=aiModel();
+ const st=!k?['Not connected','var(--mut)']:AI.testing?['Testing...','var(--mut)']:AI.err?['Not working','var(--badtx)']:aiConnected()?['Connected','var(--ok)']:['Key saved, not tested yet','var(--mut)'];
+ return `<div class="fld"><label>AI (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
+ <div class="sm">Status: <b id="ai_st" style="color:${st[1]}">${st[0]}</b></div>
+ ${AI.err?`<div class="xs" style="color:var(--badtx);margin-top:4px;word-break:break-word">${esc(AI.err)}</div>`:AI.msg&&aiConnected()?`<div class="xs mut" style="margin-top:4px;word-break:break-word">${esc(AI.msg)}</div>`:''}
+ <div class="fld" style="margin:10px 0 8px"><input id="ai_key" type="password" placeholder="${k?'Key saved (ends '+esc(k.slice(-4))+'). Paste to replace.':'Paste your Claude API key'}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+ <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sm" data-act="aiSave">Save key</button><button class="btn ghost sm" data-act="aiTest" ${k&&!AI.testing?'':'disabled'}>Test</button>${k?'<button class="btn ghost sm" data-act="aiRemove">Remove key</button>':''}</div>
+ <div class="fld" style="margin:12px 0 4px"><label>Model</label><div class="mods"><button data-act="aiModel" data-m="haiku" class="${m==='haiku'?'on':''}">Haiku (cheap, fast)</button><button data-act="aiModel" data-m="sonnet" class="${m==='sonnet'?'on':''}">Sonnet (more careful)</button></div></div>
+ <div class="xs mut" style="margin-top:6px">About PHP 0.03 a photo on Haiku (about PHP 0.5 on Sonnet). The key stays on this phone and goes only to Anthropic.</div></div></div>`}
+function aiReopenSettings(){if(UI.sheet&&UI.sheet.indexOf('id="ai_key"')>=0){const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(settingsSheet());const s2=$('#sheet');if(s2)s2.scrollTop=y}}
+async function aiTest(){
+ const k=aiKey();if(!k){toast('Paste your key and tap Save key first.');return}
+ if(AI.testing)return;if(!window.FormaAI){toast('The AI reader did not load. Refresh the app.');return}
+ AI.testing=true;AI.err='';AI.msg='';aiReopenSettings();
+ try{const r=await FormaAI.test({key:k,model:aiModel()});LS.set('forma.aiOk',k.slice(-6));AI.msg='Claude answered: '+String(r.text||'').slice(0,40)+(r.model?' ('+r.model+')':'')}
+ catch(e){LS.del('forma.aiOk');AI.err=aiErr(e)}
+ AI.testing=false;aiReopenSettings();
+}
+
+/* ---------- Snap a meal: photo -> Claude -> rows to check -> saved like Claude saves meals (photo on the first item) ---------- */
+const SNAP={photo:'',note:'',status:'',items:[],notes:[],raw:'',err:'',meal:1,date:'',seq:0};
+function snapMealNo(d){
+ const its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
+ return window.FormaCmd?FormaCmd.mealNumber({lastMealNo:its.length?Math.max(...its.map(mealNo)):0,lastMealAt:d===today()?(lastT||null):null,now:Date.now()}):(its.length?Math.max(...its.map(mealNo))+1:1);
+}
+const snapDraw=()=>{if(UI.sheet&&UI.sheetFn===snapSheet)openSheet(snapSheet(),snapSheet)};
+async function snapStart(file){
+ let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
+ Object.assign(SNAP,{photo,note:'',items:[],notes:[],raw:'',err:'',status:'',date:UI.date,seq:SNAP.seq+1});
+ SNAP.meal=snapMealNo(SNAP.date);
+ if(!aiKey()||!window.FormaAI){SNAP.status='nokey';openSheet(snapSheet(),snapSheet);return}
+ SNAP.status='reading';openSheet(snapSheet(),snapSheet);snapAsk();
+}
+async function snapAsk(){
+ const my=++SNAP.seq;SNAP.status='reading';SNAP.err='';SNAP.raw='';snapDraw();
+ try{const r=await FormaAI.meal({key:aiKey(),model:aiModel(),imageBase64:SNAP.photo,note:SNAP.note.trim()||undefined,profile:profile(),today:SNAP.date});
+  if(my!==SNAP.seq)return;SNAP.items=r.items;SNAP.notes=r.assumptions;SNAP.status='done'}
+ catch(e){if(my!==SNAP.seq)return;SNAP.status='error';SNAP.err=aiErr(e);SNAP.raw=e&&e.raw||''}
+ snapDraw();
+}
+function snapRow(j,it){return `<div class="crow"><div class="sp"><div class="n">${esc(it.name)}</div><div class="xs mut">${esc(it.amount||'')}<br>P ${rnd(it.protein)}g, C ${rnd(it.carbs)}g, F ${rnd(it.fat)}g</div></div><div class="cin"><input inputmode="decimal" value="${esc(rnd(it.kcal))}" data-sj="${j}" aria-label="${esc(it.name)} calories"><span class="xs mut">kcal</span></div><button class="ib" data-act="snapDrop" data-j="${j}" aria-label="Remove ${esc(it.name)}">${ic('x',18)}</button></div>`}
+function snapSheet(){
+ const S=SNAP,img=S.photo?`<img class="phbig" src="${esc(S.photo)}" alt="" data-act="phView">`:'';
+ let body='';
+ if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">Add your Claude API key in Settings to read meals from photos.</div><div class="row"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapSettings">Open Settings</button></div>`;
+ else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">Claude is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
+ else if(S.status==='error')body=`<div class="cunk"><div class="n">${esc(S.err)}</div>${S.raw?`<div class="xs" style="margin-top:6px;word-break:break-word;max-height:120px;overflow:auto">${esc(S.raw.slice(0,800))}</div>`:''}</div><div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapAsk">Try again</button></div>`;
+ else{
+  const tot=S.items.reduce((a,i)=>{a.k+=rnd(i.kcal);a.p+=rnd(i.protein);a.c+=rnd(i.carbs);a.f+=rnd(i.fat);return a},{k:0,p:0,c:0,f:0}),n=S.items.length;
+  body=`<div class="cmeal">Meal ${S.meal}</div>${n?S.items.map((it,j)=>snapRow(j,it)).join(''):'<div class="empty" style="padding:10px 0">Claude did not find any food in that photo.</div>'}
+  ${n?`<div class="xs mut" style="margin-top:6px">Total ${tot.k} kcal, P ${tot.p}g, C ${tot.c}g, F ${tot.f}g</div>`:''}
+  ${S.notes.length?`<div class="xs mut" style="margin-top:8px">${S.notes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:''}
+  <div class="fld" style="margin-top:12px"><label>Anything to add? (e.g. half rice, no sauce)</label><div class="row" style="gap:8px"><input id="snap_note" value="${esc(S.note)}" placeholder="half rice, no sauce" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">Ask again</button></div></div>
+  <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`;
+ }
+ return `<h2>Snap a meal</h2><div class="xs mut" style="margin:-6px 0 8px">${fmtLong(S.date)}</div>${img}${body}`;
+}
+function snapSave(){
+ const S=SNAP,d=S.date;if(!S.items.length)return;
+ const t=new Date().toISOString();let n=0;
+ S.items.forEach((it,j)=>{
+  const item={id:uid(),meal:S.meal,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t};
+  if(j===0&&S.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=S.photo.split(',')[1];item.photo=p}
+  mutate(foodP(d),{k:'foodAdd',item},{quiet:true});n++;
+ });
+ S.seq++;S.status='';S.photo='';closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+' to Meal '+S.meal+'.');
+}
+document.addEventListener('input',e=>{if(e.target.id==='snap_note')SNAP.note=e.target.value});
+document.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.id==='snap_in'){const f=t.files&&t.files[0];t.value='';if(f)snapStart(f);return}
+ if(t.dataset&&t.dataset.sj!==undefined&&SNAP.status==='done'){
+  const it=SNAP.items[+t.dataset.sj],v=num(t.value);
+  if(it&&v>=0){const r=it.kcal>0?v/it.kcal:1;['protein','carbs','fat'].forEach(k=>{it[k]=Math.round(num(it[k])*r)});it.kcal=Math.round(v)}
+  snapDraw();
+ }
 });
 
 /* ---------- events ---------- */
@@ -1745,7 +1863,8 @@ document.addEventListener('click',async e=>{
   case 'cmdGo':cmdRun();break;
   case 'cmdHist':{const el=$('#cmd_in');if(el)cmdText=el.value;cmdHOpen=!cmdHOpen;render();break}
   case 'cmdHistPick':{const h=LS.get('forma.cmdHist',[]);if(h[+D.k]==null)break;cmdText=h[+D.k];cmdHOpen=false;cmdHi=-1;render();const el=$('#cmd_in');if(el)el.focus();break}
-  case 'cmdCancel':closeSheet();break;
+  case 'cmdCancel':CMD.seq++;CMD.busy=false;closeSheet();break;
+  case 'cmdAI':cmdAI();break;
   case 'cmdSave':cmdSave();break;
   case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
   case 'cmdHand':{const u=(CMD.res.issues||[])[+D.k];const fa=CMD.acts.find(x=>x.k==='food');const m=fa?fa.meal:Math.max(0,...food(CMD.date).items.map(mealNo))+1;
@@ -1754,6 +1873,19 @@ document.addEventListener('click',async e=>{
   case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
   case 'setupSave':setupSave();break;
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
+  case 'aiSave':{const el=$('#ai_key'),v=el?el.value.trim():'';if(!v){toast('Paste your Claude API key first.');break}
+   if(!/^sk-ant-[\w-]{20,}$/.test(v)){toast('That is not a Claude key. It starts with sk-ant-.');break}
+   aiKeySet(v);LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key saved on this phone. Tap Test.');break}
+  case 'aiTest':aiTest();break;
+  case 'aiRemove':aiKeySet('');LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key removed from this phone.');break;
+  case 'aiModel':LS.set('forma.aiModel',D.m==='sonnet'?'sonnet':'haiku');aiReopenSettings();break;
+  case 'snapPick':{const el=$('#snap_in');if(el)el.click();break}
+  case 'snapAsk':snapAsk();break;
+  case 'snapCancel':SNAP.seq++;closeSheet();break;
+  case 'snapDrop':SNAP.items.splice(+D.j,1);snapDraw();break;
+  case 'snapSave':snapSave();break;
+  case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());break;
+  case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodMeal=m;foodPhoto=ph||null;openSheet(foodSheet(null,m));break}
   case 'force':closeSheet();refresh(true);break;
   case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
   case 'gotoWorkout':navTab('workout');UI.wSel=T;UI.wWk=0;{const pd=progDay(T);if(pd)UI.wDay=pd.id}render();break;
