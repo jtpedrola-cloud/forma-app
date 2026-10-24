@@ -602,6 +602,7 @@ header.hv2 .psub .seg{margin:0}
 .v1 .pr .lnk{justify-self:end;padding:0;min-height:44px;font-size:15px;font-weight:400}
 .v1 .pr.nt{grid-template-columns:6px minmax(0,1fr) auto 36px;background:var(--note);border-radius:12px;padding:0 4px 0 14px;margin-top:8px}
 .v1 .pr.nt .pn{font-size:15px;padding:8px 0}
+.v1 .pr .sg{display:inline-flex;vertical-align:-3px;margin-right:8px;color:var(--mut)}
 .v1 .pr.nt .pk.nd{width:6px;height:6px;border:0;background:var(--acc)}
 .v1 .pr.nt .ib.s{color:var(--mut)}
 /* Food: date row, meals as plain lists */
@@ -826,6 +827,10 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 #sheet .ph2{border-top:0}
 #ped .pwr{border-top:1px solid var(--line);min-height:52px}
 #ped .pwr:first-of-type{border-top:0}
+#ped .padd{display:block;min-height:36px;margin:-6px 0 6px;font-size:15px;color:var(--mut)}
+#ped .psp{display:grid;grid-template-columns:minmax(0,1fr) 104px 56px 44px;gap:8px;align-items:center;min-height:52px}
+#ped .psp .wsel{max-width:none;width:100%;text-align:left;text-align-last:left}
+#ped .psp input{min-height:44px;width:100%;text-align:right;padding:0 8px}
 #ped .card h3{margin-bottom:0}
 .wsel{width:auto;max-width:65%;text-align:right;text-align-last:right;font-size:17px;min-height:44px;padding:0 20px 0 0;border:0!important;background:none!important;appearance:none;-webkit-appearance:none;color:var(--txt);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238d9198' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right center!important}
 #lib .dchips button,.ovs .dchips button{background:var(--card);border:0;font-weight:400;color:var(--soft)}
@@ -913,7 +918,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='73c9b9e781b2ebf7cffe9563e2078eeec24c05f1';let verChecked=0;
+const BUILD='84d084251ca6be8863e2793e70cd2245dec0c25f';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1033,6 +1038,7 @@ function applyOp(d,o){
   case 'habit':{d.habits=d.habits||{};if(o.v)d.habits[o.id]=true;else delete d.habits[o.id];if(!Object.keys(d.habits).length)delete d.habits;break}
   case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
   case 'actDel':d.activities=(d.activities||[]).filter(a=>a.id!==o.id);if(!d.activities.length)delete d.activities;break;
+  case 'actSet':d.activities=(d.activities||[]).map(a=>a.id===o.a.id?Object.assign({},a,o.a):a);break;
  }
  return d;
 }
@@ -1320,6 +1326,21 @@ const ACT_GROUPS=[['Ball sports',['basketball','volleyball','football']],['Racke
 const actName=k=>(ACTS.find(a=>a[0]===k)||[k,k.charAt(0).toUpperCase()+k.slice(1)])[1];
 const actKcal=(k,min,w)=>Math.round(((ACTS.find(a=>a[0]===k)||ACTS[ACTS.length-1])[2]-1)*w*min/60);
 const actsOf=d=>logOf(d).activities||[];
+/* Planned sports (program.sports): { "0".."6": [{ kind, time?: "HH:MM", min }] }. A planned sport is done when that day has a logged activity of the same kind (matched in order). */
+const plannedSports=d=>{const s=(program().sports||{})[String(parseD(d).getDay())];return Array.isArray(s)?s:[]};
+const timeLbl=t=>{const m=/^(\d\d):(\d\d)$/.exec(t||'');if(!m)return '';const h=+m[1];return (h%12||12)+':'+m[2]+' '+(h>=12?'PM':'AM')};
+const minLbl=m=>m<60?m+' min':m%60?Math.floor(m/60)+' h '+m%60+' min':m/60+' h';
+function sportPlan(d){const used=new Set(),acts=actsOf(d);return plannedSports(d).map((s,i)=>{const a=acts.find(x=>x.kind===s.kind&&!used.has(x.id));if(a)used.add(a.id);return Object.assign({i},s,{act:a||null})})}
+const sportsDone=d=>{const sp=sportPlan(d);return sp.length>0&&sp.every(s=>s.act)};
+/* Keeps only valid planned sports (known kind, 5 to 600 minutes, HH:MM time). Used when saving the editor and reading a shared program. */
+function cleanSports(s){const out={};if(!s||typeof s!=='object')return out;
+ Object.keys(s).forEach(k=>{if(!/^[0-6]$/.test(k)||!Array.isArray(s[k]))return;
+  const l=s[k].filter(x=>x&&ACTS.some(a=>a[0]===x.kind)).slice(0,4).map(x=>{const o={kind:x.kind,min:Math.max(5,Math.min(600,Math.round(num(x.min))||60))};if(/^([01]\d|2[0-3]):[0-5]\d$/.test(x.time||''))o.time=x.time;return o});
+  if(l.length)out[k]=l});
+ return out}
+const sportNames=d=>[...new Set(plannedSports(d).map(s=>actName(s.kind)))].join(' and ');
+/* One plan row per planned sport (same row shape as Today's plan): Done logs the planned minutes, Edit or a long press opens the sheet. */
+const sportRows=d=>sportPlan(d).map(s=>`<div class="pr" data-sp="${s.i}" data-d="${d}"><span class="pk${s.act?' ok':''}">${s.act?ic('check',14):''}</span><span class="pn"><span class="sg">${ic(ACT_ICON[s.kind]||'bolt',18)}</span>${esc(actName(s.kind))}${s.time?', '+timeLbl(s.time):''}</span><span class="pv">${minLbl(s.act?s.act.min:s.min)}</span><button class="lnk" data-act="${s.act?'spEdit':'spDone'}" data-d="${d}" data-i="${s.i}">${s.act?'Edit':'Done'}</button></div>`);
 const dayActKcal=d=>actsOf(d).reduce((a,x)=>a+(num(x.kcal)||0),0);
 function dayFlags(d){const l=logOf(d),g=profile().stepGoal;return {sport:(l.activities||[]).length>0,food:food(d).items.length>0,wo:!!(l.workout&&l.workout.finishedAt),steps:l.steps!=null,hit:l.steps!=null&&l.steps>=g,weight:l.weight!=null}}
 function streakOf(fn){const T=today();let n=0,i=fn(T)?0:1;for(;i<400;i++){if(fn(addDays(T,-i)))n++;else break}return n}
@@ -1356,6 +1377,7 @@ function checklist(d){
  if(modOn('food')&&!isSimple())out.push({l:'Track food',ok:meals>0,s:meals?meals+' meal'+(meals===1?'':'s')+', '+pk+'g protein':'',act:'gotoFood'});
  if(modOn('activity'))out.push({l:(pr.stepGoal/1000)+'k steps',ok:l.steps!=null&&l.steps>=pr.stepGoal,s:l.steps!=null?l.steps.toLocaleString('en-US'):'',act:'stepsEdit'});
  if(pd&&modOn('workout'))out.push({l:'Workout: '+esc(pd.name),ok:!!(l.workout&&l.workout.finishedAt),s:l.workout&&!l.workout.finishedAt?'in progress':'',act:'gotoWorkout'});
+ if(modOn('activity'))sportPlan(d).forEach(s=>out.push({l:actName(s.kind),ok:!!s.act,s:s.act?minLbl(s.act.min):minLbl(s.min),act:'spDone',sp:1}));
  if(dow===0)out.push({l:'Progress photos',ok:progPhotos().some(x=>x.d===d),s:photoSkipSunday(d)?OC().sunday.photoFirst:'Sundays',act:'gotoBody'});
  if(dow===0&&modOn('measure'))out.push({l:'Measurements',ok:!!(l.measure&&Object.keys(l.measure).length),s:'Sundays',act:'measureEdit',d});
  return out;
@@ -1443,7 +1465,7 @@ async function journalSnap(file){
 function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today(),rg=ranges(T).kcal;
  const pd=progDay(d),wo=lg.workout,chk=checklist(d);
- const row=(ok,name,val,act,link,x,tour)=>`<div class="pr"${tour?` data-tour="${tour}"`:''}><span class="pk${ok?' ok':''}">${ok?ic('check',14):''}</span><span class="pn">${name}</span><span class="pv">${val}</span>${link?`<button class="lnk" data-act="${act}"${x||''}>${link}</button>`:'<span></span>'}</div>`;
+ const row=(ok,name,val,act,link,x,tour,rx)=>`<div class="pr"${tour?` data-tour="${tour}"`:''}${rx||''}><span class="pk${ok?' ok':''}">${ok?ic('check',14):''}</span><span class="pn">${name}</span><span class="pv">${val}</span>${link?`<button class="lnk" data-act="${act}"${x||''}>${link}</button>`:'<span></span>'}</div>`;
  const yd=addDays(today(),-1),ydp=logP(yd),ydRdy=!DB.tree[ydp]||(DB.files[ydp]&&DB.files[ydp].sha===DB.tree[ydp]);
  if(isT&&new Date().getHours()<12&&!ydRdy)loadDay(yd);
  const nudge=isT&&new Date().getHours()<12&&ydRdy&&logOf(yd).weight==null;
@@ -1451,6 +1473,7 @@ function todayView(){
  if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
  if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',(st==null?'0':st.toLocaleString('en-US'))+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
  if(pd&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
+ if(modOn('activity'))rows.push(...sportRows(d));
  chk.filter(x=>x.act==='gotoBody'||x.act==='measureEdit').forEach(x=>rows.push(row(x.ok,x.l,'',x.act,'Add',x.d?` data-d="${x.d}"`:'')));
  const notices=[];
  if(isT&&(!pr.intake)&&!LS.get('forma.intakeSeen',0))notices.push(`<div class="pr nt"><span class="pk nd"></span><span class="pn">${OC().card.title}</span><button class="lnk" data-act="inOpen">${OC().card.start}</button><button class="ib s" data-act="inDismiss" aria-label="${OC().card.later}">${ic('x',16)}</button></div>`);
@@ -1780,7 +1803,7 @@ function pedDraw(){const el=$('#ped');if(!el||!PED)return;const y=($('#ped_b')||
  const chip=(w,id,l,on)=>`<button class="chip pwc ${on?'b':''}" data-act="pedWd" data-w="${w}" data-id="${esc(id)}">${esc(l)}</button>`;
  el.innerHTML=`<div class="ovh"><button class="ib" data-act="pedBack" aria-label="Back">${ic('left')}</button><h1>Edit program</h1>${hqBtn('ped')}</div>
  <div class="ovb v1" id="ped_b"><div class="fld"><label>Program name</label><input data-pf="pname" value="${esc(doc.name||'')}" placeholder="My program" autocomplete="off"><div class="row" style="margin-top:4px;gap:24px"><button class="lnk" data-act="pedShare">Share</button><button class="lnk" data-act="impOpen">Import a program</button><button class="lnk" data-act="pedTemplates">Templates</button></div></div>
- <div class="card"><h3>Week</h3>${WD.map((w,i)=>`<label class="sctl pwr"><span class="sp">${w}</span><select class="wsel" data-wd="${i}" aria-label="${w}"><option value="rest"${(doc.weekdays[String(i)]||'rest')==='rest'?' selected':''}>Rest</option>${days.map(d=>`<option value="${esc(d.id)}"${doc.weekdays[String(i)]===d.id?' selected':''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('')}</div>
+ <div class="card"><h3>Week</h3>${WD.map((w,i)=>`<label class="sctl pwr"><span class="sp">${w}</span><select class="wsel" data-wd="${i}" aria-label="${w}"><option value="rest"${(doc.weekdays[String(i)]||'rest')==='rest'?' selected':''}>Rest</option>${days.map(d=>`<option value="${esc(d.id)}"${doc.weekdays[String(i)]===d.id?' selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${((doc.sports||{})[String(i)]||[]).map((s,j)=>`<div class="psp"><select class="wsel" data-spf="kind" data-w="${i}" data-j="${j}" aria-label="Sport">${ACTS.map(a=>`<option value="${a[0]}"${a[0]===s.kind?' selected':''}>${esc(a[1])}</option>`).join('')}</select><input type="time" data-spf="time" data-w="${i}" data-j="${j}" value="${esc(s.time||'')}" aria-label="Start time, optional"><input inputmode="numeric" data-spf="min" data-w="${i}" data-j="${j}" value="${s.min}" aria-label="Minutes"><button class="ib s" data-act="pedSpDel" data-w="${i}" data-j="${j}" aria-label="Remove sport">${ic('x',18)}</button></div>`).join('')}<button class="lnk l0 padd" data-act="pedSpAdd" data-w="${i}">Add a sport</button>`).join('')}</div>
  ${days.map((d,di)=>`<div class="card"><div class="row"><input class="pdn sp" data-pf="dname" data-d="${di}" value="${esc(d.name)}" aria-label="Day name"><button class="ib s" data-act="pedDayUp" data-d="${di}" aria-label="Move day up" ${di?'':'disabled'}>${ic('up',18)}</button><button class="ib s" data-act="pedDayDn" data-d="${di}" aria-label="Move day down" ${di<days.length-1?'':'disabled'}>${ic('down',18)}</button><button class="ib s" data-act="pedDayDel" data-d="${di}" aria-label="Delete day">${ic('trash',18)}</button></div>
  <div class="xs mut" style="margin:4px 0 2px"><span id="pm${di}">about ${dayMinutes(d)} min</span> - ${d.exercises.length} exercise${d.exercises.length===1?'':'s'}</div>
  ${d.exercises.map((e,i)=>pedEx(e,di,i,d.exercises.length)).join('')||'<div class="empty">No exercises yet. Add one below.</div>'}
@@ -1802,6 +1825,7 @@ function pedSave(){
  const doc=clone(PED.doc),old=program(),T=today();
  if(!doc.days.length){toast('Add at least one day.');return}
  const empty=doc.days.find(d=>!d.exercises.length);if(empty){toast(empty.name+' has no exercises. Add one or delete the day.');return}
+ doc.sports=cleanSports(doc.sports);
  const ids=new Set(doc.days.map(d=>d.id));Object.keys(doc.weekdays).forEach(k=>{if(doc.weekdays[k]!=='rest'&&!ids.has(doc.weekdays[k]))doc.weekdays[k]='rest'});
  doc.days.forEach(d=>{const o=((old&&old.days)||[]).find(x=>x.id===d.id),same=o&&o.exercises.map(e=>e.ex).join()===d.exercises.map(e=>e.ex).join();
   if(!d.focus||!same)d.focus=musclesOf(d).slice(0,5).join(', ')});
@@ -1836,14 +1860,16 @@ function workoutView(){
  if(!UI.wSel)UI.wSel=T;
  const sel=UI.wSel,isT=sel===T,slog=logOf(sel),swo=slog.workout&&slog.workout.finishedAt?slog.workout:null,pd=progDay(sel);
  if(!UI.wDay||!isT)UI.wDay=(swo&&swo.dayId)||(pd?pd.id:null)||(td?td.id:P.days[0].id);
- const day=P.days.find(x=>x.id===(isT?UI.wDay:(swo&&swo.dayId)||(pd&&pd.id)))||null;
+ const sportOnly=isT&&!td&&!swo&&!UI.wPick&&modOn('activity')&&plannedSports(sel).length>0;
+ const day=sportOnly?null:P.days.find(x=>x.id===(isT?UI.wDay:(swo&&swo.dayId)||(pd&&pd.id)))||null;
  const abbr=n=>n.split(/\s*\+\s*|\s+/).filter(Boolean).length>1?n.split(/\s*\+\s*|\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase():n;
  const wkd=weekDates(addDays(T,7*UI.wWk));
  const strip=wkd.map(x=>{const dw=parseD(x).getDay(),p=progDay(x),l=logOf(x),w=l.workout&&l.workout.finishedAt?l.workout:null;
-  const cls=[x===T?'today':'',x===sel?'sel':'',w?'done':'',!p?'rest':'',!w&&p&&x<T?'miss':''].join(' ');
-  const lab=w?abbr((P.days.find(q=>q.id===w.dayId)||{}).name||'Done'):p?abbr(p.name):'rest';
-  return `<button class="wd ${cls}" data-act="wsel" data-d="${x}"><span>${'SMTWTFS'[dw]}</span><b>${parseD(x).getDate()}</b><u class="dt${w?' on':''}"></u></button>`}).join('');
+  const sp=modOn('activity')?sportPlan(x):[],spDone=!p&&sp.length>0&&sp.every(q=>q.act),dn=w||spDone;
+  const cls=[x===T?'today':'',x===sel?'sel':'',dn?'done':'',!p&&!sp.length?'rest':'',!dn&&(p||sp.length)&&x<T?'miss':''].join(' ');
+  return `<button class="wd ${cls}" data-act="wsel" data-d="${x}"><span>${'SMTWTFS'[dw]}</span><b>${parseD(x).getDate()}</b><u class="dt${dn?' on':''}"></u></button>`}).join('');
  let planned=0,did=0;wkd.forEach(x=>{if(progDay(x))planned++;const l=logOf(x);if(l.workout&&l.workout.finishedAt)did++});
+ const spRows=modOn('activity')?sportRows(sel):[];
  const nav=`<div class="dnav2"><span class="dd">${UI.wWk===0?'This week':UI.wWk===-1?'Last week':UI.wWk===1?'Next week':fmtShort(wkd[0])+' to '+fmtShort(wkd[6])}</span><button class="ib s" data-act="wwk" data-n="-1" aria-label="Previous week">${ic('left',20)}</button><button class="ib s" data-act="wwk" data-n="1" aria-label="Next week">${ic('right',20)}</button></div>`;
  let body='';
  if(swo){
@@ -1853,7 +1879,7 @@ function workoutView(){
   body=`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><div class="row tl"><h2 class="pt sp">${esc(dn.name)}</h2><span class="dn">${ic('check',16)} Done</span></div><div class="sub">${swo.marked?'Marked done, no sets logged':ns+(ns===1?' set, ':' sets, ')+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+', '+rnd(kg2u(woStats(swo).vol)).toLocaleString('en-US')+' '+wU()}${swo.marked?'':`<br>${clock(swo.startedAt)} to ${clock(swo.finishedAt)}`}</div>${swo.note?`<div class="s15" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}${!isT&&swo.marked?`<button class="lnk l0" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="lnk l0" data-act="wEdit" data-d="${sel}">Edit</button>`}
   ${swo.marked?'':`<div class="lst">${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
  }else if(!day){
-  body=`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><h2 class="pt">Rest day</h2><div class="sub">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div>`;
+  body=spRows.length?`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><h2 class="pt">${esc(sportNames(sel))}</h2><div class="sub">${sel<T?'Planned sport':'No lifting. Sport day.'}</div>`:`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><h2 class="pt">Rest day</h2><div class="sub">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div>`;
  }else{
   const mins=dayMinutes(day);preloadEx(day.exercises.map(e=>e.ex));
   body=`${isT?'':`<div class="lbl">${fmtLong(sel)}${sel<T?', not logged':', planned'}</div>`}<h2 class="pt">${esc(day.name)}</h2><div class="sub">${esc(day.focus)} &middot; <span class="nw">about ${mins} min</span>${mins>sessMax()?` <span class="amb">over your ${sessMax()} min</span>`:''}</div>${!isT&&sel<T?`<button class="lnk l0" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}
@@ -1861,7 +1887,7 @@ function workoutView(){
  }
  const chips=isT&&!swo?`<details class="vs other"${td?'':' open'}><summary class="lbl">${td?'Train a different day':'Train anyway. Pick a day'}${ic('down',16)}</summary><div class="dchips">${P.days.map(x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}<small>${dayMinutes(x)} min</small></button>`).join('')}</div></details>`:'';
  const go=isT&&!swo&&day;
- return headerV1('Workout',[['libOpen','Exercise library'],['pedOpen','Edit program'],['logOpen','Log food, weight or steps']])+`<div class="v1">${nav}<div class="week w2">${strip}</div>${body}${chips}</div>`+
+ return headerV1('Workout',[['libOpen','Exercise library'],['pedOpen','Edit program'],['logOpen','Log food, weight or steps']])+`<div class="v1">${nav}<div class="week w2">${strip}</div>${body}${spRows.length?`<section class="vs plan"><div class="lbl">Sport</div>${spRows.join('')}</section>`:''}${chips}</div>`+
  (go?`<button class="fab" data-act="wStart" data-id="${day.id}" aria-label="Start workout">${ic('play',26)}</button>`:logFab());
 }
 function liveView(wo,lg){
@@ -2476,6 +2502,7 @@ function calItems(d,only){
  if(on('weigh')&&l.weight!=null)out.push({icon:'scale',done:1});
  let main=out[0]||null;
  if(!main&&on('workout')&&progDay(d)&&d>=st)main={icon:'dumbbell',done:0};
+ if(!main&&on('sport')&&d>=st&&modOn('activity')){const sp=plannedSports(d)[0];if(sp)main={icon:ACT_ICON[sp.kind]||'bolt',done:0}}
  return {main,more:Math.max(0,out.length-1)};
 }
 function calNumFor(d,mode){const l=logOf(d);
@@ -2714,7 +2741,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.3${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -2727,7 +2754,7 @@ const unb64u=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='='
 async function gzBytes(kind,bytes){const S=kind==='z'?new CompressionStream('gzip'):new DecompressionStream('gzip'),w=S.writable.getWriter();w.write(bytes);w.close();return new Uint8Array(await new Response(S.readable).arrayBuffer())}
 function progPayload(doc,title){const db=exdb().exercises,ex={};
  doc.days.forEach(d=>d.exercises.forEach(e=>{const x=db[e.ex];if(x&&!ex[e.ex]){ex[e.ex]={n:x.n,eq:x.eq||'Other',p:x.p||[],s:x.s||[]};if(x.u)ex[e.ex].u=x.u}}));
- return {v:1,name:title||doc.name||'My program',author:(profile()||{}).name||doc.author||'',weekdays:doc.weekdays||{},days:doc.days.map(d=>({id:d.id,name:d.name,focus:d.focus||'',exercises:d.exercises.map(e=>Object.assign({ex:e.ex,sets:e.sets,reps:e.reps},e.rest?{rest:e.rest}:{}))})),ex}}
+ return {v:1,name:title||doc.name||'My program',author:(profile()||{}).name||doc.author||'',weekdays:doc.weekdays||{},sports:cleanSports(doc.sports),days:doc.days.map(d=>({id:d.id,name:d.name,focus:d.focus||'',exercises:d.exercises.map(e=>Object.assign({ex:e.ex,sets:e.sets,reps:e.reps},e.rest?{rest:e.rest}:{}))})),ex}}
 async function progEncode(pl){let u=new TextEncoder().encode(JSON.stringify(pl)),tag='p';
  if(window.CompressionStream){try{u=await gzBytes('z',u);tag='z'}catch(e){}}
  return 'fp1'+tag+'.'+b64u(u)}
@@ -2742,7 +2769,7 @@ async function progDecode(text){
   exercises:(Array.isArray(d.exercises)?d.exercises:[]).slice(0,30).map(e=>{const o={ex:str(e.ex,80),sets:Math.max(1,Math.min(10,Math.round(num(e.sets))||3)),reps:str(e.reps||'8-12',12)};const r=Math.round(num(e.rest));if(r>=15&&r<=600)o.rest=r;return o}).filter(e=>e.ex)}));
  const ids=new Set(days.map(d=>d.id)),wd={};Object.keys(pl.weekdays||{}).forEach(k=>{const v=pl.weekdays[k];if(/^[0-6]$/.test(k)&&(v==='rest'||ids.has(v)))wd[k]=v});
  const ex={};Object.keys(pl.ex||{}).slice(0,200).forEach(id=>{const x=pl.ex[id]||{};ex[id]={n:str(x.n||id,60),eq:str(x.eq||'Other',60),p:(Array.isArray(x.p)?x.p:[]).slice(0,4).map(v=>str(v,30)),u:x.u==='s'||x.u==='m'?x.u:undefined}});
- return {name:str(pl.name||'Shared program',50),author:str(pl.author,40),weekdays:wd,days,ex};
+ return {name:str(pl.name||'Shared program',50),author:str(pl.author,40),weekdays:wd,sports:cleanSports(pl.sports),days,ex};
 }
 const exWords=s=>String(s||'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').split(/\s+/).filter(w=>w.length>1&&!['the','with','and','of'].includes(w));
 function exClosest(name,n=3){const db=exdb().exercises,q=new Set(exWords(name)),low=String(name).toLowerCase().trim();
@@ -2769,7 +2796,7 @@ function importApply(mode){
   const mus=(x.p||[]).filter(m=>(db.muscles||{})[m]);mutate(P_EX,{k:'exNew',id:nid,ex:Object.assign({n:x.n,eq:x.eq||'Other',p:mus.length?mus:[Object.keys(db.muscles||{})[0]],s:[],c:[],a:[]},x.u?{u:x.u}:{})},{quiet:true,delay:700});idMap[id]=nid});
  const db=exdb().exercises,conv=d=>({id:d.id,name:d.name,focus:d.focus||'',exercises:d.exercises.map(e=>Object.assign({ex:db[e.ex]?e.ex:idMap[e.ex],sets:e.sets,reps:e.reps},e.rest?{rest:e.rest}:{}))}),old=program();
  let doc;
- if(mode==='replace'){doc={name:pl.name,author:pl.author,weekdays:Object.assign({},pl.weekdays),days:pl.days.map(conv),version:fmtLong(today())};for(let i=0;i<7;i++)if(!doc.weekdays[String(i)])doc.weekdays[String(i)]='rest'}
+ if(mode==='replace'){doc={name:pl.name,author:pl.author,weekdays:Object.assign({},pl.weekdays),sports:cleanSports(pl.sports),days:pl.days.map(conv),version:fmtLong(today())};for(let i=0;i<7;i++)if(!doc.weekdays[String(i)])doc.weekdays[String(i)]='rest'}
  else{doc=clone(PED&&PED.dirty?PED.doc:old);doc.days=doc.days||[];pl.days.map(conv).forEach(d=>{let id=d.id,n=doc.days.length+1;while(doc.days.some(x=>x.id===id))id='d'+(n++);d.id=id;d.focus=d.focus||musclesOf(d).slice(0,5).join(', ');doc.days.push(d)})}
  if(mode==='add'&&PED&&PED.dirty){PED.doc=doc;pedDirty();closeSheet();pedDraw();toast0('Added '+pl.days.length+' day'+(pl.days.length===1?'':'s')+'. Save the program to keep them.');return}
  if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
@@ -3052,7 +3079,10 @@ async function termOpen(id){const L=await lessonsLoad(),g=(L.glossary||[]).find(
  openSheet(`<h2>${esc(g.term)}</h2><div class="sm" style="font-weight:600;margin-bottom:8px">${esc(g.short)}</div><div class="sm" style="color:var(--soft);line-height:1.5">${esc(g.long)}</div>
  ${ls?`<button class="btn ghost full" style="margin-top:14px" data-act="termLesson" data-id="${esc(ls.id)}">${ic('book',18)} Lesson: ${esc(ls.title)}</button>`:''}<button class="btn full" style="margin-top:10px" data-act="closeSheet">Got it</button>`)}
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('tq')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();t.click()}});
-document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.wd!=null&&PED){PED.doc.weekdays[String(t.dataset.wd)]=t.value;pedDirty()}});
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.wd!=null&&PED){PED.doc.weekdays[String(t.dataset.wd)]=t.value;pedDirty()}
+ if(t&&t.dataset&&t.dataset.spf&&PED){const s=((PED.doc.sports||{})[t.dataset.w]||[])[+t.dataset.j];if(!s)return;const f=t.dataset.spf;
+  if(f==='kind')s.kind=t.value;else if(f==='time'){if(t.value)s.time=t.value;else delete s.time}else s.min=Math.max(5,Math.min(600,Math.round(num(t.value))||60));
+  if(f==='min')t.value=s.min;pedDirty()}});
 document.addEventListener('input',e=>{if(e.target.id&&e.target.id.indexOf('m_')===0)MEAS_TOUCH=true;if(e.target.id==='learn_q'){LRN.q=e.target.value;const g=$('#learn_gl');if(g)g.innerHTML=lrnGlossList()}});
 /* Today: beginners get the Start here card until they finish or skip it; everyone else gets one dismissible line. */
 function learnNudge(){
@@ -3149,6 +3179,18 @@ async function exportData(){
   st('Done. '+paths.length+' data files, '+(fr.length-1)+' food rows and '+(wr.length-1)+' sets saved as '+a.download+'.');
  }catch(e){st(e&&e.message==='zip tool'?'Could not load the zip tool. Check your connection and try again.':'Something went wrong building the zip. Try again.')}
 }
+/* Planned sport sheet: minutes prefilled from the plan (or from what was logged). Long press on a plan row or "Edit" opens it. */
+function spSheet(d,i){const s=sportPlan(d)[i];if(!s)return '';
+ return `<h2>${esc(actName(s.kind))}</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(d)}${s.time?', '+timeLbl(s.time):''}</div>
+ <div class="fld"><label>Minutes</label><input id="sp_min" inputmode="numeric" value="${s.act?s.act.min:s.min}"></div>
+ <button class="btn full" data-act="spSave" data-d="${d}" data-i="${i}">${s.act?'Save':'Log it'}</button>
+ ${s.act?`<button class="lnk l0" style="margin-top:12px" data-act="spUndo" data-d="${d}" data-i="${i}">Remove from the log</button>`:''}`}
+let SPLP={t:null,at:0};
+function spLongStart(e){const r=e.target.closest&&e.target.closest('[data-sp]');if(!r)return;clearTimeout(SPLP.t);SPLP.t=setTimeout(()=>{SPLP.at=Date.now();try{navigator.vibrate&&navigator.vibrate(30)}catch(x){}openSheet(spSheet(r.dataset.d,+r.dataset.sp))},550)}
+function spLongStop(){clearTimeout(SPLP.t)}
+document.addEventListener('touchstart',spLongStart,{passive:true});document.addEventListener('mousedown',spLongStart);
+['touchend','touchmove','touchcancel','mouseup','mouseleave','scroll'].forEach(n=>document.addEventListener(n,spLongStop,{passive:true,capture:true}));
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-sp]'))e.preventDefault()});
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
  <div class="fld"><label>What</label><div id="act_k">${ACT_GROUPS.map(([g,ks])=>`<div class="xs mut" style="margin:8px 0 4px">${g}</div><div class="chips">${ks.map(k=>`<button class="chip ${k===actK?'b':''}" style="height:34px;padding:0 12px" data-act="actKind" data-k="${k}">${actName(k)}</button>`).join('')}</div>`).join('')}</div></div>
@@ -3483,7 +3525,7 @@ document.addEventListener('click',async e=>{
   case 'calDay':UI.date=D.d;loadDay(D.d);closeSheet();if(UI.tab!=='today'&&UI.tab!=='food')navTab('today');render();break;
   case 'pNav':UI.pM=shiftMonth(UI.pM,+D.n);loadDays(monthDates(UI.pM));render();break;
   case 'stepDay':UI.date=D.d;navTab('today');loadDay(D.d);render();window.scrollTo(0,0);break;
-  case 'wsel':UI.wSel=D.d;loadDay(D.d);render();break;
+  case 'wsel':UI.wSel=D.d;UI.wPick=false;loadDay(D.d);render();break;
   case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
   case 'stepsSave':{const v=$('#v_steps').value.trim();mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
@@ -3498,6 +3540,8 @@ document.addEventListener('click',async e=>{
   case 'pedOpen':closeSheet();pedOpen();break;
   case 'pedBack':pedBack();break;
   case 'pedSave':pedSave();break;
+  case 'pedSpAdd':{const sp=PED.doc.sports=PED.doc.sports||{};(sp[D.w]=sp[D.w]||[]).push({kind:'volleyball',min:60});pedDirty();pedDraw();break}
+  case 'pedSpDel':{const sp=PED.doc.sports||{};(sp[D.w]||[]).splice(+D.j,1);if(sp[D.w]&&!sp[D.w].length)delete sp[D.w];pedDirty();pedDraw();break}
   case 'pedWd':PED.doc.weekdays[String(D.w)]=D.id;pedDirty();pedDraw();break;
   case 'pedAddDay':{const ds=PED.doc.days;let n=ds.length+1,id='d'+n;while(ds.some(x=>x.id===id))id='d'+(++n);ds.push({id,name:'Day '+(ds.length+1),focus:'',exercises:[]});pedDirty();pedDraw();break}
   case 'pedDayUp':case 'pedDayDn':{const ds=PED.doc.days,i=+D.d,j=a==='pedDayUp'?i-1:i+1;if(j<0||j>=ds.length)break;[ds[i],ds[j]]=[ds[j],ds[i]];pedDirty();pedDraw();break}
@@ -3509,7 +3553,7 @@ document.addEventListener('click',async e=>{
   case 'pedTemplates':openSheet(pedTemplatesSheet());break;
   case 'pedTpl':{PED.pend=pedBuild(D.k);openSheet(pedConfirmSheet(PED.pend));break}
   case 'pedTplGo':{const p=PED.pend;if(!p)break;const old=program();if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
-   p.version=fmtLong(today());mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null;flushSoon(300);PED.doc=clone(p);PED.dirty=false;PED.pend=null;closeSheet();pedDraw();toast0('Program replaced. The old one is kept as a backup.');break}
+   if(old&&old.sports)p.sports=clone(old.sports);p.version=fmtLong(today());mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null;flushSoon(300);PED.doc=clone(p);PED.dirty=false;PED.pend=null;closeSheet();pedDraw();toast0('Program replaced. The old one is kept as a backup.');break}
   case 'gymOpen':closeSheet();gymOpen();break;
   case 'gymClose':if($('#gym'))gymClose();break;
   case 'gymSave':gymSave();break;
@@ -3554,6 +3598,13 @@ document.addEventListener('click',async e=>{
   case 'actSave':{const m=Math.round(num($('#act_min').value));if(!m){toast('Add the minutes.');break}
    const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
+  case 'spDone':{if(Date.now()-SPLP.at<900)break;const s=sportPlan(D.d)[+D.i];if(!s||s.act)break;
+   mutate(logP(D.d),{k:'actAdd',a:{id:uid(),kind:s.kind,min:s.min,kcal:actKcal(s.kind,s.min,latestWeight()),by:'app'}});toast0(actName(s.kind)+' logged, '+minLbl(s.min)+'.');break}
+  case 'spEdit':openSheet(spSheet(D.d,+D.i));break;
+  case 'spSave':{const m=Math.round(num($('#sp_min').value));if(!m||m<5||m>600){toast('Add the minutes.');break}
+   const s=sportPlan(D.d)[+D.i];if(!s)break;const kcal=actKcal(s.kind,m,latestWeight());
+   mutate(logP(D.d),s.act?{k:'actSet',a:{id:s.act.id,min:m,kcal}}:{k:'actAdd',a:{id:uid(),kind:s.kind,min:m,kcal,by:'app'}},{quiet:true});closeSheet();render();break}
+  case 'spUndo':{const s=sportPlan(D.d)[+D.i];if(s&&s.act)mutate(logP(D.d),{k:'actDel',id:s.act.id},{quiet:true});closeSheet();render();break}
   case 'fstTop':window.scrollTo({top:0,behavior:'smooth'});break;
   case 'gotoFood':navTab('food');setSub('food','log');window.scrollTo(0,0);render();break;
   case 'gotoBody':navTab('progress');setSub('progress','photos');window.scrollTo(0,0);render();break;
@@ -3600,7 +3651,7 @@ document.addEventListener('click',async e=>{
    else if(foodPhoto){const p='data/photos/'+UI.date+'/'+id+'.jpg';DB.photos[p]=foodPhoto.split(',')[1];item.photo=p}
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
-  case 'wday':UI.wDay=D.id;UI.wSel=T;render();break;
+  case 'wday':UI.wDay=D.id;UI.wPick=true;UI.wSel=T;render();break;
   case 'wStart':askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
   case 'finSnooze':UI.finSnooze=Date.now()+FIN_NUDGE;finTick();render();break;
