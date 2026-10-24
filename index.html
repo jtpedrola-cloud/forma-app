@@ -605,6 +605,13 @@ header.hv2 .psub .seg{margin:0}
 .v1 .pr.nt .pk.nd{width:6px;height:6px;border:0;background:var(--acc)}
 .v1 .pr.nt .ib.s{color:var(--mut)}
 /* Food: date row, meals as plain lists */
+.v1 .tt{display:flex;align-items:center;margin-top:8px;min-height:44px}.v1 .tt .ptb{flex:1;min-width:0;text-align:left;padding:0;min-height:44px;display:flex;align-items:center}.v1 .tt .pt{margin:0!important;text-wrap:balance}
+.v1 .tt .ib{width:44px;height:44px;color:var(--mut);flex:none}.v1 .tt .ib:last-child{margin-right:-12px}.v1 .tt .ib:disabled{opacity:.3}
+.v1 .btt{margin-top:0;padding:4px 0;color:var(--mut)}
+.v1 .pr .pn .sl{display:block;width:100%;padding:0;min-height:0;font-size:13px;color:var(--mut);text-align:left;margin-top:2px;text-decoration:none}
+.lsh .lrow{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.lsh .dchip{height:32px;padding:0 14px;border-radius:16px;background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);color:var(--txt);font-size:15px;font-weight:500}
+.lsh .dopt{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.lsh .dopt button{height:40px;padding:0 14px;border-radius:12px;background:var(--inset);font-size:15px}.lsh .dopt button.on{box-shadow:inset 0 0 0 1.5px var(--acc)}
 .v1 .dnav2{display:flex;align-items:center;min-height:56px;margin-top:4px}
 .v1 .dnav2 .dd{flex:1;font-size:17px}
 .v1 .dnav2 .ib{width:44px;height:44px;color:var(--mut)}
@@ -893,6 +900,7 @@ const parseD=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)
 const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const dayWord=d=>{const T=today();return d===T?'Today':d===addDays(T,-1)?'Yesterday':fmtLong(d)};
 const fmtLong=s=>{const d=parseD(s);return DOW[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()};
 const fmtShort=s=>{const d=parseD(s);return MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()};
 const today=()=>ymd(new Date());
@@ -905,7 +913,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='5d73e112b0b02d06008415506c8fc643b7217b2b';let verChecked=0;
+const BUILD='075c5a03c0d92fbea48f638d0dbe7ac746a1a008';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1323,6 +1331,11 @@ function monthGrid(m,cell,act,gcls){
 }
 function calSheet(){
  const m=UI.calM,T=today();
+ if(UI.calPick){
+  const g=monthGrid(m,d=>({cls:d===UI.date?'sel':'',inner:''}),'logDayPick');
+  return `<h2>Pick a date</h2>
+ <div class="mnav"><button class="ib" data-act="calNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="calNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>
+ ${g}`}
  const sF=streakOf(d=>isSimple()?dayFlags(d).wo:dayFlags(d).food),sS=streakOf(d=>dayFlags(d).hit),sW=streakOf(d=>dayFlags(d).weight);
  const grid=monthGrid(m,d=>{const f=dayFlags(d);const any=f.food||f.wo||f.steps||f.weight||f.sport;return {cls:d===UI.date?'sel':'',inner:any?`<span class="ds"><i></i></span>`:''}},'calDay');
  return `<h2>Calendar</h2>
@@ -1429,7 +1442,10 @@ function todayView(){
  const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today(),rg=ranges(T).kcal;
  const pd=progDay(d),wo=lg.workout,chk=checklist(d);
  const row=(ok,name,val,act,link,x,tour)=>`<div class="pr"${tour?` data-tour="${tour}"`:''}><span class="pk${ok?' ok':''}">${ok?ic('check',14):''}</span><span class="pn">${name}</span><span class="pv">${val}</span>${link?`<button class="lnk" data-act="${act}"${x||''}>${link}</button>`:'<span></span>'}</div>`;
- const rows=[row(lg.weight!=null,'Weigh in',lg.weight!=null?fwu(lg.weight):'','weightEdit',lg.weight!=null?'Edit':'Log')];
+ const yd=addDays(today(),-1),ydp=logP(yd),ydRdy=!DB.tree[ydp]||(DB.files[ydp]&&DB.files[ydp].sha===DB.tree[ydp]);
+ if(isT&&new Date().getHours()<12&&!ydRdy)loadDay(yd);
+ const nudge=isT&&new Date().getHours()<12&&ydRdy&&logOf(yd).weight==null;
+ const rows=[row(lg.weight!=null,'Weigh in'+(nudge?`<button class="lnk sl" data-act="weightYest">Yesterday missing, add</button>`:''),lg.weight!=null?fwu(lg.weight):'','weightEdit',lg.weight!=null?'Edit':'Log')];
  if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
  if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',(st==null?'0':st.toLocaleString('en-US'))+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
  if(pd&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
@@ -1439,7 +1455,7 @@ function todayView(){
  if(isT){const l=learnNudge();if(l)notices.push(l)}
  const hero=isSimple()?simpleToday(d):modOn('food')?calHero(d,true,false):'';
  if(isSimple())simpleWarm();
- return headerV1('',[['cal','Calendar']])+`<div class="v1"><h2 class="pt">${fmtLong(d)}</h2>${hero}<section class="vs plan" data-tour="chk"><div class="lbl">${isT?"Today's plan":'Plan'}</div>${rows.join('')}${notices.join('')}</section></div>`+logFab();
+ return headerV1('',[['cal','Calendar']])+`<div class="v1"><div class="tt"><button class="ptb" data-act="cal" aria-label="Pick a day"><h2 class="pt">${dayWord(d)}</h2></button><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day" ${isT?'disabled':''}>${ic('right',20)}</button></div>${isT?'':'<button class="lnk l0 btt" data-act="toToday">Back to today</button>'}${hero}<section class="vs plan" data-tour="chk"><div class="lbl">${isT?"Today's plan":'Plan'}</div>${rows.join('')}${notices.join('')}</section></div>`+logFab();
 }
 
 /* ---------- Food ---------- */
@@ -2696,7 +2712,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.1${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -2801,7 +2817,7 @@ function pagerMode(fromHeader){
 function pagePeek(mode,dir){
  const sv={date:UI.date,sub:UI.sub,wWk:UI.wWk,wSel:UI.wSel,wDay:UI.wDay};let html=null,ok=true;
  try{
-  if(mode==='date'){const nd=addDays(UI.date,dir);if(UI.tab==='food'&&nd>today())ok=false;else UI.date=nd}
+  if(mode==='date'){const nd=addDays(UI.date,dir);if((UI.tab==='food'||UI.tab==='today')&&nd>today())ok=false;else UI.date=nd}
   else if(mode==='week')UI.wWk+=dir;
   else{const subs=SUBS_OF[UI.tab],i=subs.findIndex(x=>x[0]===subOf(UI.tab,subs)),j=i+dir;if(j<0||j>=subs.length)ok=false;else UI.sub=Object.assign({},UI.sub,{[UI.tab]:subs[j][0]})}
   if(ok){const d=document.createElement('div');d.innerHTML={today:todayView,food:foodView,workout:workoutView,activity:activityView,progress:progressView}[UI.tab]();const p=d.querySelector(':scope > .v1');html=p?p.outerHTML:null}
@@ -3137,8 +3153,9 @@ function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><
  <div class="fld"><label>Minutes</label><input id="act_min" inputmode="numeric" placeholder="60"></div>
  <button class="btn full" data-act="actSave">Add</button>
  ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}
-function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2><div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">Phones do not let web pages read the step counter, so type the number from your phone or ask Claude to log it from a screenshot.</div><button class="btn full" data-act="stepsSave">Save</button>`}
-function weightSheet(){const w=logOf(UI.date).weight;return `<h2>Weight</h2><div class="fld"><label>${imperial()?'Pounds':'Kilograms'}</label><input id="v_weight" inputmode="decimal" value="${w==null?'':fw(w)}" placeholder="${imperial()?'185.0':'85.0'}"></div><button class="btn full" data-act="weightSave">Save</button>`}
+const dayLine=d=>d===today()?'':`<div class="xs mut" style="margin:-6px 0 8px">${dayWord(d)}${d<addDays(today(),-1)?'':', '+fmtShort(d)}</div>`;
+function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2>${dayLine(UI.date)}<div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">Phones do not let web pages read the step counter, so type the number from your phone or ask Claude to log it from a screenshot.</div><button class="btn full" data-act="stepsSave">Save</button>`}
+function weightSheet(d){d=d||UI.date;const w=logOf(d).weight;return `<h2>Weight</h2>${dayLine(d)}<div class="fld"><label>${imperial()?'Pounds':'Kilograms'}</label><input id="v_weight" inputmode="decimal" value="${w==null?'':fw(w)}" placeholder="${imperial()?'185.0':'85.0'}"></div><button class="btn full" data-act="weightSave" data-d="${d}">Save</button>`}
 
 /* ---------- sheet ---------- */
 /* ---------- phone back button ----------
@@ -3152,6 +3169,7 @@ function navReplace(st){if(navPending)navQ.push(['replace',st]);else history.rep
 function navPop(){navPending++;history.back()}
 function navTab(t){
  const from=UI.tab;if(t===from)return;
+ if(t==='today'&&UI.logAway){UI.date=today();UI.logAway=false}
  if(from==='today')navPush({tab:t});else if(t==='today')navPop();else navReplace({tab:t});
  UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});
 }
@@ -3181,8 +3199,11 @@ function renderSheet(){
 }
 
 /* ---------- Command bar: one typed line becomes weight, steps, sport, note and food actions (app/cmd.js, no AI) ---------- */
+function logDayToggle(d){
+ const el=$('#cmd_in');if(el)cmdText=el.value;
+ UI.logAway=d!==today()&&UI.tab!=='today'&&UI.tab!=='food';UI.date=d;logDayOpen=false;loadDay(d);render();openSheet(logSheet(),logSheet)}
 let cmdText='',cmdHi=-1;const CMD={res:null,line:'',date:'',acts:[],wkg:80,ctx:null,busy:false,aiErr:'',aiNotes:[],seq:0};
-let cmdHOpen=false;
+let cmdHOpen=false,logDayOpen=false;
 const snapPref=()=>LS.get('forma.snapPref','cam');
 const photoRow=(act,icn,l)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div></div>${ic('right',18)}</button>`;
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
@@ -3191,13 +3212,18 @@ function snapChoiceSheet(){return `<h2>Snap a meal</h2>${photoRows(photoRow('sna
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
  const chip=(act,icn,l,x='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}</span></button>`;
- return `<div class="lsh"><div class="lbl">Log</div><div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs 1 cup rice, steps 8200, weight 84.9'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?'':chip('foodAdd','plate','Add meal',` data-m="${nm}"`))+chip('snapPick','camera','Snap a meal'):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}</div></div>`}
+ const dc=UI.date,dcl=dc===today()?'Today':dc===addDays(today(),-1)?'Yesterday':fmtShort(dc),T0=today();
+ const dopt=(k,l,on)=>`<button data-act="logDaySet" data-k="${k}" class="${on?'on':''}">${l}</button>`;
+ return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs 1 cup rice, steps 8200, weight 84.9'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?'':chip('foodAdd','plate','Add meal',` data-m="${nm}"`))+chip('snapPick','camera','Snap a meal'):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}</div></div>`}
 function cmdRun(){
  const el=$('#cmd_in'),line=(el?el.value:cmdText).trim();if(!line)return;
  if(!window.FormaCmd){toast('The command reader did not load. Refresh the app.');return}
- const d=UI.date,its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
+ const dre=/(^|[\s,])(?:yesterday(?:'s)?|last night)(?=[\s,.]|$)/gi,wy=dre.test(line);dre.lastIndex=0;
+ const pline=wy?line.replace(dre,' ').replace(/\s+/g,' ').replace(/^[\s,]+|[\s,]+$/g,''):line;
+ if(!pline){toast('Nothing to log in that line.');return}
+ const d=wy?addDays(today(),-1):UI.date,its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
  const ctx={foods:foodsdb()||[],weightKg:latestWeight(),hUnit:hUnitNow(),date:d,lastMealAt:d===today()?(lastT||null):null,lastMealNo:its.length?Math.max(...its.map(mealNo)):0,now:Date.now()};
- let res;try{res=FormaCmd.parse(line,ctx)}catch(e){toast('Could not read that line.');return}
+ let res;try{res=FormaCmd.parse(pline,ctx)}catch(e){toast('Could not read that line.');return}
  if(isSimple()){res.actions=res.actions.filter(x=>x.k!=='food');res.issues=[];if(!res.actions.length){toast(SC().eat.cmdNone);return}}
  if(!res.actions.length&&!(res.issues||[]).length){toast('Nothing to log in that line.');return}
  CMD.res=res;CMD.line=line;CMD.date=d;CMD.wkg=ctx.weightKg||80;CMD.acts=JSON.parse(JSON.stringify(res.actions));CMD.ctx=ctx;CMD.seq++;CMD.busy=false;CMD.aiErr='';CMD.aiNotes=[];
@@ -3218,7 +3244,7 @@ function cmdSheet(){
  const n=CMD.acts.reduce((a,x)=>a+(x.k==='food'?x.items.length:1),0);
  const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiReady()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
  const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
- return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
+ return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}${CMD.date!==today()?`<br>For ${dayWord(CMD.date).toLowerCase()==='yesterday'?'yesterday':fmtLong(CMD.date)}`:''}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
  <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
@@ -3259,7 +3285,7 @@ function cmdSave(){
   else if(a.k==='food'){a.items.forEach(it=>{mutate(foodP(d),{k:'foodAdd',item:{id:uid(),meal:a.meal,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t:new Date().toISOString()}},{quiet:true});n++})}
  });
  const h=LS.get('forma.cmdHist',[]).filter(x=>x!==CMD.line);h.unshift(CMD.line);LS.set('forma.cmdHist',h.slice(0,10));
- cmdText='';cmdHi=-1;CMD.res=null;CMD.seq++;CMD.busy=false;closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+'.');
+ cmdText='';cmdHi=-1;CMD.res=null;CMD.seq++;CMD.busy=false;closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+(d!==today()?' for '+(d===addDays(today(),-1)?'yesterday':fmtShort(d)):'')+'.');
 }
 document.addEventListener('input',e=>{if(e.target.id==='cmd_in'){cmdText=e.target.value;cmdHi=-1}});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cf!==undefined&&CMD.res){cmdEdit(t);openSheet(cmdSheet(),cmdSheet)}});
@@ -3393,7 +3419,8 @@ document.addEventListener('click',async e=>{
  switch(a){
   case 'tab':navTab(D.t);window.scrollTo(0,0);render();break;
   case 'day':UI.date=D.d;loadDay(D.d);render();break;
-  case 'dnav':UI.date=addDays(UI.date,+D.n);loadDay(UI.date);render();break;
+  case 'dnav':{const nd=addDays(UI.date,+D.n);if(nd>today())break;UI.date=nd;UI.logAway=false;loadDay(nd);render();break}
+  case 'toToday':UI.date=today();UI.logAway=false;loadDay(UI.date);render();break;
   case 'mode':UI.mode=D.m;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});render();break;
   case 'refresh':verChecked=0;checkVersion();refresh(true);break;
   case 'retry':if(UI.sync==='error'||UI.sync==='offline'){toast(UI.syncMsg||'Retrying...');await flush();refresh()}break;
@@ -3408,7 +3435,11 @@ document.addEventListener('click',async e=>{
   case 'fsPick':{const f=((foodsdb()||{}).foods||foodsdb()||[]).find(x=>x.id===D.id);if(!f)break;FS.f=f;FS.q=fsDefault(f);$('#fs_q').hidden=false;fsApply();$('#f_res').innerHTML='';$('#f_search').value='';break}
   case 'fsStep':{if(!FS.f)break;const st=fsPiece(FS.f)?.5:(FS.q>=200?25:10);FS.q=Math.max(st,+(FS.q+(+D.d)*st).toFixed(1));fsApply();break}
   case 'cmdGo':cmdRun();break;
-  case 'logOpen':cmdHOpen=false;openSheet(logSheet(),logSheet);break;
+  case 'logOpen':cmdHOpen=false;logDayOpen=false;UI.logAway=false;if(UI.tab!=='today'&&UI.tab!=='food')UI.date=today();openSheet(logSheet(),logSheet);break;
+  case 'logDay':logDayOpen=!logDayOpen;{const el=$('#cmd_in');if(el)cmdText=el.value}openSheet(logSheet(),logSheet);break;
+  case 'logDaySet':logDayToggle(D.k==='y'?addDays(T,-1):T);break;
+  case 'logDayPickOpen':{const el=$('#cmd_in');if(el)cmdText=el.value}UI.calPick=true;UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
+  case 'logDayPick':UI.calPick=false;logDayToggle(D.d);break;
   case 'cmdHist':{const el=$('#cmd_in');if(el)cmdText=el.value;cmdHOpen=!cmdHOpen;openSheet(logSheet(),logSheet);break}
   case 'cmdHistPick':{const h=LS.get('forma.cmdHist',[]);if(h[+D.k]==null)break;cmdText=h[+D.k];cmdHOpen=false;cmdHi=-1;openSheet(logSheet(),logSheet);break}
   case 'cmdCancel':CMD.seq++;CMD.busy=false;closeSheet();break;
@@ -3444,8 +3475,8 @@ document.addEventListener('click',async e=>{
   case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodMeal=m;foodPhoto=ph||null;openSheet(foodSheet(null,m));break}
   case 'force':closeSheet();refresh(true);break;
   case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
-  case 'gotoWorkout':navTab('workout');UI.wSel=T;UI.wWk=0;{const pd=progDay(T);if(pd)UI.wDay=pd.id}render();break;
-  case 'cal':UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
+  case 'gotoWorkout':{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render();break}
+  case 'cal':UI.calPick=false;UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
   case 'calNav':UI.calM=shiftMonth(UI.calM,+D.n);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
   case 'calDay':UI.date=D.d;loadDay(D.d);closeSheet();if(UI.tab!=='today'&&UI.tab!=='food')navTab('today');render();break;
   case 'pNav':UI.pM=shiftMonth(UI.pM,+D.n);loadDays(monthDates(UI.pM));render();break;
@@ -3455,7 +3486,8 @@ document.addEventListener('click',async e=>{
   case 'stepsEdit':openSheet(stepsSheet());break;
   case 'stepsSave':{const v=$('#v_steps').value.trim();mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
-  case 'weightSave':{const v=$('#v_weight').value.trim();mutate(logP(UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
+  case 'weightYest':{const y=addDays(T,-1);loadDay(y);openSheet(weightSheet(y));break}
+  case 'weightSave':{const v=$('#v_weight').value.trim();mutate(logP(D.d||UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
   case 'pickMeal':foodMeal=+D.m;document.querySelectorAll('#fm button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
   case 'phPick':$('#f_photo').click();break;
