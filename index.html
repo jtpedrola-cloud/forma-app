@@ -913,7 +913,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='6cee807d274f1a399a2c6ac628314a0bb9c9e331';let verChecked=0;
+const BUILD='d5e5203e3f4c2811bca1f902bc1f00d3dc074b38';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -943,6 +943,7 @@ const IC={
  bike:'<circle cx="6" cy="16" r="3.6"/><circle cx="18" cy="16" r="3.6"/><path d="M6 16l4-7h5l3 7M10 9L9 6H7M15 9l-3.5 7"/>',
  swim:'<circle cx="16.5" cy="6" r="1.6"/><path d="M3.5 19c1.7 0 1.7-1.2 3.5-1.2S8.7 19 10.5 19s1.7-1.2 3.5-1.2 1.7 1.2 3.5 1.2 1.7-1.2 3.5-1.2M5 13.5l5-3.5 3 1.8 2.5-2.8M10 10l1.6 3.4"/>',
  glove:'<path d="M7 11V7.5a4 4 0 0 1 8 0V9h2a3 3 0 0 1 3 3v2.5a6 6 0 0 1-6 6H9.5A2.5 2.5 0 0 1 7 18z"/><path d="M7 16h10"/>',
+ belt:'<path d="M2.5 10.5h6.5l3 3 3-3h6.5v3.5h-6.5l-3 3-3-3H2.5z"/><path d="M10 17l-2.5 4M14 17l2.5 4"/>',
  bolt:'<path d="M13 2.5L5.5 13.5h5.5L10 21.5l8-11h-5.5z"/>',
  plate:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>',
  scale:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9.5a5.5 4.5 0 0 1 8 0M12 10l1.8-1.7"/>',
@@ -1314,7 +1315,8 @@ const ym=d=>d.slice(0,7);
 const monthDates=m=>{const [y,mo]=m.split('-').map(Number);const n=new Date(y,mo,0).getDate();return Array.from({length:n},(_,i)=>y+'-'+pad(mo)+'-'+pad(i+1))};
 const shiftMonth=(m,n)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
 const monthName=m=>{const [y,mo]=m.split('-').map(Number);return MONTHS[mo-1]+' '+y};
-const ACTS=[['basketball','Basketball',6.5],['badminton','Badminton',5.5],['volleyball','Volleyball',4],['tennis','Tennis',7],['pickleball','Pickleball',4.5],['football','Football',7],['running','Running',9],['cycling','Cycling',7],['swimming','Swimming',7],['hiking','Hiking',6],['boxing','Boxing',7.8],['other','Other',5]];
+const ACTS=[['basketball','Basketball',6.5],['badminton','Badminton',5.5],['volleyball','Volleyball',4],['tennis','Tennis',7],['pickleball','Pickleball',4.5],['football','Football',7],['running','Running',9],['cycling','Cycling',7],['swimming','Swimming',7],['hiking','Hiking',6],['boxing','Boxing',7.8],['jiujitsu','Jiu-jitsu',6],['muaythai','Muay Thai',7.8],['kickboxing','Kickboxing',7.8],['judo','Judo',6],['wrestling','Wrestling',6],['mma','MMA',7.8],['karate','Karate',6],['taekwondo','Taekwondo',6],['arnis','Arnis',6],['other','Other',5]];
+const ACT_GROUPS=[['Ball sports',['basketball','volleyball','football']],['Racket sports',['badminton','tennis','pickleball']],['Martial arts',['boxing','jiujitsu','muaythai','kickboxing','judo','wrestling','mma','karate','taekwondo','arnis']],['Endurance',['running','cycling','swimming','hiking']],['Other',['other']]];
 const actName=k=>(ACTS.find(a=>a[0]===k)||[k,k.charAt(0).toUpperCase()+k.slice(1)])[1];
 const actKcal=(k,min,w)=>Math.round(((ACTS.find(a=>a[0]===k)||ACTS[ACTS.length-1])[2]-1)*w*min/60);
 const actsOf=d=>logOf(d).activities||[];
@@ -2459,7 +2461,7 @@ function dayScore(d){const c=checklist(d);return {done:c.filter(x=>x.ok).length,
 const dayFull=d=>{const sc=dayScore(d);return sc.all>0&&sc.done===sc.all};
 /* Activity > Calendar: one icon per day and at most one small number, no colour grades. A filled disc means done, an outlined disc means a planned workout.
    A day with several things shows the main one (workout, then sport, then walk) and a small +N. Chips filter by kind; the scale chip is a plain weight view. */
-const ACT_ICON={basketball:'ball',volleyball:'ball',football:'ball',badminton:'racket',tennis:'racket',pickleball:'racket',running:'run',cycling:'bike',swimming:'swim',hiking:'walk',boxing:'glove',other:'bolt'};
+const ACT_ICON={basketball:'ball',volleyball:'ball',football:'ball',badminton:'racket',tennis:'racket',pickleball:'racket',running:'run',cycling:'bike',swimming:'swim',hiking:'walk',boxing:'glove',muaythai:'glove',kickboxing:'glove',mma:'glove',jiujitsu:'belt',judo:'belt',karate:'belt',taekwondo:'belt',wrestling:'belt',arnis:'belt',other:'bolt'};
 const CAL_KINDS=[['workout','Workouts','dumbbell'],['walk','Walks','walk'],['sport','Sport','ball'],['food','Food','plate'],['weigh','Weigh-ins','scale']];
 const CAL_NUMS=[['weight','Weight'],['steps','Steps'],['kcal','Calories'],['none','Nothing']];
 const calKinds=()=>{const k=LS.get('forma.calKinds',null);return Array.isArray(k)?k.filter(x=>CAL_KINDS.some(c=>c[0]===x)):['workout','walk','sport']};
@@ -3149,7 +3151,7 @@ async function exportData(){
 }
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
- <div class="fld"><label>What</label><div class="chips" id="act_k">${ACTS.map(([k,n])=>`<button class="chip ${k===actK?'b':''}" style="height:34px;padding:0 12px" data-act="actKind" data-k="${k}">${n}</button>`).join('')}</div></div>
+ <div class="fld"><label>What</label><div id="act_k">${ACT_GROUPS.map(([g,ks])=>`<div class="xs mut" style="margin:8px 0 4px">${g}</div><div class="chips">${ks.map(k=>`<button class="chip ${k===actK?'b':''}" style="height:34px;padding:0 12px" data-act="actKind" data-k="${k}">${actName(k)}</button>`).join('')}</div>`).join('')}</div></div>
  <div class="fld"><label>Minutes</label><input id="act_min" inputmode="numeric" placeholder="60"></div>
  <button class="btn full" data-act="actSave">Add</button>
  ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}

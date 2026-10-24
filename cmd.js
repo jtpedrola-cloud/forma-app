@@ -21,7 +21,7 @@
   'use strict';
 
   // ---------- constants ----------
-  var MET = { basketball: 6.5, badminton: 5.5, volleyball: 4, tennis: 7, pickleball: 4.5, football: 7, running: 9, cycling: 7, swimming: 7, hiking: 6, boxing: 7.8, other: 5 };
+  var MET = { basketball: 6.5, badminton: 5.5, volleyball: 4, tennis: 7, pickleball: 4.5, football: 7, running: 9, cycling: 7, swimming: 7, hiking: 6, boxing: 7.8, jiujitsu: 6, muaythai: 7.8, kickboxing: 7.8, judo: 6, wrestling: 6, mma: 7.8, karate: 6, taekwondo: 6, arnis: 6, other: 5 };
   var DEFAULT_KG = 80;
 
   var SPORT_WORDS = {
@@ -35,7 +35,16 @@
     cycling: ['cycling', 'cycle', 'biking', 'bike', 'biked', 'bicycle'],
     swimming: ['swimming', 'swim', 'swam'],
     hiking: ['hiking', 'hike', 'hiked', 'trek', 'trekking'],
-    boxing: ['boxing', 'sparring', 'muay thai'],
+    boxing: ['boxing', 'sparring'],
+    jiujitsu: ['brazilian jiu jitsu', 'jiu jitsu', 'jiujitsu', 'jujitsu', 'ju jitsu', 'bjj', 'grappling'],
+    muaythai: ['muay thai', 'muaythai', 'thai boxing'],
+    kickboxing: ['kickboxing', 'kick boxing'],
+    judo: ['judo'],
+    wrestling: ['wrestling', 'wrestle', 'wrestled'],
+    mma: ['mma', 'mixed martial arts'],
+    karate: ['karate'],
+    taekwondo: ['taekwondo', 'tkd', 'tae kwon do', 'tae kwondo'],
+    arnis: ['arnis', 'eskrima', 'escrima', 'kali'],
     other: ['sport', 'sports']
   };
 
