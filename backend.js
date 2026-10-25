@@ -85,6 +85,7 @@
         if (!r.ok) throw new HttpErr(r.status);
         var j = await r.json(), m = {};
         (j.tree || []).forEach(function (t) { if (t.type === 'blob') m[t.path] = t.sha; });
+        B.treeTruncated = !!j.truncated;
         return m;
       },
       async raw(p) {
