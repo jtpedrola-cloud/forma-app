@@ -920,7 +920,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='91c4a00a9c2e5cac58f712fe822bfcf7e41bede9';let verChecked=0;
+const BUILD='9a5c77a40c55ca3b63312b89b405d96c96bdeefd';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -934,7 +934,7 @@ function applyTheme(id){const t=THEMES.find(x=>x[0]===id)||THEMES[0];document.do
  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t[3]);
  document.documentElement.style.colorScheme=t[0]==='daylight'?'light':'dark'}
 try{applyTheme(JSON.parse(localStorage.getItem('forma.theme')||'"ember"'))}catch(e){applyTheme('ember')}
-const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const IC={
  today:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  food:'<path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 21V3c-3 2-4 6-4 9h4"/>',
@@ -979,7 +979,8 @@ const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false
 const dbKey=()=>SBS.user?'forma.db.sb.'+SBS.user.id:'forma.db';
 const hasAcct=()=>!!(SBS.user||cfg.token);
 const mDay=()=>new Date(Date.now()+8*36e5).toISOString().slice(0,10);
-const persist=()=>{if(!DEMO)LS.set(dbKey(),DB)};
+let saveWarned=false;
+const persist=()=>{if(DEMO)return true;const ok=LS.set(dbKey(),DB);if(ok)saveWarned=false;else if(pendCount()&&!saveWarned){saveWarned=true;toast('Could not save on this phone. Stay online until it syncs.')}return ok};
 const delQ=()=>DB.delQ||(DB.delQ=[]);
 const TABS=['today','food','workout','activity','progress'],savedUI=LS.get('forma.ui',{});
 const UI={lastToday:today(),tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null,sub:LS.get('forma.sub',{})||{}};
@@ -1092,12 +1093,20 @@ function photoURL(p){
  if(!PHLOAD[p]&&(DEMO||hasAcct())){PHLOAD[p]=true;B.blobURL(p).then(u=>{PHOTOS[p]=u;softRender();if(UI.sheet&&UI.sheetFn)openSheet(UI.sheetFn(),UI.sheetFn);{const g=document.querySelector('#cam .gh');if(g&&g.dataset.p===p)camUI()}if(UI.sheet){const i=$('#f_phimg');if(i&&i.dataset.p===p){i.src=u;i.style.display=''}}}).catch(()=>{PHLOAD[p]=false})}
  return '';
 }
+const PERR={};
 async function flushPhotos(){
- for(const p of delQ().slice()){await B.delBin(p,'app: delete photo '+p.split('/').slice(2).join('/'));DB.delQ=delQ().filter(x=>x!==p);(DB.gone=DB.gone||{})[p]=Date.now();persist()}
- for(const p of Object.keys(DB.photos)){
-  await B.putBin(p,DB.photos[p],'app: photo '+p.split('/').slice(2).join('/'));
-  PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];DB.tree[p]=DB.tree[p]||'uploaded';delete DB.photos[p];persist();
+ let err=null;
+ for(const p of delQ().slice()){
+  try{await B.delBin(p,'app: delete photo '+p.split('/').slice(2).join('/'));DB.delQ=delQ().filter(x=>x!==p);(DB.gone=DB.gone||{})[p]=Date.now();delete PERR[p];persist()}
+  catch(e){PERR[p]=errText(e);err=err||e}
  }
+ for(const p of Object.keys(DB.photos)){
+  try{
+   await B.putBin(p,DB.photos[p],'app: photo '+p.split('/').slice(2).join('/'));
+   PHOTOS[p]='data:image/jpeg;base64,'+DB.photos[p];DB.tree[p]=DB.tree[p]||'uploaded';delete DB.photos[p];delete PERR[p];persist();
+  }catch(e){PERR[p]=errText(e);err=err||e}
+ }
+ return err;
 }
 
 /* ---------- demo backend (in memory, seeded from ../data) ---------- */
@@ -1157,17 +1166,22 @@ function errText(e){
  return 'GitHub said no ('+(e.status||e.message)+'). Tap the dot to retry.';
 }
 function flushSoon(ms){clearTimeout(flushT);if(!pendCount())return;setSync(navigator.onLine===false?'offline':'syncing');flushT=setTimeout(()=>flush(),ms)}
-async function flush(){
+let flushP=null;
+function flush(){
  clearTimeout(flushT);
- if(flushing){again=true;return}
- if(!pendCount()){if(UI.sync!=='offline'&&UI.sync!=='error')setSync('synced');return}
- flushing=true;setSync('syncing');
+ if(flushing){again=true;return flushP}
+ if(!pendCount()){if(UI.sync!=='offline'&&UI.sync!=='error')setSync('synced');return Promise.resolve()}
+ flushing=true;flushP=doFlush();return flushP;
+}
+async function doFlush(){
+ setSync('syncing');
  try{
-  await flushPhotos();
+  const perr=await flushPhotos();
   for(const p of Object.keys(DB.pend)){if(DB.pend[p].length)await writePath(p)}
-  setSync('synced');
+  if(perr){lastErr=errText(perr);setSync(isNet(perr)?'offline':'error',lastErr);if(!isNet(perr))toast(lastErr)}
+  else setSync('synced');
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
- finally{flushing=false;if(again){again=false;flushSoon(300)}}
+ finally{flushing=false;flushP=null;if(again){again=false;flushSoon(300)}}
 }
 function commitMsg(p,ops){if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
 async function writePath(p){
@@ -1177,7 +1191,7 @@ async function writePath(p){
   let d=f.base?clone(f.base):blank(p);ops.forEach(o=>{d=applyOp(d,o)});
   try{
    const res=await B.put(p,JSON.stringify(d,null,2)+'\n',f.sha||undefined,commitMsg(p,ops));
-   f.sha=res.sha;f.base=d;DB.pend[p]=DB.pend[p].filter(o=>ops.indexOf(o)<0);DB.tree[p]=res.sha;persist();softRender();return;
+   const cf=DB.files[p]||(DB.files[p]={sha:null,base:null});cf.sha=res.sha;cf.base=d;DB.pend[p]=DB.pend[p].filter(o=>ops.indexOf(o)<0);DB.tree[p]=res.sha;persist();softRender();return;
   }catch(e){
    if((e.status===409||e.status===422)&&attempt<3){const m=await B.meta(p);f.sha=m?m.sha:null;f.base=m?m.data:null;persist();continue}
    throw e;
@@ -1197,12 +1211,13 @@ async function refresh(force){
  if(refreshing)return;refreshing=true;setSync('syncing');
  try{
   if(pendCount())await flush();
-  DB.tree=await B.tree();
+  const nt=await B.tree(),trunc=!!B.treeTruncated;
+  DB.tree=trunc?Object.assign({},DB.tree,nt):nt;
   const T=today(),want=[P_PROFILE,P_PROG,P_EX,P_FOODS,P_CHK,P_MEALS];
   for(let i=0;i<=30;i++){const d=addDays(T,-i);want.push(foodP(d),logP(d))}
   const d0=UI.date;want.push(foodP(d0),logP(d0));
   await Promise.all([...new Set(want)].filter(p=>DB.tree[p]).map(p=>fetchFile(p,force)));
-  Object.keys(DB.files).forEach(p=>{if(!DB.tree[p]&&DB.files[p].sha){DB.files[p]={sha:null,base:null}}});
+  if(!trunc)Object.keys(DB.files).forEach(p=>{if(!DB.tree[p]&&DB.files[p].sha){DB.files[p]={sha:null,base:null}}});
   persist();
   if(!pendCount())setSync('synced');else flushSoon(200);
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
@@ -1278,7 +1293,7 @@ function render(){
   const v={today:todayView,food:foodView,workout:workoutView,activity:activityView,progress:progressView}[UI.tab];
   h=v();
  }
- {const wo=profile()&&logOf(today()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt));
+ {const wo=profile()&&logOf(woDate()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt));
   if(UI.tab==='workout'&&wo&&!wo.finishedAt&&!HIST.warm){HIST.warm=true;loadAllLogs().then(()=>softRender())}}
  root.innerHTML=h+tabbar()+'<input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
  {const nv=document.querySelector('nav.tabs');if(nv)document.documentElement.style.setProperty('--tabh',nv.offsetHeight+'px')}
@@ -1861,7 +1876,7 @@ function dayRaw(day,wo){if(!day)return 0;let m=0;const db=exdb().exercises;
  return m}
 const dayMinutes=(day,wo)=>Math.round(dayRaw(day,wo)/5)*5;
 function workoutView(){
- const T=today(),lg=logOf(T),wo=lg.workout,P=program();
+ const T=today(),lg=logOf(woDate()),wo=lg.workout,P=program();
  if(wo&&!wo.finishedAt)return liveView(wo,lg);
  const td=progDay(T);
  if(!UI.wSel)UI.wSel=T;
@@ -1927,7 +1942,7 @@ const atTime=(date,t)=>{const [y,m,dd]=date.split('-').map(Number),[h,mi]=t.spli
 const clock=iso=>{const d=new Date(iso);let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(d.getMinutes())+' '+ap};
 function woStats(wo){let done=0,all=0,vol=0;Object.entries(wo.sets||{}).forEach(([ex,a])=>{const reps=unitOf(ex)==='REPS';(a||[]).forEach(z=>{all++;if(z.done){done++;if(reps){vol+=num(z.w)*num(z.r);(z.drops||[]).forEach(d=>vol+=num(d.w)*num(d.r))}}})});return {done,all,vol:Math.round(vol)}}
 function finishSheet(){
- const T=today(),wo=logOf(T).workout;if(!wo)return '<h2>No workout running</h2>';
+ const T=woDate(),wo=logOf(T).workout;if(!wo)return '<h2>No workout running</h2>';
  const day=program().days.find(x=>x.id===wo.dayId)||{name:'Workout'},st=woStats(wo),open=st.all-st.done;
  const now=Date.now(),last=wo.lastAt?new Date(wo.lastAt).getTime():null,stale=last&&now-last>20*60000;
  const endIso=stale?new Date(last+2*60000).toISOString():new Date(now).toISOString();
@@ -1948,15 +1963,15 @@ function editWoSheet(date){
  <button class="btn full" data-act="edSave" data-d="${date}">Save</button>
  <div class="row" style="margin-top:8px">${date===today()&&!wo.marked?'<button class="btn ghost sp" data-act="wReopen">Reopen and keep training</button>':''}<button class="btn red sp" data-act="edDel" data-d="${date}">Delete workout</button></div>`;
 }
-function startedSheet(){const wo=logOf(today()).workout;return `<h2>When did you start?</h2><div class="fld"><input type="time" id="st_t" value="${hhmm(wo.startedAt)}"></div><div class="xs mut" style="margin-bottom:12px">Use this if you forgot to tap Start. The timer counts from the new time.</div><button class="btn full" data-act="stSave">Save</button>`}
-function discardSheet(){const st=woStats(logOf(today()).workout||{});return `<h2>Discard this workout?</h2><div class="mut sm" style="margin-bottom:14px">${st.done?st.done+' ticked set'+(st.done===1?'':'s')+' will be deleted. This cannot be undone.':'Nothing has been ticked yet.'}</div><button class="btn red full" data-act="discardYes">Discard workout</button><button class="btn ghost full" style="margin-top:8px" data-act="discardNo">Keep it</button>`}
+function startedSheet(){const wo=logOf(woDate()).workout;return `<h2>When did you start?</h2><div class="fld"><input type="time" id="st_t" value="${hhmm(wo.startedAt)}"></div><div class="xs mut" style="margin-bottom:12px">Use this if you forgot to tap Start. The timer counts from the new time.</div><button class="btn full" data-act="stSave">Save</button>`}
+function discardSheet(){const st=woStats(logOf(woDate()).workout||{});return `<h2>Discard this workout?</h2><div class="mut sm" style="margin-bottom:14px">${st.done?st.done+' ticked set'+(st.done===1?'':'s')+' will be deleted. This cannot be undone.':'Nothing has been ticked yet.'}</div><button class="btn red full" data-act="discardYes">Discard workout</button><button class="btn ghost full" style="margin-top:8px" data-act="discardNo">Keep it</button>`}
 function startWorkout(id){
  const day=program().days.find(x=>x.id===id),sets={};
  day.exercises.forEach(e=>{sets[e.ex]=Array.from({length:e.sets},()=>({w:0,r:0,done:false}))});
  mutate(logP(today()),{k:'wStart',dayId:id,t:new Date().toISOString(),sets},{delay:300});
 }
 function tickSet(ex,i,how){
-  const T=today();let on=false;
+  const T=woDate();let on=false;
   editSets(ex,s=>{const x=s[i];x.done=!x.done;on=x.done;
    if(on){
     /* autofill: previous set today, else last session, else the program's rep target */
@@ -1977,7 +1992,7 @@ function exSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)re
 function setFeedback(all,how){all?exSound():setSound();try{navigator.vibrate&&navigator.vibrate(all?[90,60,90,60,250]:how==='shake'?[70,60,140]:60)}catch(e){}}
 /* Next set = the next open set of the exercise you last ticked, else the next exercise in order with an open set. */
 function nextSet(){
- const wo=logOf(today()).workout;if(!wo||wo.finishedAt)return null;const day=program().days.find(d=>d.id===wo.dayId);if(!day)return null;
+ const wo=logOf(woDate()).workout;if(!wo||wo.finishedAt)return null;const day=program().days.find(d=>d.id===wo.dayId);if(!day)return null;
  const order=[...day.exercises.map(e=>effEx(wo,e.ex)),...(wo.extra||[]).map(x=>effEx(wo,x.ex))];let st=Math.max(0,order.indexOf(UI.curEx));
  for(let k=0;k<order.length;k++){const ex=order[(st+k)%order.length],a=(wo.sets||{})[ex]||[],i=a.findIndex(z=>!z.done);if(i>=0)return {ex,i,n:a.length}}
  return null;
@@ -1988,7 +2003,7 @@ const inWorkout=wo=>{const day=program().days.find(x=>x.id===wo.dayId)||{exercis
 function exMeta(id){const e=exdb().exercises[id]||{},m=exdb().muscles||{};return ((e.p||[]).map(k=>(m[k]||{name:k}).name).join(', ')+(e.eq?' - '+e.eq:'')).trim()}
 function exRow(id,tag,act){return `<button class="item" data-act="${act||'pickEx'}" data-ex="${esc(id)}">${thumb(id,48)}<div class="sp"><div class="n">${esc(exName(id))}${tag?' ('+tag+')':''}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(exMeta(id))}</div></div></button>`}
 function pickSheet(){
- const wo=logOf(today()).workout,db=exdb().exercises,used=inWorkout(wo),swap=PICK.mode==='swap',slot=PICK.slot,eff=swap?effEx(wo,slot):null;
+ const wo=logOf(woDate()).workout,db=exdb().exercises,used=inWorkout(wo),swap=PICK.mode==='swap',slot=PICK.slot,eff=swap?effEx(wo,slot):null;
  const day=program().days.find(x=>x.id===wo.dayId)||{exercises:[]};
  let rec=[],prim=new Set();
  if(swap){const orig=db[slot]||{};rec=[...(eff!==slot?[slot]:[]),...(orig.a||[])].filter(x=>x!==eff&&db[x]);((db[eff]||{}).p||[]).forEach(m=>prim.add(m))}
@@ -2003,7 +2018,7 @@ function pickSearch(){
  const q=(($('#ex_q')||{}).value||'').toLowerCase().split(/\s+/).filter(Boolean),el=$('#ex_res'),gr=$('#ex_groups');if(!el)return;
  if(gr)gr.hidden=q.length>0;
  if(!q.length){el.innerHTML='';return}
- const ed=PICK.mode==='ed',wo=logOf(today()).workout,used=ed?new Set(PED.doc.days[PICK.d].exercises.map(e=>e.ex)):inWorkout(wo),db=exdb().exercises,mu=exdb().muscles||{};
+ const ed=PICK.mode==='ed',wo=logOf(woDate()).workout,used=ed?new Set(PED.doc.days[PICK.d].exercises.map(e=>e.ex)):inWorkout(wo),db=exdb().exercises,mu=exdb().muscles||{};
  const r=Object.keys(db).filter(id=>{if(used.has(id))return false;const e=db[id],h=(e.n+' '+(e.eq||'')+' '+[...(e.p||[]),...(e.s||[])].map(m=>(mu[m]||{name:m}).name+' '+m).join(' ')).toLowerCase();return q.every(w=>h.includes(w))}).sort((a,b)=>{const k=q.join(' '),pa=exName(a).toLowerCase().includes(k)?0:1,pb=exName(b).toLowerCase().includes(k)?0:1;return pa-pb||exName(a).localeCompare(exName(b))}).slice(0,30);
  const raw=(($('#ex_q')||{}).value||'').trim(),has=r.some(id=>exName(id).toLowerCase().includes(raw.toLowerCase()));
  el.innerHTML=(has?'':`<button class="item" data-act="exNewOpen" data-q="${esc(raw)}"><div class="sp"><div class="n">Create "${esc(raw)}" as a new exercise</div><div class="xs mut">Saved in your exercise library</div></div></button>`)+(()=>{const ok=gymOk(r),row=x=>exRow(x,'',ed?'edPickEx':'');return r.filter(x=>ok.has(x)).map(row).join('')+gymNoHTML(r.filter(x=>!ok.has(x)),row)})();
@@ -2018,7 +2033,7 @@ function newExSheet(){const db=exdb(),cnt={};Object.values(db.exercises).forEach
  <div class="row" style="margin-top:12px"><button class="btn ghost" data-act="nxBack">Back</button><button class="btn sp" data-act="nxSave">${PICK&&PICK.mode==='lib'?'Create':'Create and use'}</button></div>`}
 function usePick(id){
  if(PICK.mode==='ed'){const day=PED&&PED.doc.days[PICK.d];if(day&&!day.exercises.some(e=>e.ex===id)){const u=(exdb().exercises[id]||{}).u;day.exercises.push({ex:id,sets:3,reps:u==='s'?'30-60':u==='m'?'20-40':'8-12'});PED.dirty=true}closeSheet();pedDraw();return}
- const T=today(),wo=logOf(T).workout;if(!wo)return;
+ const T=woDate(),wo=logOf(T).workout;if(!wo)return;
  if(PICK.mode==='add')mutate(logP(T),{k:'wExtra',ex:id,n:3},{delay:1000});
  else{const from=effEx(wo,PICK.slot);mutate(logP(T),{k:'wSwap',slot:PICK.slot,alt:id,moved:true,from,to:id},{delay:1000})}
  closeSheet()}
@@ -2030,7 +2045,7 @@ document.addEventListener('input',e=>{if(e.target.id==='gym_q'){const q=e.target
 let SW=null;
 function toastUndo(m,fn){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.innerHTML=`<span>${esc(m)}</span><button>Undo</button>`;
  t.querySelector('button').onclick=()=>{t.remove();fn()};document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
-function delSet(ex,i){const before=clone(((logOf(today()).workout||{}).sets||{})[ex]||[]);if(!before[i])return;
+function delSet(ex,i){const before=clone(((logOf(woDate()).workout||{}).sets||{})[ex]||[]);if(!before[i])return;
  editSets(ex,s=>{s.splice(i,1)},{delay:1500});
  toastUndo('Set '+(i+1)+' deleted.',()=>{editSets(ex,s=>{s.length=0;before.forEach(z=>s.push(z))},{delay:1500})})}
 document.addEventListener('touchstart',e=>{const w=e.target.closest&&e.target.closest('.swr');if(!w||e.touches.length!==1){SW=null;return}const t=e.touches[0];SW={w,row:w.querySelector('.set'),x:t.clientX,y:t.clientY,dx:0,on:false,width:w.offsetWidth}},{passive:true});
@@ -2044,9 +2059,9 @@ document.addEventListener('touchend',()=>swEnd(false));document.addEventListener
 let sdTimer=null;
 function doneNext(how){
  const nx=nextSet();if(!nx){toast0('All sets are done. Tap Finish.');return}
- const before=clone(((logOf(today()).workout||{}).sets||{})[nx.ex]||[]);
+ const before=clone(((logOf(woDate()).workout||{}).sets||{})[nx.ex]||[]);
  if(!tickSet(nx.ex,nx.i,how))return;
- const x=((logOf(today()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
+ const x=((logOf(woDate()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
  let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';
  el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done${nx.i+1===nx.n?'<br>Exercise complete':''}</div><div class="sd-s">${esc(nm)}<br>${x.w?fwU(x.w,exU(nx.ex))+' '+exU(nx.ex)+' x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
  <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
@@ -2083,7 +2098,7 @@ function undoDone(){const el=$('#sdone');if(!el||!el._undo)return;const u=el._un
 const SHK={peaks:[],last:0,cool:0};
 function onMotion(e){
  if(LS.get('forma.shake',1)===0||document.hidden||UI.tab!=='workout'||UI.sheet||$('#cam')||$('#intake'))return;
- const wo=logOf(today()).workout;if(!wo||wo.finishedAt)return;
+ const wo=logOf(woDate()).workout;if(!wo||wo.finishedAt)return;
  const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
  const dev=Math.abs(Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z)-9.81),now=performance.now();
  if(dev<13||now-SHK.last<110)return;SHK.last=now;SHK.peaks=SHK.peaks.filter(t=>now-t<1000);SHK.peaks.push(now);
@@ -2092,12 +2107,14 @@ function onMotion(e){
 window.addEventListener('devicemotion',onMotion);
 function askMotion(){try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().catch(()=>{})}catch(e){}}
 function editSets(ex,fn,o){
- const p=logP(today()),wo=logOf(today()).workout;if(!wo)return;
+ const W=woDate(),p=logP(W),wo=logOf(W).workout;if(!wo)return;
  const sets=clone((wo.sets||{})[ex])||[];fn(sets);
  const op={k:'wSets',ex,sets};if(o&&o.t)op.t=o.t;
  mutate(p,op,o);
 }
 let finMode='drop';
+/* The date of the live workout: today's if it is running, else yesterday's if that was never finished (started before midnight). */
+function woDate(){const T=today();for(const d of [T,addDays(T,-1)]){const w=logOf(d).workout;if(w&&!w.finishedAt)return d}return T}
 /* Forgotten workouts. lastAt is the time of the last ticked set. 20 minutes after it, with the workout still open, a
    notification (service worker, tag forma-finish) and a banner ask to finish. After 45 minutes without a set, or 3 hours
    since the start, the app finishes it itself at lastAt + 2 min (startedAt + 60 min if no set was ticked) and says so. */
@@ -2130,7 +2147,7 @@ function notifyFinish(){try{if(!window.Notification||Notification.permission!=='
  (swReg?Promise.resolve(swReg):navigator.serviceWorker.ready).then(g=>g.showNotification('Still training?',{body:'Tap to finish your workout.',tag:'forma-finish',renotify:false,vibrate:[200,100,200],icon:'icon-192.png',data:{tab:'workout'}})).catch(()=>{})}catch(e){}}
 function finTick(){
  if(firstSync&&!UI.sheet)autoFinishCheck();
- const wo=logOf(today()).workout,live=wo&&!wo.finishedAt&&lastMs(wo);let key='',at=0;
+ const wo=logOf(woDate()).workout,live=wo&&!wo.finishedAt&&lastMs(wo);let key='',at=0;
  if(live){at=Math.max(lastMs(wo)+FIN_NUDGE,UI.finSnooze||0);key=wo.lastAt+'|'+at}
  if(key!==finKey){finKey=key;
   if(key&&at>Date.now())swPost({k:'finish',at});else{swPost({k:'finishCancel'});if(!key)try{if(swReg&&swReg.getNotifications)swReg.getNotifications({tag:'forma-finish'}).then(n=>n.forEach(x=>x.close())).catch(()=>{})}catch(e){}}}
@@ -2144,7 +2161,7 @@ try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',
    remembered per exercise on this phone (forma.rest). */
 const REST_PRESETS=[60,90,120,150,180,240];
 /* Rest length: tapped for today's workout (forma.restWo) > the program's rest for that exercise > an older saved tap (forma.rest) > Settings default > 150 big lifts, 120 jumps, 90 the rest. */
-function progRest(ex){const wo=logOf(today()).workout,day=wo&&program().days.find(x=>x.id===wo.dayId),e=day&&day.exercises.find(x=>effEx(wo,x.ex)===ex);return e&&e.rest>=15?e.rest:0}
+function progRest(ex){const wo=logOf(woDate()).workout,day=wo&&program().days.find(x=>x.id===wo.dayId),e=day&&day.exercises.find(x=>effEx(wo,x.ex)===ex);return e&&e.rest>=15?e.rest:0}
 function restFor(ex){const t=LS.get('forma.restWo',null);if(t&&t.d===today()&&t.m&&t.m[ex])return t.m[ex];
  return progRest(ex)||LS.get('forma.rest',{})[ex]||restAuto(ex)}
 const RIR=[[3,'3+ left'],[2,'1-2 left'],[0,'Failure']];
@@ -2158,7 +2175,7 @@ function beep(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)retur
 function restTick(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(c)tone(c,660,0,.07,.5,'square')}
 document.addEventListener('pointerdown',()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}},{once:true});
 /* keep the screen on during a live workout so the rest timer can ring */
-let wakeLock=null;async function syncWake(){const wo=logOf(today()).workout,live=UI.tab==='workout'&&wo&&!wo.finishedAt&&!document.hidden;
+let wakeLock=null;async function syncWake(){const wo=logOf(woDate()).workout,live=UI.tab==='workout'&&wo&&!wo.finishedAt&&!document.hidden;
  try{if(live&&!wakeLock&&navigator.wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}else if(!live&&wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
 /* The rest timer runs off its end time, so it keeps counting while the app is in the background, and it is saved
    on this phone (forma.restT) so a reload or Android closing the tab does not lose it. When it ends while the app
@@ -2189,7 +2206,7 @@ function updateRest(){
  const sec=Math.ceil(left);if(sec<=3&&sec>=1&&r.lastTick!==sec){r.lastTick=sec;restTick()}
 }
 setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
-setInterval(()=>{const e=$('#el');if(e){const wo=logOf(today()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest();saveRest()},500);
+setInterval(()=>{const e=$('#el');if(e){const wo=logOf(woDate()).workout;if(wo)e.textContent=mmss((Date.now()-new Date(wo.startedAt))/1000)}if(UI.rest)updateRest();saveRest()},500);
 document.addEventListener('visibilitychange',()=>{saveRest();if(!document.hidden){if(UI.rest)updateRest();restSeenWhileAway()}});
 restSeenWhileAway();
 
@@ -2749,7 +2766,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.5${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.6${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -2848,7 +2865,7 @@ function pagerMode(fromHeader){
   if(tab==='food'&&cur==='log')return 'date';
   return 'sub'}
  if(tab==='today')return 'date';
- if(tab==='workout'){const wo=logOf(today()).workout;return wo&&!wo.finishedAt?null:'week'}
+ if(tab==='workout'){const wo=logOf(woDate()).workout;return wo&&!wo.finishedAt?null:'week'}
  return null}
 /* the page one step away (dir +1 is the next page, the one a left swipe brings in), or null at the end of the line */
 function pagePeek(mode,dir){
@@ -2975,7 +2992,7 @@ function tourFull(){tourRun(tourFullSteps(),{kind:'full'}).then(k=>{
  const p=profile();
  if(k!=='stop'&&SBS.user&&p&&!p.intake&&!LS.get('forma.intakeSeen',0)){SBS.firstRun=true;setTimeout(()=>{if(!document.getElementById('intake')&&!FormaTour.active)intakeOpen()},450);return}
  learnAfterTour()})}
-function tourHelp(){let s=UI.tab;if(s==='workout'){const wo=logOf(today()).workout;if(wo&&!wo.finishedAt)s='live'}tourMini(s)}
+function tourHelp(){let s=UI.tab;if(s==='workout'){const wo=logOf(woDate()).workout;if(wo&&!wo.finishedAt)s='live'}tourMini(s)}
 function tourMaybe(){if(!window.FormaTour||FormaTour.active||TOUR.on)return;if(LS.get('forma.tourSeen',0)||!LS.get('forma.tourPending',0))return;
  if(UI.sheet||['intake','cam','lib','ped','hist','gym'].some(i=>document.getElementById(i)))return;if(!profile()||!program()||!exdb())return;
  LS.del('forma.tourPending');setTimeout(tourFull,500)}
@@ -3503,7 +3520,7 @@ document.addEventListener('click',async e=>{
   case 'roverClose':{const r=$('#rover');if(r)r.remove();break}
   case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
   case 'setupSave':setupSave();break;
-  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
+  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Switch repo anyway?'))break;cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
   case 'aiSave':{const el=$('#ai_key'),v=el?el.value.trim():'';if(!v){toast('Paste your Claude API key first.');break}
    if(!/^sk-ant-[\w-]{20,}$/.test(v)){toast('That is not a Claude key. It starts with sk-ant-.');break}
    aiKeySet(v);LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key saved on this phone. Tap Test.');break}
@@ -3667,7 +3684,7 @@ document.addEventListener('click',async e=>{
   case 'finSnooze':UI.finSnooze=Date.now()+FIN_NUDGE;finTick();render();break;
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'finKeep':closeSheet();break;
-  case 'finSave':{const wo=logOf(T).workout;if(!wo){closeSheet();break}
+  case 'finSave':{const T=woDate(),wo=logOf(T).workout;if(!wo){closeSheet();break}
    const s0=atTime(T,$('#fin_s').value||hhmm(wo.startedAt));let f0=atTime(T,$('#fin_f').value||hhmm(new Date().toISOString()));if(f0<s0&&s0-f0>=60000)f0=new Date(f0.getTime()+864e5);else if(f0<s0)f0=s0;
    if(f0-s0>6*3600000){toast('That is over 6 hours. Check the times.');break}
    const st=woStats(wo);if(st.all>st.done)mutate(logP(T),{k:'wFinalize',mode:finMode},{quiet:true});
@@ -3676,12 +3693,12 @@ document.addEventListener('click',async e=>{
    {const w2=logOf(T).workout,dn=(program().days.find(x=>x.id===(w2||wo).dayId)||{name:'Workout'}).name;workoutDone(dn,woStats(w2||wo),(f0-s0)/1000)}break}
   case 'wdClose':{const z=$('#wdone');if(z)z.remove();break}
   case 'wStarted':openSheet(startedSheet());break;
-  case 'stSave':{const v=$('#st_t').value;if(!v)break;let s0=atTime(T,v);if(s0>new Date())s0=new Date(s0.getTime()-864e5);mutate(logP(T),{k:'wTimes',s:s0.toISOString()},{delay:300});closeSheet();break}
+  case 'stSave':{const T=woDate(),v=$('#st_t').value;if(!v)break;let s0=atTime(T,v);if(s0>new Date())s0=new Date(s0.getTime()-864e5);mutate(logP(T),{k:'wTimes',s:s0.toISOString()},{delay:300});closeSheet();break}
   case 'wEdit':openSheet(editWoSheet(D.d));break;
   case 'edSave':{const wo=logOf(D.d).workout;if(!wo)break;const s0=atTime(D.d,$('#ed_s').value||hhmm(wo.startedAt));let f0=atTime(D.d,$('#ed_f').value||hhmm(wo.finishedAt));if(f0<s0)f0=new Date(f0.getTime()+864e5);
    mutate(logP(D.d),{k:'wNote',v:$('#ed_n').value.trim()},{quiet:true});mutate(logP(D.d),{k:'wTimes',s:s0.toISOString(),f:f0.toISOString()},{delay:300});closeSheet();break}
   case 'edDel':if(t.dataset.sure){mutate(logP(D.d),{k:'wClear'},{delay:300});closeSheet();toast0('Workout deleted.')}else{t.dataset.sure='1';t.textContent='Tap again to delete'}break;
-  case 'discardYes':mutate(logP(T),{k:'wClear'},{delay:300});UI.rest=null;closeSheet();break;
+  case 'discardYes':mutate(logP(woDate()),{k:'wClear'},{delay:300});UI.rest=null;closeSheet();break;
   case 'discardNo':closeSheet();break;
   case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});closeSheet();break;
   case 'wMark':if(D.d>today()){toast('That day has not happened yet.');break}mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
@@ -3771,8 +3788,8 @@ document.addEventListener('click',async e=>{
   case 'nxSave':{const nm=NEWX.name.trim();if(!nm){toast('Give the exercise a name.');break}if(!NEWX.mu){toast('Pick the main muscle.');break}
    const slug=nm.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'exercise',ex=exdb().exercises;let id='custom_'+slug,n=2;while(ex[id])id='custom_'+slug+'_'+(n++);
    mutate(P_EX,{k:'exNew',id,ex:{n:nm,eq:NEWX.eq||'Other',p:[NEWX.mu],s:[],c:[],a:[]}},{quiet:true,delay:700});if(PICK&&PICK.mode==='lib'){closeSheet();if($('#lib'))libDraw();toast0('Exercise created.');break}usePick(id);break}
-  case 'exDel':if(confirm('Remove this exercise from today\'s workout?'))mutate(logP(T),{k:'wExtraDel',ex:D.ex},{delay:1000});break;
-  case 'doSwap':{const wo=logOf(T).workout;const from=effEx(wo,D.slot);mutate(logP(T),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
+  case 'exDel':if(confirm('Remove this exercise from today\'s workout?'))mutate(logP(woDate()),{k:'wExtraDel',ex:D.ex},{delay:1000});break;
+  case 'doSwap':{const W=woDate(),wo=logOf(W).workout;const from=effEx(wo,D.slot);mutate(logP(W),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
  }
 });
 document.addEventListener('input',e=>{
