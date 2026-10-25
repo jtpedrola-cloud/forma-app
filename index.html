@@ -906,11 +906,16 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 #sheet .chips{gap:8px}
 .ss .fld:has(>label):not(:first-child):not(.lbl+.fld){margin-top:24px!important}
 #sheet .btn.sm,.ss .btn.sm{border-radius:14px}
+/* Accessibility: visible keyboard focus (not shown on touch), screen-reader-only text */
+.sro{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--acl,var(--acc));outline-offset:2px}
+#sheet:focus,#ped:focus,#lib:focus,#gym:focus,#hist:focus,#learn:focus,#cam:focus,#intake:focus{outline:none}
+.sec:has(>.add){position:relative}.sec>.add{position:absolute;right:0;top:6px}.v1 .sec:has(>.add)>summary{padding-right:44px}.v1 .sec>.add+.item{border-top:0}
 </style>
 </head>
 <body>
-<div class="wrap" id="root"></div>
-<div id="rest" hidden></div>
+<main class="wrap" id="root"></main>
+<div id="rest" hidden role="region" aria-label="Rest timer"></div>
 <script src="smart.js"></script>
 <script src="plan.js"></script>
 <script src="copy.js"></script>
@@ -942,7 +947,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='469f488026e0785a366eb8815a5f7d2d0ed6b9f7';let verChecked=0;
+const BUILD='0b3603b45dec850b2828feb6f87ddb8388c39b0f';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1266,7 +1271,7 @@ window.addEventListener('focus',()=>{if(rollDay())render();checkVersion();refres
 /* ---------- ui plumbing ---------- */
 const root=$('#root');
 function ferr(id,m){const el=$('#'+id);if(!el){toast(m);return}let e=el.parentNode.querySelector('.ferr');if(!e){e=document.createElement('div');e.className='ferr';e.setAttribute('role','alert');el.parentNode.appendChild(e)}e.textContent=m;el.focus()}
-function toast(m){if([...document.querySelectorAll('.toast')].some(x=>x.textContent===m))return;const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
+function toast(m){if([...document.querySelectorAll('.toast')].some(x=>x.textContent===m))return;const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function softRender(){
  if(window.FormaTour&&FormaTour.active)return;
  if(window.PGDRAG)return;
@@ -1285,7 +1290,7 @@ function headerV1(title,items,sub=''){
  const mi=([act,label,attr])=>`<button class="mi" data-act="${act}"${attr||''}>${label}</button>`;
  const syn={synced:'Synced',syncing:'Syncing',offline:'Offline, tap to retry',error:'Sync failed, tap to retry'}[UI.sync]||'Sync status';
  const bad=UI.sync==='offline'||UI.sync==='error';
- return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}${bad?'<i class="sb"></i>':''}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
+ return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}${bad?'<i class="sb"></i>':''}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
 }
 const logFab=()=>`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
 document.addEventListener('click',e=>{document.querySelectorAll('details.more[open]').forEach(d=>{if(!d.contains(e.target)||e.target.closest('.mi'))d.open=false})});
@@ -1301,7 +1306,7 @@ function subSeg(tab,subs){const cur=subOf(tab,subs);return `<div class="psub"><d
 function setSub(tab,sk){UI.sub=UI.sub||{};UI.sub[tab]=sk;LS.set('forma.sub',UI.sub)}
 function tabbar(){
  const t=[['today','Today'],['food',isSimple()?SC().eat.tab:'Food'],['workout','Workout'],['activity','Activity'],['progress','Progress']].filter(([k])=>k==='today'||k==='progress'||modOn(k));
- return `<nav class="tabs"><div>${t.map(([k,l])=>`<button data-act="tab" data-t="${k}" class="${UI.tab===k?'on':''}">${ic(k)}<span>${l}</span></button>`).join('')}</div></nav>`;
+ return `<nav class="tabs" aria-label="Main"><div>${t.map(([k,l])=>`<button data-act="tab" data-t="${k}" class="${UI.tab===k?'on':''}"${UI.tab===k?' aria-current="page"':''}>${ic(k)}<span>${l}</span></button>`).join('')}</div></nav>`;
 }
 /* A phone left open past midnight keeps showing the old day. Remember which day was today last time we looked; if the view is still on it, move to the new today. */
 function rollDay(){const t=today(),o=UI.lastToday;UI.lastToday=t;if(!o||o===t)return false;let ch=false;if(UI.date===o){UI.date=t;ch=true}if(UI.wSel===o){UI.wSel=t;UI.wWk=0;ch=true}if(UI.wDay&&ch)UI.wDay=null;return ch}
@@ -1321,7 +1326,7 @@ function render(){
   if(UI.tab==='workout'&&wo&&!wo.finishedAt&&!HIST.warm){HIST.warm=true;loadAllLogs().then(()=>softRender())}}
  root.innerHTML=h+tabbar()+'<input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
  {const nv=document.querySelector('nav.tabs');if(nv)document.documentElement.style.setProperty('--tabh',nv.offsetHeight+'px')}
- renderSheet();updateRest();foodSticky();
+ renderSheet();updateRest();foodSticky();a11yFix();
  if(sc)window.scrollTo(0,sc);
 }
 
@@ -1597,7 +1602,7 @@ function foodView(){
  const ml=mealList(d);
  const secs=ml.filter(k=>items.some(i=>mealNo(i)===k)).map(k=>{
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
-  return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="mk2">${fmtN(mt.kcal)} kcal</span><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button></summary>
+  return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="mk2">${fmtN(mt.kcal)} kcal</span></summary><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button>
   ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button></details>`}).join('');
  const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v),skv=kcalVerdict(t.kcal,T.kcal),sIn=k=>rangeState(k,t[k],T).in,sChip=(c,l,k,g)=>`<span class="chip ${c}">${l} ${mv(t[k],g)}</span>`;
  const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${fmtN(big)}</b>${skv.in?'<span>In range</span>':`<span class="mut">${isCons?skv.l+' '+skv.v:rem<0?'Over':'cal left'}</span>`}${sChip('p','P','protein',T.protein)}${sChip('c','C','carbs',T.carbs)}${sChip('f','F','fat',T.fat)}</div></button>`;
@@ -1851,7 +1856,7 @@ const JUMPY=['volleyball','basketball','badminton','football','tennis','pickleba
 function legWarn(doc,i){const sp=((doc.sports||{})[String(i)]||[]).find(s=>JUMPY.includes(s.kind));if(!sp)return '';const d=doc.days.find(x=>x.id===doc.weekdays[String(i)]);if(!d)return '';
  const n=d.exercises.filter(e=>((exdb().exercises[e.ex]||{}).p||[]).some(m=>m==='quads'||m==='hamstrings'||m==='glutes')).length;
  return n>=2?`<div class="xs" style="color:var(--warn);margin:0 0 6px">Legs on a ${esc(actName(sp.kind))} day. Your legs may be tired for it.</div>`:''}
-function pedDraw(){const el=$('#ped');if(!el||!PED)return;const y=($('#ped_b')||{}).scrollTop||0,doc=PED.doc,days=doc.days;
+function pedDraw(){const el=$('#ped');if(!el||!PED)return;queueMicrotask(a11yFix);const y=($('#ped_b')||{}).scrollTop||0,doc=PED.doc,days=doc.days;
  const chip=(w,id,l,on)=>`<button class="chip pwc ${on?'b':''}" data-act="pedWd" data-w="${w}" data-id="${esc(id)}">${esc(l)}</button>`;
  el.innerHTML=`<div class="ovh"><button class="ib" data-act="pedBack" aria-label="Back">${ic('left')}</button><h1>Edit program</h1>${hqBtn('ped')}</div>
  <div class="ovb v1" id="ped_b"><div class="fld"><label>Program name</label><input data-pf="pname" value="${esc(doc.name||'')}" placeholder="My program" autocomplete="off"><div class="row" style="margin-top:4px;gap:24px"><button class="lnk" data-act="pedShare">Share</button><button class="lnk" data-act="impOpen">Import a program</button><button class="lnk" data-act="pedTemplates">Templates</button></div></div>
@@ -1956,7 +1961,7 @@ function liveView(wo,lg){
   ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="swr" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="set ${s.done?'dn':''}"><div class="sn">${i+1}${s.done&&setIsPR(ex,sets,i)?'<b class="prc">PR</b>':''}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
   <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
   <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
-  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-label="Mark set ${i+1} done">${ic('check',20)}</button></div></div>
+  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="Set ${i+1} done">${ic('check',20)}</button></div></div>
   ${s.done&&u==='REPS'?`<div class="sx"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="xa"><button class="lnk" data-act="addSet" data-ex="${ex}">+ Add set</button><button class="lnk" data-act="hist" data-ex="${ex}" aria-label="History and PRs for ${esc(inf.n)}">${ic('hist',16)}History</button>${sets.length>1?`<button class="lnk" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">Remove set</button>`:''}${e.extra?`<button class="lnk" data-act="exDel" data-ex="${e.ex}">Remove exercise</button>`:''}</div></section>`}).join('')+`<button class="lnk addx" data-act="exAdd">+ Add exercise</button>`;
@@ -2074,7 +2079,7 @@ document.addEventListener('input',e=>{if(e.target.id==='gym_q'){const q=e.target
  if(e.target.id==='lib_q'){LIB.q=e.target.value;LIB.n=60;libDraw();return}if(e.target.id==='ex_q')pickSearch();else if(e.target.id==='nx_name')NEWX.name=e.target.value});
 /* Swipe a set row left to delete it (touch only; the "-" button stays for the mouse). Past half the width deletes, with a 5 second Undo. */
 let SW=null;
-function toastUndo(m,fn){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.innerHTML=`<span>${esc(m)}</span><button>Undo</button>`;
+function toastUndo(m,fn){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.setAttribute('role','status');t.innerHTML=`<span>${esc(m)}</span><button>Undo</button>`;
  t.querySelector('button').onclick=()=>{t.remove();fn()};document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function delSet(ex,i){const before=clone(((logOf(woDate()).workout||{}).sets||{})[ex]||[]);if(!before[i])return;
  const gone=before[i];
@@ -2094,7 +2099,7 @@ function doneNext(how){
  const before=clone(((logOf(woDate()).workout||{}).sets||{})[nx.ex]||[]);
  if(!tickSet(nx.ex,nx.i,how))return;
  const x=((logOf(woDate()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
- let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';
+ let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';el.setAttribute('role','region');el.setAttribute('aria-label','Set done');
  el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Set ${nx.i+1} of ${nx.n} done${nx.i+1===nx.n?'<br>Exercise complete':''}</div><div class="sd-s">${esc(nm)}<br>${x.w?fwU(x.w,exU(nx.ex))+' '+exU(nx.ex)+' x ':''}${x.r} reps</div><div class="sd-r">Rest ${mmss(restFor(nx.ex))} started</div>
  <button class="sd-undo" data-act="sdUndo">${ic('undo',26)} Undo</button><div class="xs" style="color:#aaa;margin-top:14px">Tap anywhere to close</div></div>`;
  el._undo={ex:nx.ex,before};el.addEventListener('click',e=>{if(!e.target.closest('.sd-undo'))el.remove()});
@@ -2155,7 +2160,7 @@ const lastMs=wo=>wo&&wo.lastAt?new Date(wo.lastAt).getTime():null;
 function finStale(wo){const la=lastMs(wo);return !!(la&&!wo.finishedAt&&Date.now()-la>=FIN_NUDGE&&Date.now()>=(UI.finSnooze||0))}
 function finBanner(wo){const m=Math.max(20,Math.floor((Date.now()-lastMs(wo))/60000));
  return `<div class="card warn" id="finbn" style="margin-top:10px"><b class="sm">No set for ${m} min. Finish?</b><div class="xs mut" style="margin:2px 0 8px">Your last set was at ${clock(wo.lastAt)}. If you finish now the end time is set to just after it.</div><div class="row"><button class="btn sm sp" data-act="wFinish">Finish</button><button class="btn ghost sm sp" data-act="finSnooze">Keep going</button></div></div>`}
-function toastEdit(m,d){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.innerHTML=`<span>${esc(m)}</span><button>Edit</button>`;
+function toastEdit(m,d){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.setAttribute('role','status');t.innerHTML=`<span>${esc(m)}</span><button>Edit</button>`;
  t.querySelector('button').onclick=()=>{t.remove();openSheet(editWoSheet(d))};document.body.appendChild(t);setTimeout(()=>t.remove(),12000)}
 let autoBusy=false;
 function autoFinishCheck(){
@@ -2468,7 +2473,7 @@ function maintCard(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7;
  const train=maintFor(sg,60),rest=maintFor(sg,0);
  const fmt=v=>rnd(v).toLocaleString('en-US'),pct=Math.round(sm.conf*100);
- const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--faint)">${sub}</div>`:''}</span><span>${v}</span></div>`;
+ const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--mut)">${sub}</div>`:''}</span><span>${v}</span></div>`;
  const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null;
  const stTxt={collecting:['var(--mut)','Collecting data. Log food and weigh in daily; the estimate starts learning after about 7 logged days and 10 days of weigh-ins.'],
   'on pace':['var(--ok)','On pace: losing about '+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week (goal '+fw(goal,2)+').'],
@@ -2699,7 +2704,7 @@ function intakeStep(){
 function intakeUI(){
  const el=$('#intake');if(!el)return;const sc=inScreens(),n=sc.length,st=sc[INT.step],last=INT.step===n-1,C=OC();
  const nextLbl=last?(LS.get('forma.tourSeen',0)?C.summary.finish:C.summary.finishTour):C[sc[INT.step+1]].to;
- el.innerHTML=`<div class="ih"><div class="row"><button class="ib" data-act="inClose" aria-label="${C.nav.close}">${ic('x',22)}</button><div class="sp"></div><span style="width:44px"></span></div><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${INT.step+1}"><i style="width:${(INT.step+1)/n*100}%"></i></div></div>
+ el.innerHTML=`<div class="ih"><div class="row"><button class="ib" data-act="inClose" aria-label="${C.nav.close}">${ic('x',22)}</button><div class="sp"></div><span style="width:44px"></span></div><div class="prog" role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${INT.step+1}"><i style="width:${(INT.step+1)/n*100}%"></i></div></div>
  <div class="ib2" id="in_body">${intakeStep()}</div>
  <div class="if">${INT.step?`<button class="btn ghost" data-act="inBack">${C.nav.back}</button>`:''}${st==='equipment'?`<span class="xs mut sp" style="text-align:center" id="gym_n">${cf(C.equipment.count,{n:INT.a.gym.length,total:GT_ALL.length})}</span><button class="btn" data-act="inNext">${nextLbl}</button>`:st==='photo'&&!INT.photo?`<button class="btn ghost sp" data-act="inSkipPhoto">${C.photo.skip}</button>`:`<button class="btn sp" data-act="${last?'inSave':'inNext'}">${nextLbl}</button>`}</div>`;
  if(st==='bf')bfCenter(bfIdx());
@@ -2808,7 +2813,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.17${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.18${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3304,11 +3309,25 @@ function openSheet(html,fn){if(!UI.sheet)navPush({l:'sheet'});UI.sheet=html;UI.s
 function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop()}
 function renderSheet(){
  let ov=$('#ov');
- if(!UI.sheet){if(ov)ov.remove();return}
- if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog"></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeSheet(false)})}
- const sh=$('#sheet');if(sh.dataset.h!==UI.sheet){sh.innerHTML=UI.sheet;sh.dataset.h=UI.sheet;const af=sh.querySelector('[data-af]');if(af){af.focus();try{af.setSelectionRange(af.value.length,af.value.length)}catch(e){}}}
+ if(!UI.sheet){if(ov){ov.remove();root.inert=false;a11yRestore()}return}
+ if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog" aria-modal="true" aria-label="Dialog" tabindex="-1"></div>';document.body.appendChild(ov);root.inert=true;ov.addEventListener('click',e=>{if(e.target===ov)closeSheet(false)});ov.dataset.new='1'}
+ const sh=$('#sheet');if(sh.dataset.h!==UI.sheet){sh.innerHTML=UI.sheet;queueMicrotask(a11yFix);sh.dataset.h=UI.sheet;const hd=sh.querySelector('h1,h2');sh.setAttribute('aria-label',hd&&hd.firstChild?(hd.firstChild.textContent||hd.textContent).trim()||'Dialog':sh.querySelector('.lsh')?'Log food, weight or steps':'Dialog');const af=sh.querySelector('[data-af]');if(af){af.focus();try{af.setSelectionRange(af.value.length,af.value.length)}catch(e){}}else if(ov.dataset.new)sh.focus({preventScroll:true})}
+ delete ov.dataset.new;
 }
-
+/* Accessibility: full-screen panels get dialog semantics and focus; closing any panel returns focus to the control that opened it. */
+const OVL={ov:'Dialog',ped:'Edit program',lib:'Exercise library',gym:'My gym',hist:'Exercise history',learn:'Learn',cam:'Progress photos',intake:'Setup'};
+let LASTF=null;
+const OVLSEL=Object.keys(OVL).map(k=>'#'+k).join(',');
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button,a,summary,[tabindex]');if(b&&!b.closest(OVLSEL))LASTF=b.dataset&&b.dataset.act?{act:b.dataset.act,m:b.dataset.m,t:b.dataset.t,s:b.dataset.s,el:b}:{el:b}},true);
+function a11yRestore(){if(document.querySelector(OVLSEL)||!LASTF)return;let el=LASTF.el;if(!el||!el.isConnected){el=null;if(LASTF.act){const c=[...document.querySelectorAll('[data-act="'+LASTF.act+'"]')];el=c.find(x=>(LASTF.m==null||x.dataset.m===LASTF.m)&&(LASTF.t==null||x.dataset.t===LASTF.t)&&(LASTF.s==null||x.dataset.s===LASTF.s))||null}}
+ LASTF=null;if(el&&el.focus)try{el.focus({preventScroll:true})}catch(e){}}
+new MutationObserver(ms=>{let gone=false;for(const m of ms){m.addedNodes.forEach(n=>{if(n.nodeType!==1||!OVL[n.id]||n.id==='ov')return;n.setAttribute('role','dialog');n.setAttribute('aria-modal','true');if(!n.getAttribute('aria-label')){const h=n.querySelector('h1');n.setAttribute('aria-label',(h&&h.textContent.trim())||OVL[n.id])}n.tabIndex=-1;if(!n.contains(document.activeElement))n.focus({preventScroll:true})});m.removedNodes.forEach(n=>{if(n.nodeType===1&&OVL[n.id]&&n.id!=='ov')gone=true})}if(gone)a11yRestore()}).observe(document.body,{childList:true});
+/* Small fixes applied after every render: labels tied to their inputs, toggle state on segmented buttons, heading levels. */
+function a11yFix(){
+ document.querySelectorAll('label:not([for])').forEach(l=>{if(l.querySelector('input,select,textarea'))return;const c=l.parentElement&&l.parentElement.querySelector('input[id],select[id],textarea[id]');if(c&&!c.getAttribute('aria-label')&&!(c.labels&&c.labels.length))l.htmlFor=c.id});
+ document.querySelectorAll('.seg button,.mods button,.opts button,.dchips button').forEach(b=>{if(!b.hasAttribute('aria-pressed')&&!b.hasAttribute('aria-current'))b.setAttribute('aria-pressed',b.classList.contains('on')?'true':'false')});
+ document.querySelectorAll('#ped h3').forEach(h=>{h.setAttribute('role','heading');h.setAttribute('aria-level','2')});
+}
 /* ---------- Command bar: one typed line becomes weight, steps, sport, note and food actions (app/cmd.js, no AI) ---------- */
 function logDayToggle(d){
  const el=$('#cmd_in');if(el)cmdText=el.value;
@@ -3889,7 +3908,7 @@ document.addEventListener('change',async e=>{
  catch(x){toast('Could not read that photo.')}
  e.target.value='';
 });
-function toast0(m){const t=document.createElement('div');t.className='toast';t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
+function toast0(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
 document.addEventListener('change',e=>{if(e.target.id==='s_rest'){let v=Math.round(num(e.target.value));if(!(v>=15))v=0;v=Math.min(600,v);e.target.value=v||'';mutate(P_PROFILE,{k:'merge',data:{restDefault:v}},{delay:300});return}
  if(e.target.id==='s_smax'){let v=parseInt(e.target.value,10);if(!(v>0))v=90;v=Math.max(20,Math.min(240,v));e.target.value=v;mutate(P_PROFILE,{k:'merge',data:{sessionMax:v}},{delay:300})}});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
