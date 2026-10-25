@@ -418,20 +418,6 @@
     return out;
   }
 
-  // "rice egg": two known foods side by side with no connector (longest first part wins)
-  function splitKnown(toks, idx, depth) {
-    for (var cut = toks.length - 1; cut >= 1; cut--) {
-      var L = toks.slice(0, cut), R = toks.slice(cut);
-      if (R[0].k !== 'w' || R[0].prot) continue;
-      var a = resolvePiece(L, idx);
-      if (!a.item) continue;
-      var b = resolvePiece(R, idx);
-      if (b.item) return [a, b];
-      if (depth < 3) { var sub = splitKnown(R, idx, depth + 1); if (sub) return [a].concat(sub); }
-    }
-    return null;
-  }
-
   function resolvePieceAt(toks, idx, useQty, noQuarter) {
     var q = null, i = 0, r;
     if (useQty && toks[0] && !toks[0].prot) {
@@ -470,6 +456,11 @@
       useUnit = 'serving';
       assumed = true;
     }
+    // "3 egg omelette": a count before a component word of a dish that holds it scales the dish by that component
+    var eggLab = null;
+    if (q != null && !useUnit && f.contains && m.keys.length > 1 && idx.aliases.some(function (e) {
+      return e.keys.length === 1 && e.keys[0] === m.keys[0] && f.contains.ids.indexOf(e.food.id) >= 0;
+    })) { qty = q / f.contains.n; eggLab = fmtQ(q) + (q === 1 ? ' egg' : ' eggs'); assumed = false; }
     var c = compute(f, qty, useUnit, assumed);
     if (c.err) return { err: c.err };
     var it = {
@@ -481,6 +472,7 @@
       fat: Math.round(f.fat * c.mult),
       foodId: f.id
     };
+    if (eggLab) { it.name = f.name.replace(/\b\d+ eggs?\b/, eggLab); it.amount = eggLab; }
     if (c.assumed) it.assumed = true;
     return { item: it, meta: { food: f, mult: c.mult, explicit: q != null } };
   }
@@ -881,7 +873,7 @@
       if (pieces.length > 1) pieces = pieces.filter(function (pc) { return !(pc.length === 1 && pc[0].k === 'w' && BRAND[pc[0].v]); }); // lone "jollibee" before "1 pc chickenjoy"
       pieces.forEach(function (pc) {
         var out = resolvePiece(pc, idx), outs = [out];
-        if (!out.item && out.err === 'not in the food list') { var sk = splitKnown(pc, idx, 0); if (sk) outs = sk; }
+        // Adjacent-name splitting ("rice egg") was removed: it turned "chocolate milk" and "rice cake" into two wrong foods.
         outs.forEach(function (o) {
           if (o.item) {
             if (foodAt < 0) { foodAt = res.actions.length; res.actions.push(null); }

@@ -144,7 +144,7 @@
   {"id":"egg-boiled","name":"Egg, boiled","aliases":["egg","boiled egg","hard boiled egg","soft boiled egg","itlog","nilagang itlog"],"unit":"piece","per":1,"kcal":70,"protein":6,"carbs":0,"fat":5,"portions":{"piece":50}},
   {"id":"egg-fried","name":"Egg, fried (1 tsp oil)","aliases":["fried egg","sunny side up","sunny side up egg","pritong itlog"],"unit":"piece","per":1,"kcal":90,"protein":6,"carbs":0,"fat":7,"portions":{"piece":50}},
   {"id":"egg-scrambled","name":"Egg, scrambled (with oil)","aliases":["scrambled egg","scrambled","ginisang itlog"],"unit":"piece","per":1,"kcal":91,"protein":6,"carbs":1,"fat":7,"portions":{"piece":55}},
-  {"id":"omelette","name":"Omelette (2 eggs, oil)","aliases":["omelette","omelet","tortang itlog"],"unit":"piece","per":1,"kcal":187,"protein":12,"carbs":1,"fat":15,"portions":{"piece":120},"contains":{"ids":["egg-boiled","egg-fried","egg-scrambled"],"n":2}},
+  {"id":"omelette","name":"Omelette (2 eggs, oil)","aliases":["omelette","omelet","tortang itlog","egg omelette","egg omelet"],"unit":"piece","per":1,"kcal":187,"protein":12,"carbs":1,"fat":15,"portions":{"piece":120},"contains":{"ids":["egg-boiled","egg-fried","egg-scrambled"],"n":2}},
   {"id":"egg-salted","name":"Itlog na maalat (salted duck egg)","aliases":["itlog na maalat","salted egg","salted duck egg"],"unit":"piece","per":1,"kcal":130,"protein":9,"carbs":1,"fat":10,"portions":{"piece":70}},
   {"id":"egg-white","name":"Egg white","aliases":["egg white","egg whites","white of egg"],"unit":"piece","per":1,"kcal":17,"protein":4,"carbs":0,"fat":0,"portions":{"piece":33}},
   {"id":"quail-egg","name":"Quail egg","aliases":["quail egg","itlog pugo","pugo egg"],"unit":"piece","per":1,"kcal":13,"protein":1,"carbs":0,"fat":1,"portions":{"piece":9}},
@@ -225,7 +225,7 @@
   {"id":"black-beans","name":"Black beans, cooked","aliases":["black beans","black bean","beans"],"unit":"g","per":100,"kcal":132,"protein":9,"carbs":24,"fat":1,"portions":{"cup":172,"serving":100}},
   {"id":"edamame","name":"Edamame","aliases":["edamame"],"unit":"g","per":100,"kcal":121,"protein":12,"carbs":9,"fat":5,"portions":{"cup":155,"serving":100}},
   {"id":"quinoa","name":"Quinoa, cooked","aliases":["quinoa"],"unit":"g","per":100,"kcal":120,"protein":4,"carbs":21,"fat":2,"portions":{"cup":185,"serving":100}},
-  {"id":"puto","name":"Puto","aliases":["puto"],"unit":"piece","per":1,"kcal":70,"protein":1,"carbs":13,"fat":1,"portions":{"piece":35}},
+  {"id":"puto","name":"Puto","aliases":["puto","rice cake"],"unit":"piece","per":1,"kcal":70,"protein":1,"carbs":13,"fat":1,"portions":{"piece":35}},
   {"id":"kutsinta","name":"Kutsinta","aliases":["kutsinta"],"unit":"piece","per":1,"kcal":55,"protein":0,"carbs":13,"fat":0,"portions":{"piece":30}},
   {"id":"bibingka","name":"Bibingka","aliases":["bibingka"],"unit":"piece","per":1,"kcal":216,"protein":4,"carbs":32,"fat":8,"portions":{"piece":100}},
   {"id":"suman","name":"Suman","aliases":["suman"],"unit":"piece","per":1,"kcal":163,"protein":2,"carbs":32,"fat":3,"portions":{"piece":80}},
@@ -367,6 +367,15 @@
   {"id":"pork-tenderloin","name":"Pork tenderloin, cooked","aliases":["pork tenderloin","pork loin","lomo","lean pork"],"unit":"g","per":100,"kcal":140,"protein":26,"carbs":0,"fat":4,"portions":{"serving":150}},
   {"id":"crab","name":"Crab meat, cooked","aliases":["crab","crab meat","alimasag","alimango"],"unit":"g","per":100,"kcal":100,"protein":20,"carbs":0,"fat":2,"portions":{"serving":120}},
   {"id":"chicken-liver","name":"Chicken liver, cooked","aliases":["chicken liver","atay ng manok","liver"],"unit":"g","per":100,"kcal":167,"protein":25,"carbs":1,"fat":7,"portions":{"serving":100}},
-  {"id":"beef-jerky","name":"Beef jerky","aliases":["beef jerky","jerky","tapang usa"],"unit":"serving","per":1,"kcal":110,"protein":9,"carbs":3,"fat":7,"portions":{"serving":28}}
+  {"id":"beef-jerky","name":"Beef jerky","aliases":["beef jerky","jerky","tapang usa"],"unit":"serving","per":1,"kcal":110,"protein":9,"carbs":3,"fat":7,"portions":{"serving":28}},
+  {"id":"choco-milk","name":"Chocolate milk","aliases":["chocolate milk","choco milk"],"unit":"ml","per":100,"kcal":83,"protein":3,"carbs":11,"fat":3,"portions":{"cup":240,"glass":240,"serving":240,"box":200}},
+  {"id":"hotdog-sandwich","name":"Hotdog sandwich","aliases":["hotdog sandwich","hot dog sandwich"],"unit":"piece","per":1,"kcal":377,"protein":13,"carbs":34,"fat":21,"portions":{"piece":140}},
+  {"id":"chicken-sandwich","name":"Chicken sandwich (generic)","aliases":["chicken sandwich"],"unit":"piece","per":1,"kcal":397,"protein":25,"carbs":36,"fat":17,"portions":{"piece":170}},
+  {"id":"egg-fried-rice","name":"Egg fried rice","aliases":["egg fried rice"],"unit":"g","per":100,"kcal":195,"protein":6,"carbs":27,"fat":7,"portions":{"cup":150,"serving":220}},
+  {"id":"pb-toast","name":"Peanut butter toast (1 slice)","aliases":["peanut butter toast","pb toast"],"unit":"piece","per":1,"kcal":169,"protein":6,"carbs":16,"fat":9,"portions":{"piece":40,"slice":40}},
+  {"id":"banana-shake","name":"Banana shake (16 oz)","aliases":["banana shake","banana smoothie"],"unit":"serving","per":1,"kcal":257,"protein":5,"carbs":48,"fat":5,"portions":{"serving":450}},
+  {"id":"iced-coffee","name":"Iced coffee, sweetened","aliases":["iced coffee","ice coffee","sweetened iced coffee","iced coffee with sugar"],"unit":"serving","per":1,"kcal":126,"protein":1,"carbs":26,"fat":2,"portions":{"serving":350,"cup":350,"glass":350}},
+  {"id":"hot-choco","name":"Hot chocolate (cup)","aliases":["hot chocolate","hot choco","hot cocoa","iced chocolate","iced choco","chocolate drink","cocoa drink","tablea"],"unit":"serving","per":1,"kcal":194,"protein":5,"carbs":30,"fat":6,"portions":{"serving":240,"cup":240,"mug":300}},
+  {"id":"iced-tea","name":"Iced tea, sweetened","aliases":["iced tea","ice tea","sweetened iced tea","sweet tea"],"unit":"serving","per":1,"kcal":90,"protein":0,"carbs":22,"fat":0,"portions":{"serving":350,"glass":350,"cup":350}}
   ]
 }
