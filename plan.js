@@ -113,6 +113,8 @@
     loA: ['Lower A', ['squat', 'hinge', 'quadIso', 'hamCurl', 'calves', 'abs']],
     upB: ['Upper B', ['inclinePress', 'vPull', 'row2', 'chestFly', 'lateral', 'biceps2', 'triceps2']],
     loB: ['Lower B', ['hinge', 'quad2', 'glute', 'hamCurl', 'calves', 'obliques']],
+    up5: ['Upper', ['inclinePress', 'vPull', 'row2', 'chestFly', 'lateral', 'biceps2', 'triceps2']],
+    lo5: ['Lower', ['hinge', 'quad2', 'glute', 'hamCurl', 'calves', 'obliques']],
     push: ['Push', ['chestPress', 'inclinePress', 'ohp', 'lateral', 'triceps', 'abs']],
     pull: ['Pull', ['vPull', 'hRow', 'rearDelt', 'biceps', 'biceps2', 'abs']],
     legs: ['Legs', ['squat', 'quad2', 'hinge', 'hamCurl', 'calves', 'abs']],
@@ -121,7 +123,7 @@
     legsB: ['Legs B', ['hinge', 'squat', 'glute', 'quadIso', 'calves', 'abs']],
   };
   const SPLITS = { 2: ['fbA', 'fbB'], 3: ['fbA', 'fbB', 'fbC'], 4: ['upA', 'loA', 'upB', 'loB'],
-    5: ['push', 'pull', 'legs', 'upB', 'loB'], 6: ['push', 'pull', 'legs', 'pushB', 'pullB', 'legsB'] };
+    5: ['push', 'pull', 'legs', 'up5', 'lo5'], 6: ['push', 'pull', 'legs', 'pushB', 'pullB', 'legsB'] };
   const SPLIT_NAME = { 2: 'Full body, 2 days', 3: 'Full body, 3 days', 4: 'Upper / lower, 4 days',
     5: 'Push, pull, legs + upper / lower, 5 days', 6: 'Push, pull, legs twice, 6 days' };
   const FOCUS = { abs: ['abs', 'obliques'], shoulders: ['lateral', 'ohp', 'rearDelt'], chest: ['chestPress', 'chestPress2', 'inclinePress', 'chestFly'],
@@ -139,7 +141,7 @@
     const days = (a.trainDays || []).map(Number).sort((x, y) => x - y).slice(0, 6);
     const n = clamp(days.length, 2, 6), split = SPLITS[n], cap = PER_SESSION[a.minutes] || 6;
     const focus = (a.focus || []).slice(0, 2), beginner = a.experience === 'new';
-    const pick = slot => SLOTS[slot][0].find(id => ex[id] && canDo(ex[id].eq, have)) || null;
+    const pick = slot => (beginner && /^vPull/.test(slot) ? SLOTS[slot][0].filter(x => x !== 'pull_up').concat('pull_up') : SLOTS[slot][0]).find(id => ex[id] && canDo(ex[id].eq, have)) || null;
     const keep = s => focus.some(f => (FOCUS[f] || []).includes(s));
     const out = split.map((key) => {
       const [name, slots0] = DAYS[key];

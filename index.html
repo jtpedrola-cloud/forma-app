@@ -920,7 +920,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='f2495a3ab452fd695b9b95f5a04265b1df602c48';let verChecked=0;
+const BUILD='91c4a00a9c2e5cac58f712fe822bfcf7e41bede9';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1393,7 +1393,7 @@ function checklist(d){
    and makes the number a tap that switches between eaten and left. */
 function calHero(d,cons,rings){
  const pr=profile(),T=pr.targets,t=totals(d),rs=rangeState('kcal',t.kcal,T),big=cons?rnd(t.kcal):rnd(T.kcal-t.kcal);
- const st=rs.in?`In range, ${rs.band}`:rs.l==='Left'?`Left ${fmtN(rs.amt)} of ${rs.band}`:`<span class="amb">Over ${fmtN(rs.amt)}</span> of ${rs.band}`;
+ const st=rs.in?`In range, ${rs.band}`:rs.l==='Left'?(t.kcal<=0?`${rs.band} to eat`:`Left ${fmtN(rs.amt)} of ${rs.band}`):`<span class="amb">Over ${fmtN(rs.amt)}</span> of ${rs.band}`;
  const num_=`<b class="big">${fmtN(big)}</b><span class="of">/ ${fmtN(T.kcal)}</span>`;
  const mac=(l,k)=>{const r=rangeState(k,t[k],T);return `<div><div class="lbl">${l}</div><div class="t17">${fmtN(t[k])} g</div><div class="s15 mut">${r.in?'in range':r.l==='Left'?'left '+fmtN(r.amt):'<span class="amb">over '+fmtN(r.amt)+'</span>'}</div></div>`};
  let h=`<section class="hero" id="fmain" data-tour="cal"><div class="lbl">Calories${rings?(cons?' eaten':' left'):''}</div>`;
@@ -1569,12 +1569,13 @@ const savedMeals=()=>((cur(P_MEALS)||{}).meals||[]);
 const nextMealNo=d=>Math.max(0,...food(d).items.map(mealNo))+1;
 const sumItems=its=>its.reduce((a,i)=>({kcal:a.kcal+num(i.kcal),protein:a.protein+num(i.protein)}),{kcal:0,protein:0});
 function mealSaveSheet(m){const d=UI.date,its=food(d).items.filter(i=>mealNo(i)===m),t=sumItems(its);
- return `<h2>Save this meal</h2><div class="xs mut" style="margin:-6px 0 12px">${its.length} food${its.length===1?'':'s'}, ${rnd(t.kcal)} cal, ${rnd(t.protein)}g protein. Next time, log all of it with one tap.</div>
+ return `<h2>Save this meal</h2><div class="xs mut" style="margin:-6px 0 12px">${its.length} food${its.length===1?'':'s'}, ${fmtN(t.kcal)} kcal, ${rnd(t.protein)}g protein. Next time, log all of it with one tap.</div>
  <div class="fld"><label>Name</label><input id="sm_name" maxlength="60" value="${esc('Meal '+m+' '+fmtShort(d))}"></div><button class="btn full" data-act="mealSaveGo" data-m="${m}">Save meal</button>`}
 function savedSheet(){
  const d=UI.date,prev=addDays(d,-1),pf=food(prev).items,pt=sumItems(pf),ms=savedMeals();
- const cp=(LS.get('forma.copied',{})||{})[d]?'':pf.length?`<button class="item" data-act="copyPrev"><div class="sp"><div class="n">${d===today()?'Copy yesterday':'Copy '+DOW[parseD(prev).getDay()]}</div><div class="xs mut">${new Set(pf.map(mealNo)).size} meal${new Set(pf.map(mealNo)).size===1?'':'s'} from ${fmtShort(prev)}</div></div><div class="r"><div>${rnd(pt.kcal)} cal</div><div class="xs mut">${rnd(pt.protein)}g protein</div></div></button>`:`<div class="xs mut" style="padding:10px 0">Nothing logged on ${fmtShort(prev)} to copy.</div>`;
- const rows=ms.map(m=>{const t=sumItems(m.items||[]);return `<button class="item smr" data-act="mealUse" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r"><div>${rnd(t.kcal)} cal</div><div class="xs mut">${rnd(t.protein)}g protein</div></div></button>`}).join('');
+ const cpv=(LS.get('forma.copied',{})||{})[d],cpIds=Array.isArray(cpv)?cpv:null,cpHeld=cpv&&(cpIds?cpIds.some(id=>food(d).items.some(i=>i.id===id)):food(d).items.length>0);
+ const cp=cpHeld?'':pf.length?`<button class="item" data-act="copyPrev"><div class="sp"><div class="n">${d===today()?'Copy yesterday':'Copy '+DOW[parseD(prev).getDay()]}</div><div class="xs mut">${new Set(pf.map(mealNo)).size} meal${new Set(pf.map(mealNo)).size===1?'':'s'} from ${fmtShort(prev)}</div></div><div class="r"><div>${fmtN(pt.kcal)} kcal</div><div class="xs mut">${rnd(pt.protein)}g protein</div></div></button>`:`<div class="xs mut" style="padding:10px 0">Nothing logged on ${fmtShort(prev)} to copy.</div>`;
+ const rows=ms.map(m=>{const t=sumItems(m.items||[]);return `<button class="item smr" data-act="mealUse" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r"><div>${fmtN(t.kcal)} kcal</div><div class="xs mut">${rnd(t.protein)}g protein</div></div></button>`}).join('');
  return `<h2>Saved meals</h2><div class="xs mut" style="margin:-6px 0 8px">Tap one to log it as Meal ${nextMealNo(d)}${d===today()?'':' on '+fmtShort(d)}. Hold one to delete it.</div>${cp}${rows||`<div class="empty">No saved meals yet. Open a meal in the Food log and tap Save meal.</div>`}`}
 let SMLP={t:null,at:0};
 function smLongStart(e){const r=e.target.closest&&e.target.closest('.smr');if(!r)return;clearTimeout(SMLP.t);SMLP.t=setTimeout(()=>{SMLP.at=Date.now();const m=savedMeals().find(x=>x.id===r.dataset.id);if(!m)return;try{navigator.vibrate&&navigator.vibrate(30)}catch(x){}
@@ -1583,7 +1584,7 @@ function smLongStop(){clearTimeout(SMLP.t)}
 document.addEventListener('touchstart',smLongStart,{passive:true});document.addEventListener('mousedown',smLongStart);
 ['touchend','touchmove','touchcancel','mouseup','mouseleave','scroll'].forEach(n=>document.addEventListener(n,smLongStop,{passive:true,capture:true}));
 document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.smr'))e.preventDefault()});
-function mealItemsAdd(d,no,its){const t=new Date().toISOString();its.forEach(it=>mutate(foodP(d),{k:'foodAdd',item:{id:uid(),meal:no,name:it.name,amount:it.amount||'',kcal:rnd(num(it.kcal)),protein:rnd(num(it.protein)),carbs:rnd(num(it.carbs)),fat:rnd(num(it.fat)),by:'app',t}},{quiet:true}))}
+function mealItemsAdd(d,no,its,ids){const t=new Date().toISOString();its.forEach(it=>mutate(foodP(d),{k:'foodAdd',item:{id:(()=>{const x=uid();if(ids)ids.push(x);return x})(),meal:no,name:it.name,amount:it.amount||'',kcal:rnd(num(it.kcal)),protein:rnd(num(it.protein)),carbs:rnd(num(it.carbs)),fat:rnd(num(it.fat)),by:'app',t}},{quiet:true}))}
 /* Recent foods and database search at the top of the add-meal sheet. Tapping fills the fields below. */
 let FS={f:null,q:0},RECENT=[];
 function recentFoods(){const seen=new Set(),out=[],ps=new Set([...Object.keys(DB.files),...Object.keys(DB.pend)].filter(p=>p.startsWith('data/food/')));
@@ -1665,7 +1666,7 @@ function libDraw(){
  $('#lib_eq').innerHTML=EQ_GROUPS.map(g=>ch('libEq',g,g,LIB.eq===g)).join('');
  $('#lib_cnt').textContent=ids.length===all?all+' exercises':ids.length+' of '+all;
  const el=$('#lib_list');el.scrollTop=0;
- el.innerHTML=ids.length?ids.slice(0,LIB.n).map(libRow).join(''):'<div class="empty">Nothing matches. Clear the filters or search for something else.</div>';
+ el.innerHTML=`<button class="item" data-act="libNew"><div class="sp"><div class="n">Create exercise</div><div class="xs mut">Add your own to the library</div></div><div class="r">${ic('plus',18)}</div></button>`+(ids.length?ids.slice(0,LIB.n).map(libRow).join(''):'<div class="empty">Nothing matches. Clear the filters or search for something else.</div>');
 }
 function libMore(){const el=$('#lib_list');if(!el)return;const ids=libIds();if(LIB.n>=ids.length)return;
  if(el.scrollTop+el.clientHeight<el.scrollHeight-900)return;const from=LIB.n;LIB.n+=60;el.insertAdjacentHTML('beforeend',ids.slice(from,LIB.n).map(libRow).join(''))}
@@ -2014,7 +2015,7 @@ function newExSheet(){const db=exdb(),cnt={};Object.values(db.exercises).forEach
  return `<h2>New exercise</h2><div class="fld"><label>Name</label><input id="nx_name" value="${esc(NEWX.name)}" autocomplete="off"></div>
  <div class="fld"><label>Equipment</label><div class="chips">${eqs.map(e=>chip('nxEq','',e,e,NEWX.eq===e).replace('data-v=""','data-v="'+esc(e)+'"')).join('')}</div></div>
  <div class="fld"><label>Main muscle</label><div class="chips">${Object.keys(mu).map(k=>chip('nxMu','',k,mu[k].name,NEWX.mu===k).replace('data-v=""','data-v="'+esc(k)+'"')).join('')}</div></div>
- <div class="row" style="margin-top:12px"><button class="btn ghost" data-act="nxBack">Back</button><button class="btn sp" data-act="nxSave">Create and use</button></div>`}
+ <div class="row" style="margin-top:12px"><button class="btn ghost" data-act="nxBack">Back</button><button class="btn sp" data-act="nxSave">${PICK&&PICK.mode==='lib'?'Create':'Create and use'}</button></div>`}
 function usePick(id){
  if(PICK.mode==='ed'){const day=PED&&PED.doc.days[PICK.d];if(day&&!day.exercises.some(e=>e.ex===id)){const u=(exdb().exercises[id]||{}).u;day.exercises.push({ex:id,sets:3,reps:u==='s'?'30-60':u==='m'?'20-40':'8-12'});PED.dirty=true}closeSheet();pedDraw();return}
  const T=today(),wo=logOf(T).workout;if(!wo)return;
@@ -2209,6 +2210,7 @@ function lineChart(pts,startW){
  const path=tr.map((p,i)=>(i?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
  const ys0=Y(startW);
  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Weight, last 30 days. Dots are weigh-ins, the line is the smoothed trend."><line x1="0" x2="${W}" y1="${ys0}" y2="${ys0}" style="stroke:var(--faint)" stroke-width="1"/><text x="${W-2}" y="${ys0-4}" font-size="11" style="fill:var(--mut)" text-anchor="end">start ${startW}</text>
+ <text x="${px}" y="${(Y(Math.max(...ys))-4).toFixed(1)}" font-size="11" style="fill:var(--mut)">${fw(Math.max(...ys))}</text><text x="${px}" y="${(Y(Math.min(...ys))+12).toFixed(1)}" font-size="11" style="fill:var(--mut)">${fw(Math.min(...ys))}</text>
  ${pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.5" style="fill:var(--mut);opacity:.6"/>`).join('')}
  <path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
  <text x="${px}" y="${H-3}" font-size="11" style="fill:var(--mut)">30 days ago</text><text x="${W-px}" y="${H-3}" font-size="11" style="fill:var(--mut)" text-anchor="end">today</text></svg>`;
@@ -2265,7 +2267,7 @@ function bodyCard(part){
  if(!bodyLoaded){bodyLoaded=true;const ds=[...new Set(ph.map(x=>x.d))];if(ds.length)loadDays(ds)}
  if(part==='bf'){
   const chart=h.length>=2?`<div class="ch">${bfChart(h)}</div>`:'';
-  if(!bf)return `<section class="vs"><div class="lbl">Body fat</div><div class="s15 mut">No estimate yet. Send Claude front, side and back photos and ask for one.</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
+  if(!bf)return `<section class="vs"><div class="lbl">Body fat</div><div class="s15 mut">${isSimple()?'No photos yet. Add front, side and back photos below to see the change over time.':'No estimate yet. Add front, side and back photos below, then ask Claude for an estimate.'}</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
   const lean=w*(1-bf.pct/100),fat=w-lean,prev=h.length>1?h[h.length-2]:null;
   return `<section class="vs"><div class="lbl">Body fat</div>${chart}<div class="g22">${gstat('~'+bf.pct+'<small>%</small>','','Body fat')}${gstat(bf.low+'-'+bf.high+'<small>%</small>','','Range')}${gstat(fw(lean),wU(),'Lean mass')}${gstat(fw(fat),wU(),'Fat mass')}</div>
   <div class="s15 mut stl">${esc(bf.note||('Estimated by Claude from your photos on '+fmtShort(bf.d)+(prev?', was '+prev.pct+'% on '+fmtShort(prev.d):'')+'.'))}</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
@@ -2672,7 +2674,7 @@ function intakeSave(){
  mutate(P_PROFILE,{k:'merge',data},{quiet:true});
  if(a.replaceProgram){const old=program();if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
   p.version=fmtLong(T);mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null}
- if(logOf(T).weight==null&&+a.weight)mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
+ if(+a.weight)mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
  LS.set('forma.intakeSeen',1);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);flushSoon(300);intakeClose();toast0(OC().summary.saved);setTimeout(tourMaybe,900);if(SBS.firstRun){SBS.firstRun=false;setTimeout(learnAfterTour,1300)}
 }
 
@@ -2683,7 +2685,7 @@ function setupView(){
  const keyName=encodeURIComponent(`Forma ${dev} ${d.toISOString().slice(0,10)} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`);
  const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=${keyName}&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
  const acct=sbOn();
- return `<div class="setup"><h1>Forma</h1>${acct?`<div class="mut" style="margin-bottom:18px">Track food, workouts and steps. Sign in with your email, no password.</div>
+ return `<div class="setup"><h1>Pulzo</h1>${acct?`<div class="mut" style="margin-bottom:18px">Track food, workouts and steps. Sign in with your email, no password.</div>
  <div class="card"><h3>Sign in</h3><div class="sm mut" style="margin:2px 0 10px">We email you a link. Open it on this phone.</div>${sbSignInBox()}${sbServerFields()}</div>
  <details class="sm" style="margin-top:14px"><summary><b>Personal mode</b> (my own GitHub repo)</summary><div class="mut" style="margin:10px 0 14px">The app needs a key to open your private data on GitHub. It takes about a minute.</div>`
  :`<div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>`}
@@ -2693,7 +2695,7 @@ function setupView(){
  <div class="card"><h3>Step 2: paste it here</h3>
  <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
  <div id="s_err" class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
- <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details>${acct?'</details>':`<details class="sm mut" style="margin-top:10px"><summary>Forma account (beta)</summary>${sbServerFields()}</details>`}</div>`;
+ <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details>${acct?'</details>':`<details class="sm mut" style="margin-top:10px"><summary>Pulzo account (beta)</summary>${sbServerFields()}</details>`}</div>`;
 }
 async function setupSave(){
  const repo=$('#s_repo').value.trim(),tok=$('#s_tok').value.trim(),err=$('#s_err');
@@ -2727,7 +2729,7 @@ function settingsSheet(){
  ${ctl('Default rest, seconds',`<input id="s_rest" inputmode="numeric" value="${restDefault()||''}" placeholder="Auto" aria-label="Default rest, seconds">`)}
  <div class="snote">Auto is 150 for big lifts and 90 for the rest. Set one per exercise in Edit program.</div>`;
  const rem=`${ctl('Rest timer alerts',`<span class="mut">${notifState()}</span>${notifState()==='Not asked'?'<button class="lnk" data-act="notifAllow">Allow</button>':''}<button class="lnk" data-act="notifTest">Test</button>`)}
- ${notifState()==='Blocked'?'<div class="snote">Blocked. Allow notifications for Forma in your phone settings (site settings in Chrome).</div>':''}
+ ${notifState()==='Blocked'?'<div class="snote">Blocked. Allow notifications for Pulzo in your phone settings (site settings in Chrome).</div>':''}
  <div class="snote">Phones can silence a web app in the background.</div>`;
  const data=`${row('exportGo','Export my data','A zip with every data file, plus food.csv and workouts.csv you can open in a spreadsheet')}
  ${SBS.user?'':`<div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>`}
@@ -2747,7 +2749,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.4${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.5${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -2931,7 +2933,7 @@ const TOUR_STEPS={
   {id:'start',full:1,target:()=>document.querySelector('[data-act=wStart]')||document.querySelector('.fab'),title:'Start a workout',text:'The round button starts the workout: it begins the timer and lists every set for you to tick off.'},
   {id:'lib',full:1,target:'header details.more summary',title:'Library and program',text:'The three-dot menu opens the exercise library, with pictures and how-to notes, and Edit program, where you change days, sets, reps and rest.'}],
  live:[
-  {id:'bar',target:'.lhero',title:'Timer and Finish',text:'Your time and sets done are the big number up here. Finish ends the workout, and Forma finishes a forgotten one for you.'},
+  {id:'bar',target:'.lhero',title:'Timer and Finish',text:'Your time and sets done are the big number up here. Finish ends the workout, and Pulzo finishes a forgotten one for you.'},
   {id:'sets',target:'.swr',title:'Log a set',text:'Type weight and reps then tick the circle, and PREVIOUS shows what you did last time.'},
   {id:'done',target:'#setdone',title:'Set done',text:'This ticks the next set for you and starts your rest timer.'},
   {id:'hist',target:'[data-act=hist]',title:'History and PRs',text:'The clock opens this exercise\'s history with your PRs, a chart and every session.'}],
@@ -3052,7 +3054,7 @@ function lrnLesson(){
  const opts=(ck.options||[]).map((o,i)=>{const cls=!ans?'':i===ck.answer?'ok':i===LRN.pick?'no':'';return `<button class="opt ${cls}" data-act="learnPick" data-i="${i}" ${ans?'disabled':''}><b>${esc(o)}</b></button>`}).join('');
  const fb=ans&&LRN.pick!==-2?(LRN.pick===ck.answer?`<div class="sm" style="color:var(--ok);font-weight:700;margin-top:4px">${ic('check',14)} Right.</div>`:`<div class="sm" style="color:var(--warn);font-weight:700;margin-top:4px">Not quite. It is: ${esc((ck.options||[])[ck.answer])}</div><div class="xs mut">Go Back to read the cards again.</div>`):'';
  return {b:dots+`<div class="card lcard ${LRN.dir}"><div class="xs mut" style="margin-bottom:4px">Quick check</div><h3>${esc(ck.q)}</h3>${opts}${fb}</div>`,
-  f:ans?`${l.tryIt&&l.tryIt.tab?`<button class="btn ghost sp" data-act="learnTry">${esc(l.tryIt.label||'Try it')}</button>`:''}<button class="btn sp" data-act="learnDone">${nxt?'Done, next lesson':'Done'}</button>`:`<button class="btn ghost sp" data-act="learnPrev">Back</button><button class="btn ghost sp" data-act="learnSkipQ">Skip question</button>`}
+  f:ans?`${LRN.pick>=0&&LRN.pick!==ck.answer?`<button class="btn ghost sp" data-act="learnRetry">Try again</button>`:''}${l.tryIt&&l.tryIt.tab?`<button class="btn ghost sp" data-act="learnTry">${esc(l.tryIt.label||'Try it')}</button>`:''}<button class="btn sp" data-act="learnDone">${nxt?'Done, next lesson':'Done'}</button>`:`<button class="btn ghost sp" data-act="learnPrev">Back</button><button class="btn ghost sp" data-act="learnSkipQ">Skip question</button>`}
 }
 function lrnGlossList(){const q=LRN.q.trim().toLowerCase(),g=lrnGlos().filter(x=>!q||String(x.term).toLowerCase().includes(q)||String(x.short).toLowerCase().includes(q)).sort((a,b)=>String(a.term).localeCompare(String(b.term)));
  return g.length?`<div class="lst ml">${g.map(x=>`<button class="item" data-act="term" data-term="${esc(x.id)}"><div class="sp"><div class="n">${esc(x.term)}</div><div class="xs mut">${esc(x.short)}</div></div><span class="mut">${ic('right',16)}</span></button>`).join('')}</div>`:'<div class="empty">No word like that yet.</div>'}
@@ -3100,8 +3102,8 @@ function learnNudge(){
 function learnAfterTour(){if(!lrnNew()||LRNS().start)return;lrnSet('start','pending');setTimeout(()=>learnOpen({}),400)}
 /* ---------- Account (skeleton): shows which backend holds the data. Sign in is a placeholder until Supabase accounts exist (docs/specs/backend.md). ---------- */
 const acctKind=()=>B.kind||'demo';
-const acctName=()=>SBS.user?esc(SBS.user.email||'Forma account'):({github:'GitHub',supabase:'Forma account',demo:'Demo'})[acctKind()]||'GitHub';
-const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Forma account.':acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
+const acctName=()=>SBS.user?esc(SBS.user.email||'Pulzo account'):({github:'GitHub',supabase:'Pulzo account',demo:'Demo'})[acctKind()]||'GitHub';
+const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Pulzo account.':acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
 /* Sign in with email (a magic link). supabase-js is loaded from cdnjs by the adapter only when this is used. */
 function sbServerFields(){const c=sbCfg();
  return `<details class="sm mut" style="margin-top:12px"><summary>Server (advanced)</summary><div class="fld" style="margin-top:10px"><label>Supabase URL</label><input id="sb_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co" autocapitalize="off" autocorrect="off" spellcheck="false"></div><div class="fld"><label>Anon key (public)</label><input id="sb_key" value="${esc(c.anonKey)}" placeholder="public anon key" autocapitalize="off" autocorrect="off" spellcheck="false"></div><button class="btn ghost sm" data-act="sbCfgSave">Save server</button><div class="xs mut" style="margin-top:6px">Only the public anon key goes here. Never paste a service role key.</div></details>`}
@@ -3111,12 +3113,12 @@ function sbSignInBox(){
  <div id="sb_msg" class="sm" style="color:var(--badtx);min-height:20px;margin:-4px 0 6px">${esc(SBS.msg)}</div>
  <button class="btn full" data-act="sbSend" ${SBS.busy?'disabled':''}>${SBS.busy?'Sending...':'Email me a sign-in link'}</button>`}
 function acctSheet(){
- if(SBS.user)return `<h2>Account</h2><div class="card" style="margin:0 0 12px"><div class="sm"><b>${esc(SBS.user.email||'')}</b></div><div class="xs mut" style="margin-top:2px">Signed in. Your food, workouts, photos and plan are saved in your Forma account.</div></div>
+ if(SBS.user)return `<h2>Account</h2><div class="card" style="margin:0 0 12px"><div class="sm"><b>${esc(SBS.user.email||'')}</b></div><div class="xs mut" style="margin-top:2px">Signed in. Your food, workouts, photos and plan are saved in your Pulzo account.</div></div>
  <button class="btn ghost full" data-act="exportGo">Export my data</button>
  <button class="btn red full" style="margin-top:10px" data-act="sbOut">Sign out</button>`;
- return `<h2>Sign in</h2><div class="mut sm" style="margin-bottom:12px">Sign in with your email. We send you a link, no password. Your data lives in your own Forma account, with 5 AI meal reads a day.</div>
+ return `<h2>Sign in</h2><div class="mut sm" style="margin-bottom:12px">Sign in with your email. We send you a link, no password. Your data lives in your own Pulzo account, with 5 AI meal reads a day.</div>
  ${sbSignInBox()}${sbServerFields()}
- <div class="xs mut" style="margin-top:12px">Not signed in, Forma keeps using ${acctKind()==='demo'?'the demo data in this tab':'your GitHub repo ('+esc(cfg.repo)+')'}.</div>
+ <div class="xs mut" style="margin-top:12px">Not signed in, Pulzo keeps using ${acctKind()==='demo'?'the demo data in this tab':'your GitHub repo ('+esc(cfg.repo)+')'}.</div>
  <button class="btn ghost full" style="margin-top:12px" data-act="exportGo">Export my data first</button>`}
 const sbRedraw=()=>{if(UI.sheet&&UI.sheetFn===acctSheet)openSheet(acctSheet(),acctSheet);else if(!hasAcct())render()};
 /* Switch the whole app to a user (or back to personal mode / demo). Returns true when something changed. */
@@ -3377,11 +3379,11 @@ function aiSettings(){
   return `<div class="fld"><label>AI (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
  <div class="sm">Snap a meal and Ask AI are included with your account. No key needed.</div>
  <div class="sm" style="margin-top:8px"><b>${u==null?L+' reads a day':u+' of '+L+' AI reads used today'}</b></div>
- <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Forma is unlimited.</div></div></div>`}
+ <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div></div></div>`}
  const k=aiKey(),m=aiModel();
  const st=!k?['Not connected','var(--mut)']:AI.testing?['Testing...','var(--mut)']:AI.err?['Not working','var(--badtx)']:aiConnected()?['Connected','var(--ok)']:['Key saved, not tested yet','var(--mut)'];
  return `<div class="fld"><label>Personal mode key (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
- <div class="xs mut" style="margin-bottom:8px">Only for personal mode, when you are not signed in. With a Forma account the AI is included and needs no key.</div>
+ <div class="xs mut" style="margin-bottom:8px">Only for personal mode, when you are not signed in. With a Pulzo account the AI is included and needs no key.</div>
  <div class="sm">Status: <b id="ai_st" style="color:${st[1]}">${st[0]}</b></div>
  ${AI.err?`<div class="xs" style="color:var(--badtx);margin-top:4px;word-break:break-word">${esc(AI.err)}</div>`:AI.msg&&aiConnected()?`<div class="xs mut" style="margin-top:4px;word-break:break-word">${esc(AI.msg)}</div>`:''}
  <div class="fld" style="margin:10px 0 8px"><input id="ai_key" type="password" placeholder="${k?'Key saved (ends '+esc(k.slice(-4))+'). Paste to replace.':'Paste your Claude API key'}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
@@ -3478,7 +3480,7 @@ document.addEventListener('click',async e=>{
   case 'notifAllow':try{await Notification.requestPermission()}catch(e){}openSheet(settingsSheet());break;
   case 'notifTest':{try{if(window.Notification&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}
    openSheet(settingsSheet());
-   if(notifState()!=='Allowed'){toast(notifState()==='Blocked'?'Notifications are blocked for Forma.':'Notifications are not available here.');break}
+   if(notifState()!=='Allowed'){toast(notifState()==='Blocked'?'Notifications are blocked for Pulzo.':'Notifications are not available here.');break}
    swPost({k:'rest',end:Date.now()+5000,name:'Test',test:true});toast0('Lock your phone now. A test arrives in 5 seconds.');break}
   case 'recentPick':{const i=RECENT[+D.i];if(!i)break;FS.f=null;FS.q=0;const q=$('#fs_q');if(q)q.hidden=true;const qi=$('#fs_qty');if(qi)qi.value='';
    [['f_name','name'],['f_amount','amount'],['f_kcal','kcal'],['f_protein','protein'],['f_carbs','carbs'],['f_fat','fat']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.value=i[k]==null?'':i[k]});break}
@@ -3534,7 +3536,7 @@ document.addEventListener('click',async e=>{
   case 'wsel':UI.wSel=D.d;UI.wPick=false;loadDay(D.d);render();break;
   case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
-  case 'stepsSave':{const v=$('#v_steps').value.trim();if(v!==''&&!(num(v)>=0&&num(v)<=100000)){ferr('v_steps','Enter steps from 0 to 100,000.');break}mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
+  case 'stepsSave':{const v=$('#v_steps').value.trim();if(v!==''&&!(/^\d[\d,]*(\.\d+)?$/.test(v)&&num(v.replace(/,/g,''))<=100000)){ferr('v_steps','Enter steps from 0 to 100,000.');break}mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v.replace(/,/g,'')))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
   case 'weightYest':{const y=addDays(T,-1);loadDay(y);openSheet(weightSheet(y));break}
   case 'weightSave':{const v=$('#v_weight').value.trim();if(v!==''){const kg=u2kg(num(v));if(!(kg>=20&&kg<=400)){ferr('v_weight','Enter a weight from '+fw(20,0)+' to '+fw(400,0)+' '+wU()+'.');break}}mutate(logP(D.d||UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
@@ -3549,7 +3551,7 @@ document.addEventListener('click',async e=>{
   case 'pedSpAdd':{const sp=PED.doc.sports=PED.doc.sports||{};if((sp[D.w]||[]).length>=4)break;(sp[D.w]=sp[D.w]||[]).push({kind:'volleyball',min:60});pedDirty();pedDraw();break}
   case 'pedSpDel':{const sp=PED.doc.sports||{};(sp[D.w]||[]).splice(+D.j,1);if(sp[D.w]&&!sp[D.w].length)delete sp[D.w];pedDirty();pedDraw();break}
   case 'pedWd':PED.doc.weekdays[String(D.w)]=D.id;pedDirty();pedDraw();break;
-  case 'pedAddDay':{const ds=PED.doc.days;let n=ds.length+1,id='d'+n;while(ds.some(x=>x.id===id))id='d'+(++n);ds.push({id,name:'Day '+(ds.length+1),focus:'',exercises:[]});pedDirty();pedDraw();break}
+  case 'pedAddDay':{const ds=PED.doc.days;let id='d'+Date.now().toString(36);while(ds.some(x=>x.id===id))id+='x';ds.push({id,name:'Day '+(ds.length+1),focus:'',exercises:[]});pedDirty();pedDraw();break}
   case 'pedDayUp':case 'pedDayDn':{const ds=PED.doc.days,i=+D.d,j=a==='pedDayUp'?i-1:i+1;if(j<0||j>=ds.length)break;[ds[i],ds[j]]=[ds[j],ds[i]];pedDirty();pedDraw();break}
   case 'pedDayDel':{const ds=PED.doc.days,d=ds[+D.d];if(!d)break;if(d.exercises.length&&!confirm('Delete '+d.name+' and its '+d.exercises.length+' exercises?'))break;ds.splice(+D.d,1);Object.keys(PED.doc.weekdays).forEach(k=>{if(PED.doc.weekdays[k]===d.id)PED.doc.weekdays[k]='rest'});pedDirty();pedDraw();break}
   case 'pedExUp':case 'pedExDn':{const xs=PED.doc.days[+D.d].exercises,i=+D.i,j=a==='pedExUp'?i-1:i+1;if(j<0||j>=xs.length)break;[xs[i],xs[j]]=[xs[j],xs[i]];pedDirty();pedDraw();break}
@@ -3648,9 +3650,10 @@ document.addEventListener('click',async e=>{
   case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
   case 'phView':{const src=t.getAttribute('src');if(!src||$('#phv'))break;const full=document.createElement('div');full.id='phv';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>phvClose());document.body.appendChild(full);navPush({l:'photo'});break}
   case 'foodSave':{
-   const name=$('#f_name').value.trim();if(!name){toast('Give the food a name first.');return}
+   document.querySelectorAll('#sheet .ferr').forEach(e=>e.remove());
+   const name=$('#f_name').value.trim();if(!name){ferr('f_name','Give the food a name first.');return}
    const g=id=>Math.round(num($('#f_'+id).value));
-   for(const [id,l] of [['kcal','Calories'],['protein','Protein'],['carbs','Carbs'],['fat','Fat']])if(num($('#f_'+id).value)<0){ferr('f_'+id,l+' cannot be below 0.');return}
+   for(const [id,l] of [['kcal','Calories'],['protein','Protein'],['carbs','Carbs'],['fat','Fat']]){const x=num($('#f_'+id).value),mx=id==='kcal'?5000:500;if(x<0){ferr('f_'+id,l+' cannot be below 0.');return}if(x>mx){ferr('f_'+id,l+' is at most '+fmtN(mx)+(id==='kcal'?' per item.':' g per item.'));return}}
    const old=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
    const id=D.id||uid();
    const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
@@ -3694,12 +3697,12 @@ document.addEventListener('click',async e=>{
   case 'mealUse':{if(Date.now()-SMLP.at<900)break;const m=savedMeals().find(x=>x.id===D.id);if(!m)break;const no=nextMealNo(UI.date);mealItemsAdd(UI.date,no,m.items||[]);closeSheet();render();toast0('Added '+m.name+' as Meal '+no+'.');break}
   case 'mealDelGo':mutate(P_MEALS,{k:'mealDel',id:D.id},{quiet:true});openSheet(savedSheet(),savedSheet);break;
   case 'copyPrev':{const d=UI.date,pf=food(addDays(d,-1)).items;if(!pf.length)break;const nos=[...new Set(pf.map(mealNo))].sort((a,b)=>a-b),base=nextMealNo(d)-1;
-   nos.forEach((n,k)=>mealItemsAdd(d,base+k+1,pf.filter(i=>mealNo(i)===n)));{const cd=LS.get('forma.copied',{})||{};cd[d]=1;LS.set('forma.copied',cd)}closeSheet();render();toast0('Copied '+pf.length+' food'+(pf.length===1?'':'s')+' from '+fmtShort(addDays(d,-1))+'.');break}
+   const cids=[];nos.forEach((n,k)=>mealItemsAdd(d,base+k+1,pf.filter(i=>mealNo(i)===n),cids));{const cd=LS.get('forma.copied',{})||{};cd[d]=cids;LS.set('forma.copied',cd)}closeSheet();render();toast0('Copied '+pf.length+' food'+(pf.length===1?'':'s')+' from '+fmtShort(addDays(d,-1))+'.');break}
   case 'shareOpen':shareOpen(program());break;
   case 'pedShare':shareOpen(PED?PED.doc:program());break;
   case 'shCopy':if(PSH&&PSH.code)copyText(PSH.code,'Code copied.');break;
   case 'shLink':if(PSH&&PSH.code)copyText(PSH.url,'Link copied.');break;
-  case 'shShare':if(PSH&&PSH.code){try{await navigator.share({title:PSH.title,text:'My Forma program: '+PSH.title,url:PSH.url})}catch(e){}}break;
+  case 'shShare':if(PSH&&PSH.code){try{await navigator.share({title:PSH.title,text:'My Pulzo program: '+PSH.title,url:PSH.url})}catch(e){}}break;
   case 'impOpen':openSheet(impPasteSheet());break;
   case 'impGo':{const el=$('#imp_code');if(!el||!el.value.trim()){toast('Paste a code or link first.');break}importOpen(el.value);break}
   case 'impApply':if(PIMP)importApply(D.m);break;
@@ -3721,6 +3724,7 @@ document.addEventListener('click',async e=>{
   case 'learnNext':lrnStep(1);break;
   case 'learnPrev':lrnStep(-1);break;
   case 'learnPick':if(LRN.pick===-1){LRN.pick=+D.i;learnDraw()}break;
+  case 'learnRetry':LRN.pick=-1;learnDraw();break;
   case 'learnSkipQ':LRN.pick=-2;learnDraw();break;
   case 'learnDone':lrnFinish();break;
   case 'learnTry':learnTry();break;
@@ -3759,13 +3763,14 @@ document.addEventListener('click',async e=>{
   case 'swap':{
    PICK={mode:'swap',slot:D.slot};openSheet(pickSheet());break}
   case 'pickEx':usePick(D.ex);break
+  case 'libNew':PICK={mode:'lib'};NEWX={name:($('#lib_q')||{}).value||'',eq:null,mu:null};openSheet(newExSheet(),newExSheet);break
   case 'exNewOpen':NEWX={name:D.q||'',eq:null,mu:null};openSheet(newExSheet(),newExSheet);break
   case 'nxEq':NEWX.eq=D.v;openSheet(newExSheet(),newExSheet);break
   case 'nxMu':NEWX.mu=D.v;openSheet(newExSheet(),newExSheet);break
-  case 'nxBack':openSheet(PICK.mode==='ed'?pedPickSheet():pickSheet());break
+  case 'nxBack':if(PICK&&PICK.mode==='lib'){closeSheet();break}openSheet(PICK.mode==='ed'?pedPickSheet():pickSheet());break
   case 'nxSave':{const nm=NEWX.name.trim();if(!nm){toast('Give the exercise a name.');break}if(!NEWX.mu){toast('Pick the main muscle.');break}
    const slug=nm.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'exercise',ex=exdb().exercises;let id='custom_'+slug,n=2;while(ex[id])id='custom_'+slug+'_'+(n++);
-   mutate(P_EX,{k:'exNew',id,ex:{n:nm,eq:NEWX.eq||'Other',p:[NEWX.mu],s:[],c:[],a:[]}},{quiet:true,delay:700});usePick(id);break}
+   mutate(P_EX,{k:'exNew',id,ex:{n:nm,eq:NEWX.eq||'Other',p:[NEWX.mu],s:[],c:[],a:[]}},{quiet:true,delay:700});if(PICK&&PICK.mode==='lib'){closeSheet();if($('#lib'))libDraw();toast0('Exercise created.');break}usePick(id);break}
   case 'exDel':if(confirm('Remove this exercise from today\'s workout?'))mutate(logP(T),{k:'wExtraDel',ex:D.ex},{delay:1000});break;
   case 'doSwap':{const wo=logOf(T).workout;const from=effEx(wo,D.slot);mutate(logP(T),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
  }
@@ -3793,10 +3798,14 @@ function toast0(m){const t=document.createElement('div');t.className='toast';t.s
 document.addEventListener('change',e=>{if(e.target.id==='s_rest'){let v=Math.round(num(e.target.value));if(!(v>=15))v=0;v=Math.min(600,v);e.target.value=v||'';mutate(P_PROFILE,{k:'merge',data:{restDefault:v}},{delay:300});return}
  if(e.target.id==='s_smax'){let v=parseInt(e.target.value,10);if(!(v>0))v=90;v=Math.max(20,Math.min(240,v));e.target.value=v;mutate(P_PROFILE,{k:'merge',data:{sessionMax:v}},{delay:300})}});
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
+function setErr(t,m){const row=t.parentNode;let e=row.nextElementSibling;if(e&&!e.classList.contains('ferr'))e=null;if(!m){if(e)e.remove();t.removeAttribute('aria-invalid');return}t.setAttribute('aria-invalid','true');if(!e){e=document.createElement('div');e.className='ferr';e.setAttribute('role','alert');row.after(e)}e.textContent=m}
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
  let v=t.value.trim()===''?0:num(t.value);
- if(v<0){t.setAttribute('aria-invalid','true');toast('Weight and reps cannot be below 0.');return}t.removeAttribute('aria-invalid');
+ const isW=t.dataset.f==='w'||t.dataset.f==='dw';
+ if(v<0){setErr(t,'Weight and reps cannot be below 0.');return}
+ if(isW?toKgU(v,exU(t.dataset.ex))>1000:v>999){setErr(t,isW?'Weight is at most '+fwU(1000,exU(t.dataset.ex))+' '+(exU(t.dataset.ex)==='lb'?'lb':'kg')+'.':'Reps are at most 999.');return}
+ setErr(t,'');
  if(t.dataset.f==='r'||t.dataset.f==='dr')v=Math.round(v);
  if(t.dataset.f==='dw'||t.dataset.f==='dr'){editSets(t.dataset.ex,s=>{const x=s[+t.dataset.i];if(x&&x.drops&&x.drops[+t.dataset.j])x.drops[+t.dataset.j][t.dataset.f==='dw'?'w':'r']=t.dataset.f==='dw'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});return}
  editSets(t.dataset.ex,s=>{if(s[+t.dataset.i])s[+t.dataset.i][t.dataset.f]=t.dataset.f==='w'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});

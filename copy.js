@@ -259,7 +259,7 @@
   const simple = {
     q: {
       title: 'Do you want to count calories and macros?',
-      lead: 'Counting is the most accurate. If it is not for you, Forma can still tell you each week what to change.',
+      lead: 'Counting is the most accurate. If it is not for you, Pulzo can still tell you each week what to change.',
       count: 'Yes, count them',
       countSub: 'Most accurate. You log food and see calories, protein, carbs and fat.',
       simple: 'No, keep it simple',
