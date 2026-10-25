@@ -297,7 +297,7 @@ svg{display:block}
 #learn .ovh .lnk{flex:none;white-space:nowrap}
 #learn .ovb{overscroll-behavior-x:contain;touch-action:pan-y}
 .mrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.mrow:first-of-type{border-top:0}.mrow .msp{width:64px;flex:none}.mrow .mv{text-align:right;min-width:92px;flex:none}
-.lrw{display:flex;align-items:center;border-top:1px solid var(--line)}.lrw .item{border-top:0;flex:1;min-width:0}.lrw .hb{flex:none;color:var(--acct)}
+.lrw{display:flex;align-items:center;border-top:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 82px}.lrw .item{border-top:0;flex:1;min-width:0}.lrw .hb{flex:none;color:var(--acct)}
 .hpr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.hpr>div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}.hpr .l{font-size:12px;color:var(--mut);font-weight:600}.hpr b{display:block;font-size:22px;line-height:1.2;margin:2px 0}.hpr .s{font-size:11.5px;color:var(--mut);line-height:1.3}
 .prc{display:block;font-size:9px;line-height:1;margin:3px auto 0;width:max-content;color:var(--onacc);background:var(--acc);border-radius:5px;padding:2px 4px;font-weight:800;letter-spacing:.3px}
 .chip.prb{background:var(--acc);color:var(--onacc);height:18px;font-size:10px;padding:0 6px;vertical-align:middle;margin-left:6px}
@@ -920,7 +920,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='12de1c4774c3c3407b3026986efd412bdf56e41e';let verChecked=0;
+const BUILD='5729fe9af010f2d1ab826543ed41eb772fe2d559';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1495,7 +1495,7 @@ function todayView(){
  const rows=[row(lg.weight!=null,'Weigh in'+(nudge?`<button class="lnk sl" data-act="weightYest">Yesterday missing, add</button>`:''),lg.weight!=null?fwu(lg.weight):'','weightEdit',lg.weight!=null?'Edit':'Log')];
  if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo&&t.kcal<=rg.hi,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
  if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',(st==null?'0':st.toLocaleString('en-US'))+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
- if(pd&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
+ if((pd||(wo&&wo.dayId))&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(wo&&wo.dayId?dayName(wo.dayId,pd?pd.name:wo.dayId):pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
  if(modOn('activity'))rows.push(...sportRows(d));
  chk.filter(x=>x.act==='gotoBody'||x.act==='measureEdit').forEach(x=>rows.push(row(x.ok,x.l,'',x.act,'Add',x.d?` data-d="${x.d}"`:'')));
  const notices=[];
@@ -1686,7 +1686,7 @@ function libDraw(){
  el.innerHTML=`<button class="item" data-act="libNew"><div class="sp"><div class="n">Create exercise</div><div class="xs mut">Add your own to the library</div></div><div class="r">${ic('plus',18)}</div></button>`+(ids.length?ids.slice(0,LIB.n).map(libRow).join(''):'<div class="empty">Nothing matches. Clear the filters or search for something else.</div>');
 }
 function libMore(){const el=$('#lib_list');if(!el)return;const ids=libIds();if(LIB.n>=ids.length)return;
- if(el.scrollTop+el.clientHeight<el.scrollHeight-900)return;const from=LIB.n;LIB.n+=60;el.insertAdjacentHTML('beforeend',ids.slice(from,LIB.n).map(libRow).join(''))}
+ if(el.scrollTop+el.clientHeight<el.scrollHeight-900)return;const from=LIB.n;LIB.n+=30;el.insertAdjacentHTML('beforeend',ids.slice(from,LIB.n).map(libRow).join(''))}
 function libOpen(){if($('#lib'))return;LIB={q:'',mu:'',eq:'',n:60};const el=document.createElement('div');el.id='lib';
  el.innerHTML=`<div class="ovh"><button class="ib" data-act="libClose" aria-label="Back">${ic('left')}</button><h1>Exercise library</h1><span class="xs mut" id="lib_cnt"></span></div>
  <div class="ovs"><input id="lib_q" placeholder="Search name, muscle or equipment" autocomplete="off" autocapitalize="off" aria-label="Search exercises"><div class="dchips s" id="lib_mu"></div><div class="dchips s" id="lib_eq"></div></div><div class="ovb" id="lib_list"></div>`;
@@ -1989,7 +1989,7 @@ function tickSet(ex,i,how){
     /* prefill the next set with the same numbers */
     const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
    }
-  },{delay:2000,t:new Date().toISOString()});
+  },{delay:2000,t:new Date().toISOString(),quiet:true});
   if(on){UI.curEx=ex;const all=(((logOf(T).workout||{}).sets||{})[ex]||[]).every(z=>z.done);setFeedback(all,how);startRest(restFor(ex),(exdb().exercises[ex]||{}).n);
    try{const ss=((logOf(T).workout||{}).sets||{})[ex]||[];if(setIsPR(ex,ss,i))toast0('New PR: '+exName(ex)+' '+setTxt(ss[i],exU(ex)))}catch(e){}}else{UI.rest=null;}render();return on}
 /* Feedback when a set is ticked (tap, Set done or shake): a short two-note ding and a buzz for a set, a rising
@@ -2768,7 +2768,7 @@ function settingsSheet(){
  const data=`${row('exportGo','Export my data','A zip with every data file, plus food.csv and workouts.csv you can open in a spreadsheet')}
  ${SBS.user?'':`<div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>`}
  <button class="srow" data-act="force"><span class="sp">Force refresh<span class="xs">Reload everything from your account</span></span></button>
- ${pr?`${isSimple()?'':`<div class="kv"><span class="mut">Calories</span><span>${pr.targets.kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${pr.stepGoal.toLocaleString('en-US')}</span></div>
+ ${pr?`${isSimple()||!(pr.targets&&pr.targets.kcal!=null)?'':`<div class="kv"><span class="mut">Calories</span><span>${pr.targets.kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${(pr.stepGoal||0).toLocaleString('en-US')}</span></div>
  <div class="snote">${SBS.user?'Targets are set when you set up your plan. To change them, redo the setup in Account.':'Targets are set by the weekly check-in. To change them yourself, redo the setup in Account.'}</div>`:''}
  ${SBS.user?'':`<details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -2783,7 +2783,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.9${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.10${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
