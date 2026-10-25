@@ -96,7 +96,11 @@
       if (/^[,;+&\n.]$/.test(x)) { t.k = 's'; t.v = x; }
       else if (UNI_FRAC[x] != null) { t.k = 'n'; t.v = UNI_FRAC[x]; t.frac = true; }
       else if (/^\d+\/\d+$/.test(x)) { var p = x.split('/'); t.k = 'n'; t.v = +p[1] ? (+p[0] / +p[1]) : 0; t.frac = true; }
-      else if (/^[\d]/.test(x)) { t.k = 'n'; t.v = parseFloat(x.replace(/,/g, '')); }
+      else if (/^[\d]/.test(x)) {
+        t.k = 'n'; t.v = parseFloat(x.replace(/,/g, ''));
+        // a leading minus ("-5 kg", "weight -80") is remembered so the caller can reject it
+        if (/[-\u2212\u2013]/.test(str.charAt(m.index - 1)) && (m.index < 2 || /[\s,;:(]/.test(str.charAt(m.index - 2)))) t.neg = true;
+      }
       else { t.k = 'w'; t.v = x.toLowerCase().replace(/['’]/g, ''); }
       out.push(t);
     }
@@ -439,6 +443,11 @@
       if (mins == null) continue;
       var end = r.n + 1;
       if (hour && toks[end] && toks[end].k === 'n' && toks[end].tail) { mins += toks[end].v * 60; end++; }
+      // "1h30", "1h 30": a bare number right after the hours is minutes
+      else if (hour && toks[end] && toks[end].k === 'n' && !toks[end].frac && !toks[end].neg && toks[end].v >= 1 && toks[end].v < 60 && Math.floor(toks[end].v) === toks[end].v) {
+        var nx = toks[end + 1];
+        if (!nx || nx.k === 's' || skip[end + 1] || (nx.k === 'w' && MINUTE[stem(nx.v)])) { mins += toks[end].v; end++; if (nx && nx.k === 'w' && MINUTE[stem(nx.v)] && !skip[end]) end++; }
+      }
       total += mins; found = true;
       for (var k = i; k < end; k++) used[k] = true;
       i = end - 1;
@@ -605,6 +614,7 @@
     if (cur.length) segs.push(cur);
 
     function pushAction(a) { res.actions.push(a); }
+    function hasNeg(seg) { return seg.some(function (t) { return t.k === 'n' && t.neg; }); }
 
     function stripLead(seg, set) {
       var i = 0;
@@ -621,6 +631,7 @@
       var st = findSteps(seg);
       if (st) {
         if (st.none) { bad(pieceText(text, seg), 'how many steps?'); return; }
+        if (hasNeg(seg)) { bad(pieceText(text, seg), 'steps cannot be negative'); return; }
         if (!(st.v >= 100 && st.v <= 200000)) { bad(pieceText(text, seg), 'that step count looks off'); return; }
         pushAction({ k: 'steps', n: Math.round(st.v) });
         used = {};
@@ -637,6 +648,7 @@
         var skipSet = {};
         for (i = sp.from; i < sp.to; i++) skipSet[i] = true;
         var du = findDuration(seg, skipSet);
+        if (hasNeg(seg)) { bad(pieceText(text, seg), 'minutes cannot be negative'); return; }
         if (!du) { bad(pieceText(text, seg), 'how long did you play?'); return; }
         if (!(du.min > 0 && du.min <= 600)) { bad(pieceText(text, seg), 'that duration looks off'); return; }
         var assumedKg = kg == null;
@@ -655,6 +667,7 @@
       var wt = findWeight(seg);
       if (wt) {
         if (wt.none) { bad(pieceText(text, seg), 'what weight?'); return; }
+        if (hasNeg(seg)) { bad(pieceText(text, seg), 'weight cannot be negative'); return; }
         var wkg = wt.unit === 'lb' ? wt.v * 0.45359237 : wt.v;
         var lo = wt.hasUnit ? 25 : 30, hi = wt.hasUnit ? 300 : 250;
         if (!(wkg >= lo && wkg <= hi)) { bad(pieceText(text, seg), 'that weight looks off'); return; }

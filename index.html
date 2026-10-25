@@ -337,6 +337,7 @@ details.ngym{margin-top:12px;border-top:1px solid var(--line)}details.ngym summa
 .ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--inset);flex:none}
 .phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:var(--inset);margin-bottom:8px;display:block}
 #phv{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92)}#phv img{max-width:100%;max-height:90vh;object-fit:contain}
+.ferr{color:var(--warn);font-size:13px;margin-top:6px}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--badbg);border:1px solid var(--badline);color:var(--badtx);padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
 .empty{text-align:center;color:var(--mut);padding:18px 8px;font-size:14px}
 .setup{padding-top:40px}.setup h1{font-size:30px;margin:0 0 6px}
@@ -519,6 +520,7 @@ details.more{position:relative}details.more>summary{list-style:none;cursor:point
 /* The one round button, the log sheet and the notice block (design-v1 amendments, October 24, 2026) */
 .fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 16px);z-index:26;width:56px;height:56px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}
 .wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 32px)}
+@media (min-width:700px){.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 96px)}}
 body:has(#ov,#cam,#lib,#ped,#gym,#hist,#svm,#tpl,#learn,#intake,#rover) .fab{display:none}
 .lsh .cmdbar{margin:6px 0 0;gap:0;background:var(--inset);border:1px solid var(--line);border-radius:28px;padding:3px 3px 3px 18px}
 .lsh .cmdbar:focus-within{border-color:var(--acct)}
@@ -602,7 +604,7 @@ header.hv2 .psub .seg{margin:0}
 .v1 .pr .lnk{justify-self:end;padding:0;min-height:44px;font-size:15px;font-weight:400}
 .v1 .pr.nt{grid-template-columns:6px minmax(0,1fr) auto 36px;background:var(--note);border-radius:12px;padding:0 4px 0 14px;margin-top:8px}
 .v1 .pr.nt .pn{font-size:15px;padding:8px 0}
-.v1 .pr .sg{display:inline-flex;vertical-align:-3px;margin-right:8px;color:var(--mut)}
+.v1 .pr .sg{display:inline-flex;vertical-align:-3px;margin-left:8px;color:var(--mut)}
 .v1 .pr.nt .pk.nd{width:6px;height:6px;border:0;background:var(--acc)}
 .v1 .pr.nt .ib.s{color:var(--mut)}
 /* Food: date row, meals as plain lists */
@@ -918,7 +920,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='016a811adb68c641b4412bc2928854b412f8c41b';let verChecked=0;
+const BUILD='8dcaa05bee6f30baed10f8a29108dc41e99782a1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -980,7 +982,7 @@ const mDay=()=>new Date(Date.now()+8*36e5).toISOString().slice(0,10);
 const persist=()=>{if(!DEMO)LS.set(dbKey(),DB)};
 const delQ=()=>DB.delQ||(DB.delQ=[]);
 const TABS=['today','food','workout','activity','progress'],savedUI=LS.get('forma.ui',{});
-const UI={tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null,sub:LS.get('forma.sub',{})||{}};
+const UI={lastToday:today(),tab:TABS.includes(savedUI.tab)?savedUI.tab:'today',date:today(),wDay:null,wSel:null,wWk:0,calM:null,pM:null,mode:savedUI.mode==='remaining'?'remaining':'consumed',open:{},sync:'synced',syncMsg:'',cues:{},rest:null,sheet:null,sub:LS.get('forma.sub',{})||{}};
 const P_MEALS='data/meals.json',P_CHK='data/checkins.json';const P_PROFILE='data/profile.json',P_PROG='data/program.json',P_EX='data/exercises.json',P_FOODS='data/foods.json';
 const base=p=>DB.files[p]&&DB.files[p].base;
 let EXC=null;
@@ -1218,13 +1220,14 @@ async function loadDays(ds){
 }
 window.addEventListener('online',()=>{flush();refresh()});
 window.addEventListener('offline',()=>setSync('offline','No connection.'));
-document.addEventListener('visibilitychange',()=>{if(document.hidden){setKeep(true);flush();setTimeout(()=>setKeep(false),1500)}else{if(UI.date<today()&&false)UI.date=today();checkVersion();refresh()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){setKeep(true);flush();setTimeout(()=>setKeep(false),1500)}else{rollDay();checkVersion();refresh()}});
 window.addEventListener('pagehide',()=>{setKeep(true);flush()});
-window.addEventListener('focus',()=>{checkVersion();refresh()});
+window.addEventListener('focus',()=>{if(rollDay())render();checkVersion();refresh()});
 
 /* ---------- ui plumbing ---------- */
 const root=$('#root');
-function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
+function ferr(id,m){const el=$('#'+id);if(!el){toast(m);return}let e=el.parentNode.querySelector('.ferr');if(!e){e=document.createElement('div');e.className='ferr';e.setAttribute('role','alert');el.parentNode.appendChild(e)}e.textContent=m;el.focus()}
+function toast(m){if([...document.querySelectorAll('.toast')].some(x=>x.textContent===m))return;const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function softRender(){
  if(window.FormaTour&&FormaTour.active)return;
  if(window.PGDRAG)return;
@@ -1261,12 +1264,15 @@ function tabbar(){
  const t=[['today','Today'],['food',isSimple()?SC().eat.tab:'Food'],['workout','Workout'],['activity','Activity'],['progress','Progress']].filter(([k])=>k==='today'||k==='progress'||modOn(k));
  return `<nav class="tabs"><div>${t.map(([k,l])=>`<button data-act="tab" data-t="${k}" class="${UI.tab===k?'on':''}">${ic(k)}<span>${l}</span></button>`).join('')}</div></nav>`;
 }
+/* A phone left open past midnight keeps showing the old day. Remember which day was today last time we looked; if the view is still on it, move to the new today. */
+function rollDay(){const t=today(),o=UI.lastToday;UI.lastToday=t;if(!o||o===t)return false;let ch=false;if(UI.date===o){UI.date=t;ch=true}if(UI.wSel===o){UI.wSel=t;UI.wWk=0;ch=true}if(UI.wDay&&ch)UI.wDay=null;return ch}
 function render(){
+ rollDay();
  if(!hasAcct()){root.innerHTML=setupView();return}
  const sc=window.scrollY;
  let h='';
  if(!profile()||!program()||!exdb()){
-  h=header('Forma')+`<div class="empty">${UI.sync==='error'||UI.sync==='offline'?esc(UI.syncMsg||'Could not load.')+'<br><br><button class="btn" data-act="refresh">Try again</button>':'Loading your data...'}</div>`;
+  h=headerV1('',[])+`<div class="empty">${UI.sync==='error'||UI.sync==='offline'?esc(UI.sync==='offline'?'No connection. Connect once to load your data.':(UI.syncMsg||'Could not load.'))+'<br><br><button class="btn" data-act="refresh">Try again</button>':'Loading your data...'}</div>`;
  }else{
   if(UI.tab!=='today'&&UI.tab!=='progress'&&!modOn(UI.tab))UI.tab='today';
   const v={today:todayView,food:foodView,workout:workoutView,activity:activityView,progress:progressView}[UI.tab];
@@ -1322,7 +1328,7 @@ const monthDates=m=>{const [y,mo]=m.split('-').map(Number);const n=new Date(y,mo
 const shiftMonth=(m,n)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
 const monthName=m=>{const [y,mo]=m.split('-').map(Number);return MONTHS[mo-1]+' '+y};
 const ACTS=[['basketball','Basketball',6.5],['badminton','Badminton',5.5],['volleyball','Volleyball',4],['tennis','Tennis',7],['pickleball','Pickleball',4.5],['football','Football',7],['running','Running',9],['cycling','Cycling',7],['swimming','Swimming',7],['hiking','Hiking',6],['boxing','Boxing',7.8],['jiujitsu','Jiu-jitsu',6],['muaythai','Muay Thai',7.8],['kickboxing','Kickboxing',7.8],['judo','Judo',6],['wrestling','Wrestling',6],['mma','MMA',7.8],['karate','Karate',6],['taekwondo','Taekwondo',6],['arnis','Arnis',6],['other','Other',5]];
-const ACT_GROUPS=[['Ball sports',['basketball','volleyball','football']],['Racket sports',['badminton','tennis','pickleball']],['Martial arts',['boxing','jiujitsu','muaythai','kickboxing','judo','wrestling','mma','karate','taekwondo','arnis']],['Endurance',['running','cycling','swimming','hiking']],['Other',['other']]];
+const ACT_GROUPS=[['Ball sports',['basketball','volleyball','football']],['Racket sports',['badminton','tennis','pickleball']],['Martial arts',['boxing','jiujitsu','muaythai','kickboxing','judo','wrestling','mma','karate','taekwondo','arnis']],['Endurance',['running','cycling','swimming','hiking','other']]];
 const actName=k=>(ACTS.find(a=>a[0]===k)||[k,k.charAt(0).toUpperCase()+k.slice(1)])[1];
 const actKcal=(k,min,w)=>Math.round(((ACTS.find(a=>a[0]===k)||ACTS[ACTS.length-1])[2]-1)*w*min/60);
 const actsOf=d=>logOf(d).activities||[];
@@ -1340,7 +1346,7 @@ function cleanSports(s){const out={};if(!s||typeof s!=='object')return out;
  return out}
 const sportNames=d=>[...new Set(plannedSports(d).map(s=>actName(s.kind)))].join(' and ');
 /* One plan row per planned sport (same row shape as Today's plan): Done logs the planned minutes, Edit or a long press opens the sheet. */
-const sportRows=d=>sportPlan(d).map(s=>`<div class="pr" data-sp="${s.i}" data-d="${d}"><span class="pk${s.act?' ok':''}">${s.act?ic('check',14):''}</span><span class="pn"><span class="sg">${ic(ACT_ICON[s.kind]||'bolt',18)}</span>${esc(actName(s.kind))}${s.time?', '+timeLbl(s.time):''}</span><span class="pv">${minLbl(s.act?s.act.min:s.min)}</span><button class="lnk" data-act="${s.act?'spEdit':'spDone'}" data-d="${d}" data-i="${s.i}">${s.act?'Edit':'Done'}</button></div>`);
+const sportRows=d=>sportPlan(d).map(s=>`<div class="pr" data-sp="${s.i}" data-d="${d}"><span class="pk${s.act?' ok':''}">${s.act?ic('check',14):''}</span><span class="pn">${esc(actName(s.kind))}${s.time?', '+timeLbl(s.time):''}<span class="sg">${ic(ACT_ICON[s.kind]||'bolt',18)}</span></span><span class="pv">${minLbl(s.act?s.act.min:s.min)}</span>${!s.act&&d>today()?'<span></span>':`<button class="lnk" data-act="${s.act?'spEdit':'spDone'}" data-d="${d}" data-i="${s.i}">${s.act?'Edit':'Done'}</button>`}</div>`);
 const dayActKcal=d=>actsOf(d).reduce((a,x)=>a+(num(x.kcal)||0),0);
 function dayFlags(d){const l=logOf(d),g=profile().stepGoal;return {sport:(l.activities||[]).length>0,food:food(d).items.length>0,wo:!!(l.workout&&l.workout.finishedAt),steps:l.steps!=null,hit:l.steps!=null&&l.steps>=g,weight:l.weight!=null}}
 function streakOf(fn){const T=today();let n=0,i=fn(T)?0:1;for(;i<400;i++){if(fn(addDays(T,-i)))n++;else break}return n}
@@ -1470,7 +1476,7 @@ function todayView(){
  if(isT&&new Date().getHours()<12&&!ydRdy)loadDay(yd);
  const nudge=isT&&new Date().getHours()<12&&ydRdy&&logOf(yd).weight==null;
  const rows=[row(lg.weight!=null,'Weigh in'+(nudge?`<button class="lnk sl" data-act="weightYest">Yesterday missing, add</button>`:''),lg.weight!=null?fwu(lg.weight):'','weightEdit',lg.weight!=null?'Edit':'Log')];
- if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
+ if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo&&t.kcal<=rg.hi,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
  if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',(st==null?'0':st.toLocaleString('en-US'))+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
  if(pd&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
  if(modOn('activity'))rows.push(...sportRows(d));
@@ -1554,7 +1560,7 @@ function foodView(){
   ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button></details>`}).join('');
  const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v),skv=kcalVerdict(t.kcal,T.kcal),sIn=k=>rangeState(k,t[k],T).in,sChip=(c,l,k,g)=>`<span class="chip ${c}">${l} ${mv(t[k],g)}</span>`;
  const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${fmtN(big)}</b>${skv.in?'<span>In range</span>':`<span class="mut">${isCons?skv.l+' '+skv.v:rem<0?'Over':'cal left'}</span>`}${sChip('p','P','protein',T.protein)}${sChip('c','C','carbs',T.carbs)}${sChip('f','F','fat',T.fat)}</div></button>`;
- return fh+strip+`<div class="v1"><div class="dnav2"><span class="dd">${d===today()?'Today, ':''}${fmtShort(d)}</span><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day">${ic('right',20)}</button></div>
+ return fh+strip+`<div class="v1"><div class="dnav2"><span class="dd">${d===today()?'Today, ':''}${fmtShort(d)}</span><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day"${d===today()?' disabled':''}>${ic('right',20)}</button></div>
  ${calHero(d,isCons,true)}
  <div class="meals">${secs||'<div class="empty">Nothing logged yet. Tap + to log what you ate.</div>'}</div></div>`+logFab();
 }
@@ -1567,7 +1573,7 @@ function mealSaveSheet(m){const d=UI.date,its=food(d).items.filter(i=>mealNo(i)=
  <div class="fld"><label>Name</label><input id="sm_name" maxlength="60" value="${esc('Meal '+m+' '+fmtShort(d))}"></div><button class="btn full" data-act="mealSaveGo" data-m="${m}">Save meal</button>`}
 function savedSheet(){
  const d=UI.date,prev=addDays(d,-1),pf=food(prev).items,pt=sumItems(pf),ms=savedMeals();
- const cp=pf.length?`<button class="item" data-act="copyPrev"><div class="sp"><div class="n">Copy yesterday</div><div class="xs mut">${new Set(pf.map(mealNo)).size} meal${new Set(pf.map(mealNo)).size===1?'':'s'} from ${fmtShort(prev)}</div></div><div class="r"><div>${rnd(pt.kcal)} cal</div><div class="xs mut">${rnd(pt.protein)}g protein</div></div></button>`:`<div class="xs mut" style="padding:10px 0">Nothing logged on ${fmtShort(prev)} to copy.</div>`;
+ const cp=(LS.get('forma.copied',{})||{})[d]?'':pf.length?`<button class="item" data-act="copyPrev"><div class="sp"><div class="n">${d===today()?'Copy yesterday':'Copy '+DOW[parseD(prev).getDay()]}</div><div class="xs mut">${new Set(pf.map(mealNo)).size} meal${new Set(pf.map(mealNo)).size===1?'':'s'} from ${fmtShort(prev)}</div></div><div class="r"><div>${rnd(pt.kcal)} cal</div><div class="xs mut">${rnd(pt.protein)}g protein</div></div></button>`:`<div class="xs mut" style="padding:10px 0">Nothing logged on ${fmtShort(prev)} to copy.</div>`;
  const rows=ms.map(m=>{const t=sumItems(m.items||[]);return `<button class="item smr" data-act="mealUse" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r"><div>${rnd(t.kcal)} cal</div><div class="xs mut">${rnd(t.protein)}g protein</div></div></button>`}).join('');
  return `<h2>Saved meals</h2><div class="xs mut" style="margin:-6px 0 8px">Tap one to log it as Meal ${nextMealNo(d)}${d===today()?'':' on '+fmtShort(d)}. Hold one to delete it.</div>${cp}${rows||`<div class="empty">No saved meals yet. Open a meal in the Food log and tap Save meal.</div>`}`}
 let SMLP={t:null,at:0};
@@ -1803,7 +1809,7 @@ function pedDraw(){const el=$('#ped');if(!el||!PED)return;const y=($('#ped_b')||
  const chip=(w,id,l,on)=>`<button class="chip pwc ${on?'b':''}" data-act="pedWd" data-w="${w}" data-id="${esc(id)}">${esc(l)}</button>`;
  el.innerHTML=`<div class="ovh"><button class="ib" data-act="pedBack" aria-label="Back">${ic('left')}</button><h1>Edit program</h1>${hqBtn('ped')}</div>
  <div class="ovb v1" id="ped_b"><div class="fld"><label>Program name</label><input data-pf="pname" value="${esc(doc.name||'')}" placeholder="My program" autocomplete="off"><div class="row" style="margin-top:4px;gap:24px"><button class="lnk" data-act="pedShare">Share</button><button class="lnk" data-act="impOpen">Import a program</button><button class="lnk" data-act="pedTemplates">Templates</button></div></div>
- <div class="card"><h3>Week</h3>${WD.map((w,i)=>`<label class="sctl pwr"><span class="sp">${w}</span><select class="wsel" data-wd="${i}" aria-label="${w}"><option value="rest"${(doc.weekdays[String(i)]||'rest')==='rest'?' selected':''}>Rest</option>${days.map(d=>`<option value="${esc(d.id)}"${doc.weekdays[String(i)]===d.id?' selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${((doc.sports||{})[String(i)]||[]).map((s,j)=>`<div class="psp"><select class="wsel" data-spf="kind" data-w="${i}" data-j="${j}" aria-label="Sport">${ACTS.map(a=>`<option value="${a[0]}"${a[0]===s.kind?' selected':''}>${esc(a[1])}</option>`).join('')}</select><input type="time" data-spf="time" data-w="${i}" data-j="${j}" value="${esc(s.time||'')}" aria-label="Start time, optional"><input inputmode="numeric" data-spf="min" data-w="${i}" data-j="${j}" value="${s.min}" aria-label="Minutes"><button class="ib s" data-act="pedSpDel" data-w="${i}" data-j="${j}" aria-label="Remove sport">${ic('x',18)}</button></div>`).join('')}<button class="lnk l0 padd" data-act="pedSpAdd" data-w="${i}">Add a sport</button>`).join('')}</div>
+ <div class="card"><h3>Week</h3>${WD.map((w,i)=>`<label class="sctl pwr"><span class="sp">${w}</span><select class="wsel" data-wd="${i}" aria-label="${w}"><option value="rest"${(doc.weekdays[String(i)]||'rest')==='rest'?' selected':''}>Rest</option>${days.map(d=>`<option value="${esc(d.id)}"${doc.weekdays[String(i)]===d.id?' selected':''}>${esc(d.name)}</option>`).join('')}</select></label>${((doc.sports||{})[String(i)]||[]).map((s,j)=>`<div class="psp"><select class="wsel" data-spf="kind" data-w="${i}" data-j="${j}" aria-label="Sport">${ACTS.map(a=>`<option value="${a[0]}"${a[0]===s.kind?' selected':''}>${esc(a[1])}</option>`).join('')}</select><input type="time" data-spf="time" data-w="${i}" data-j="${j}" value="${esc(s.time||'')}" aria-label="Start time, optional"><input inputmode="numeric" data-spf="min" data-w="${i}" data-j="${j}" value="${s.min}" aria-label="Minutes"><button class="ib s" data-act="pedSpDel" data-w="${i}" data-j="${j}" aria-label="Remove sport">${ic('x',18)}</button></div>`).join('')}${((doc.sports||{})[String(i)]||[]).length>=4?'':`<button class="lnk l0 padd" data-act="pedSpAdd" data-w="${i}">Add a sport</button>`}`).join('')}</div>
  ${days.map((d,di)=>`<div class="card"><div class="row"><input class="pdn sp" data-pf="dname" data-d="${di}" value="${esc(d.name)}" aria-label="Day name"><button class="ib s" data-act="pedDayUp" data-d="${di}" aria-label="Move day up" ${di?'':'disabled'}>${ic('up',18)}</button><button class="ib s" data-act="pedDayDn" data-d="${di}" aria-label="Move day down" ${di<days.length-1?'':'disabled'}>${ic('down',18)}</button><button class="ib s" data-act="pedDayDel" data-d="${di}" aria-label="Delete day">${ic('trash',18)}</button></div>
  <div class="xs mut" style="margin:4px 0 2px"><span id="pm${di}">about ${dayMinutes(d)} min</span> - ${d.exercises.length} exercise${d.exercises.length===1?'':'s'}</div>
  ${d.exercises.map((e,i)=>pedEx(e,di,i,d.exercises.length)).join('')||'<div class="empty">No exercises yet. Add one below.</div>'}
@@ -1860,7 +1866,7 @@ function workoutView(){
  if(!UI.wSel)UI.wSel=T;
  const sel=UI.wSel,isT=sel===T,slog=logOf(sel),swo=slog.workout&&slog.workout.finishedAt?slog.workout:null,pd=progDay(sel);
  if(!UI.wDay||!isT)UI.wDay=(swo&&swo.dayId)||(pd?pd.id:null)||(td?td.id:P.days[0].id);
- const sportOnly=isT&&!td&&!swo&&!UI.wPick&&modOn('activity')&&plannedSports(sel).length>0;
+ const sportOnly=isT&&!td&&!swo&&!UI.wPick;
  const day=sportOnly?null:P.days.find(x=>x.id===(isT?UI.wDay:(swo&&swo.dayId)||(pd&&pd.id)))||null;
  const abbr=n=>n.split(/\s*\+\s*|\s+/).filter(Boolean).length>1?n.split(/\s*\+\s*|\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase():n;
  const wkd=weekDates(addDays(T,7*UI.wWk));
@@ -2741,7 +2747,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.3${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.4${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3528,10 +3534,10 @@ document.addEventListener('click',async e=>{
   case 'wsel':UI.wSel=D.d;UI.wPick=false;loadDay(D.d);render();break;
   case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
-  case 'stepsSave':{const v=$('#v_steps').value.trim();mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
+  case 'stepsSave':{const v=$('#v_steps').value.trim();if(v!==''&&!(num(v)>=0&&num(v)<=100000)){ferr('v_steps','Enter steps from 0 to 100,000.');break}mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
   case 'weightYest':{const y=addDays(T,-1);loadDay(y);openSheet(weightSheet(y));break}
-  case 'weightSave':{const v=$('#v_weight').value.trim();mutate(logP(D.d||UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
+  case 'weightSave':{const v=$('#v_weight').value.trim();if(v!==''){const kg=u2kg(num(v));if(!(kg>=20&&kg<=400)){ferr('v_weight','Enter a weight from '+fw(20,0)+' to '+fw(400,0)+' '+wU()+'.');break}}mutate(logP(D.d||UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
   case 'pickMeal':foodMeal=+D.m;document.querySelectorAll('#fm button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
   case 'foodEdit':{const it=food(UI.date).items.find(i=>i.id===D.id);if(it){foodMeal=mealNo(it);foodPhoto=null;openSheet(foodSheet(it))}break}
   case 'phPick':$('#f_photo').click();break;
@@ -3540,7 +3546,7 @@ document.addEventListener('click',async e=>{
   case 'pedOpen':closeSheet();pedOpen();break;
   case 'pedBack':pedBack();break;
   case 'pedSave':pedSave();break;
-  case 'pedSpAdd':{const sp=PED.doc.sports=PED.doc.sports||{};(sp[D.w]=sp[D.w]||[]).push({kind:'volleyball',min:60});pedDirty();pedDraw();break}
+  case 'pedSpAdd':{const sp=PED.doc.sports=PED.doc.sports||{};if((sp[D.w]||[]).length>=4)break;(sp[D.w]=sp[D.w]||[]).push({kind:'volleyball',min:60});pedDirty();pedDraw();break}
   case 'pedSpDel':{const sp=PED.doc.sports||{};(sp[D.w]||[]).splice(+D.j,1);if(sp[D.w]&&!sp[D.w].length)delete sp[D.w];pedDirty();pedDraw();break}
   case 'pedWd':PED.doc.weekdays[String(D.w)]=D.id;pedDirty();pedDraw();break;
   case 'pedAddDay':{const ds=PED.doc.days;let n=ds.length+1,id='d'+n;while(ds.some(x=>x.id===id))id='d'+(++n);ds.push({id,name:'Day '+(ds.length+1),focus:'',exercises:[]});pedDirty();pedDraw();break}
@@ -3595,13 +3601,13 @@ document.addEventListener('click',async e=>{
   case 'tlPose':UI.tlPose=D.p;UI.tlIdx=null;render();break;
   case 'actOpen':openSheet(actSheet(),actSheet);break;
   case 'actKind':actK=D.k;document.querySelectorAll('#act_k button').forEach(b=>b.classList.toggle('b',b.dataset.k===D.k));break;
-  case 'actSave':{const m=Math.round(num($('#act_min').value));if(!m){toast('Add the minutes.');break}
+  case 'actSave':{const m=Math.round(num($('#act_min').value));if(!(m>0)){ferr('act_min','Enter minutes above 0.');break}if(m>1440){ferr('act_min','That is more than a day. Check the minutes.');break}
    const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
-  case 'spDone':{if(Date.now()-SPLP.at<900)break;const s=sportPlan(D.d)[+D.i];if(!s||s.act)break;
+  case 'spDone':{if(Date.now()-SPLP.at<900)break;if(D.d>today()){toast('That day has not happened yet.');break}const s=sportPlan(D.d)[+D.i];if(!s||s.act)break;
    mutate(logP(D.d),{k:'actAdd',a:{id:uid(),kind:s.kind,min:s.min,kcal:actKcal(s.kind,s.min,latestWeight()),by:'app'}});toast0(actName(s.kind)+' logged, '+minLbl(s.min)+'.');break}
   case 'spEdit':openSheet(spSheet(D.d,+D.i));break;
-  case 'spSave':{const m=Math.round(num($('#sp_min').value));if(!m||m<5||m>600){toast('Add the minutes.');break}
+  case 'spSave':{const m=Math.round(num($('#sp_min').value));if(!m||m<5||m>600){ferr('sp_min','Enter 5 to 600 minutes.');break}
    const s=sportPlan(D.d)[+D.i];if(!s)break;const kcal=actKcal(s.kind,m,latestWeight());
    mutate(logP(D.d),s.act?{k:'actSet',a:{id:s.act.id,min:m,kcal}}:{k:'actAdd',a:{id:uid(),kind:s.kind,min:m,kcal,by:'app'}},{quiet:true});closeSheet();render();break}
   case 'spUndo':{const s=sportPlan(D.d)[+D.i];if(s&&s.act)mutate(logP(D.d),{k:'actDel',id:s.act.id},{quiet:true});closeSheet();render();break}
@@ -3643,7 +3649,8 @@ document.addEventListener('click',async e=>{
   case 'phView':{const src=t.getAttribute('src');if(!src||$('#phv'))break;const full=document.createElement('div');full.id='phv';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>phvClose());document.body.appendChild(full);navPush({l:'photo'});break}
   case 'foodSave':{
    const name=$('#f_name').value.trim();if(!name){toast('Give the food a name first.');return}
-   const g=id=>num($('#f_'+id).value);
+   const g=id=>Math.round(num($('#f_'+id).value));
+   for(const [id,l] of [['kcal','Calories'],['protein','Protein'],['carbs','Carbs'],['fat','Fat']])if(num($('#f_'+id).value)<0){ferr('f_'+id,l+' cannot be below 0.');return}
    const old=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
    const id=D.id||uid();
    const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
@@ -3652,7 +3659,7 @@ document.addEventListener('click',async e=>{
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;UI.wPick=true;UI.wSel=T;render();break;
-  case 'wStart':askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
+  case 'wStart':UI.wPick=false;window.scrollTo(0,0);askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
   case 'finSnooze':UI.finSnooze=Date.now()+FIN_NUDGE;finTick();render();break;
   case 'finMode':finMode=D.m;document.querySelectorAll('#fin_mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===D.m));break;
@@ -3674,7 +3681,7 @@ document.addEventListener('click',async e=>{
   case 'discardYes':mutate(logP(T),{k:'wClear'},{delay:300});UI.rest=null;closeSheet();break;
   case 'discardNo':closeSheet();break;
   case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});closeSheet();break;
-  case 'wMark':mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
+  case 'wMark':if(D.d>today()){toast('That day has not happened yet.');break}mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
   case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
   case 'wCancel':openSheet(discardSheet());break;
   case 'cues':openSheet(notesSheet(D.ex));break;
@@ -3687,7 +3694,7 @@ document.addEventListener('click',async e=>{
   case 'mealUse':{if(Date.now()-SMLP.at<900)break;const m=savedMeals().find(x=>x.id===D.id);if(!m)break;const no=nextMealNo(UI.date);mealItemsAdd(UI.date,no,m.items||[]);closeSheet();render();toast0('Added '+m.name+' as Meal '+no+'.');break}
   case 'mealDelGo':mutate(P_MEALS,{k:'mealDel',id:D.id},{quiet:true});openSheet(savedSheet(),savedSheet);break;
   case 'copyPrev':{const d=UI.date,pf=food(addDays(d,-1)).items;if(!pf.length)break;const nos=[...new Set(pf.map(mealNo))].sort((a,b)=>a-b),base=nextMealNo(d)-1;
-   nos.forEach((n,k)=>mealItemsAdd(d,base+k+1,pf.filter(i=>mealNo(i)===n)));closeSheet();render();toast0('Copied '+pf.length+' food'+(pf.length===1?'':'s')+' from '+fmtShort(addDays(d,-1))+'.');break}
+   nos.forEach((n,k)=>mealItemsAdd(d,base+k+1,pf.filter(i=>mealNo(i)===n)));{const cd=LS.get('forma.copied',{})||{};cd[d]=1;LS.set('forma.copied',cd)}closeSheet();render();toast0('Copied '+pf.length+' food'+(pf.length===1?'':'s')+' from '+fmtShort(addDays(d,-1))+'.');break}
   case 'shareOpen':shareOpen(program());break;
   case 'pedShare':shareOpen(PED?PED.doc:program());break;
   case 'shCopy':if(PSH&&PSH.code)copyText(PSH.code,'Code copied.');break;
@@ -3788,7 +3795,9 @@ document.addEventListener('change',e=>{if(e.target.id==='s_rest'){let v=Math.rou
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
- const v=t.value.trim()===''?0:num(t.value);
+ let v=t.value.trim()===''?0:num(t.value);
+ if(v<0){t.setAttribute('aria-invalid','true');toast('Weight and reps cannot be below 0.');return}t.removeAttribute('aria-invalid');
+ if(t.dataset.f==='r'||t.dataset.f==='dr')v=Math.round(v);
  if(t.dataset.f==='dw'||t.dataset.f==='dr'){editSets(t.dataset.ex,s=>{const x=s[+t.dataset.i];if(x&&x.drops&&x.drops[+t.dataset.j])x.drops[+t.dataset.j][t.dataset.f==='dw'?'w':'r']=t.dataset.f==='dw'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});return}
  editSets(t.dataset.ex,s=>{if(s[+t.dataset.i])s[+t.dataset.i][t.dataset.f]=t.dataset.f==='w'?toKgU(v,exU(t.dataset.ex)):v},{quiet:true,delay:2000});
 });
