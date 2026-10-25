@@ -515,7 +515,7 @@ details.more{position:relative}details.more>summary{list-style:none;cursor:point
 #ped .ovb.v1,#learn .ovb.v1{padding-top:0}
 :root #ped .v1 .card{margin-top:28px}
 .pgx{position:absolute;left:0;pointer-events:none}
-#root{touch-action:pan-y}html{touch-action:manipulation}button,.tabs,.fab{-webkit-user-select:none;user-select:none}
+#root{touch-action:pan-y}html{touch-action:manipulation}.tabs,.tabs button,.fab,.chk,button.chip,.chip{-webkit-user-select:none;user-select:none}
 @media (prefers-reduced-motion:reduce){.pgx{transition:none!important}}
 /* The one round button, the log sheet and the notice block (design-v1 amendments, October 24, 2026) */
 .fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 16px);z-index:26;width:56px;height:56px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}
@@ -947,7 +947,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='9bfe6eee4e19e8ad27808c51d59ca12829ff0429';let verChecked=0;
+const BUILD='20e3080da0b6d4f56afd4d49d45a53e969a8f08b';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1961,7 +1961,7 @@ function liveView(wo,lg){
   ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="swr" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="set ${s.done?'dn':''}"><div class="sn">${i+1}${s.done&&setIsPR(ex,sets,i)?'<b class="prc">PR</b>':''}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
   <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
   <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
-  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="Set ${i+1} done">${ic('check',20)}</button></div></div>
+  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="${s.done?`Set ${i+1} done, tap to undo`:`Tick set ${i+1}`}">${ic('check',20)}</button></div></div>
   ${s.done&&u==='REPS'?`<div class="sx"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="xa"><button class="lnk" data-act="addSet" data-ex="${ex}">+ Add set</button><button class="lnk" data-act="hist" data-ex="${ex}" aria-label="History and PRs for ${esc(inf.n)}">${ic('hist',16)}History</button>${sets.length>1?`<button class="lnk" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">Remove set</button>`:''}${e.extra?`<button class="lnk" data-act="exDel" data-ex="${e.ex}">Remove exercise</button>`:''}</div></section>`}).join('')+`<button class="lnk addx" data-act="exAdd">+ Add exercise</button>`;
@@ -2814,7 +2814,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.20${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.21${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3025,16 +3025,18 @@ function tourFullSteps(){const out=[];
  out.push({id:'gear',target:'header details.more summary',title:'Settings and help',text:'The three-dot menu opens Settings, and the ? on each screen explains just that screen.'});return out}
 function tourTab(name){if(UI.tab===name)return;UI.tab=name;window.scrollTo(0,0);render()}
 function tourEnd(){if(!TOUR.on)return;TOUR.on=false;UI.sub=TOUR.sub||UI.sub;if(TOUR.tab&&UI.tab!==TOUR.tab)UI.tab=TOUR.tab;
- if(TOUR.kind==='full')LS.set('forma.tourSeen',1);if(!TOUR.fromPop)navPop();TOUR.fromPop=false;render()}
+ if(TOUR.kind==='full')LS.set('forma.tourSeen',1);if(!TOUR.fromPop)navPop();TOUR.fromPop=false;render();tourRefocus()}
+function tourRefocus(){const F=TOUR.opener;TOUR.opener=null;if(!F||document.querySelector('#ov'))return;let el=F.el;if(!el||!el.isConnected){el=null;if(F.act){el=[...document.querySelectorAll('[data-act="'+F.act+'"]')].find(x=>(F.m==null||x.dataset.m===F.m)&&(F.t==null||x.dataset.t===F.t)&&(F.s==null||x.dataset.s===F.s))||null}}
+ if(el&&el.focus)try{el.focus({preventScroll:true})}catch(e){}}
 /* Runs steps with the history entry that makes Android back close the tour. Tab and sub-tab changes during the tour never touch history, and both are put back at the end. */
 function tourRun(steps,o){o=o||{};
  if(!window.FormaTour||!steps.length)return Promise.resolve('stop');
  if(FormaTour.active)FormaTour.stop();
- TOUR.on=true;TOUR.fromPop=false;TOUR.kind=o.kind||'';TOUR.tab=UI.tab;TOUR.sub=clone(UI.sub||{});navPush({l:'tour'});
+ TOUR.opener=document.activeElement&&document.activeElement!==document.body?fref(document.activeElement):(LASTO||LASTF);TOUR.on=true;TOUR.fromPop=false;TOUR.kind=o.kind||'';TOUR.tab=UI.tab;TOUR.sub=clone(UI.sub||{});navPush({l:'tour'});
  let act=null;
  return FormaTour.start(steps,{onTab:tourTab,onAction:id=>{act=id}}).then(k=>{tourEnd();if(act&&o.action)o.action(act);return k});
 }
-function tourMini(screen){tourRun(tourMiniSteps(screen),{kind:'mini',action:id=>{if(id==='full')setTimeout(tourFull,350);else if(id==='learn')learnOpen({id:TOUR_LESSON[screen]})}})}
+function tourMini(screen){tourRun(tourMiniSteps(screen),{kind:'mini',action:id=>{if(id==='full'){if(UI.sheet)closeSheet();setTimeout(tourFull,350)}else if(id==='learn')learnOpen({id:TOUR_LESSON[screen]})}})}
 /* A signed-in first open goes straight to the tour, then the setup questionnaire, then (for beginners) the Learn start-here path. */
 function tourFull(){tourRun(tourFullSteps(),{kind:'full'}).then(k=>{
  const p=profile();
@@ -3051,8 +3053,11 @@ const HQ={addfood:['Adding a food','Search a food or type it in, then check the 
 const hqBtn=k=>`<button class="ib s hq" data-act="hq" data-k="${k}" aria-label="Help">${ic('help',18)}</button>`;
 function hqOpen(k){const q=HQ[k];if(!q||$('#hqo'))return;const o=document.createElement('div');o.id='hqo';
  o.innerHTML=`<div class="hqc" role="dialog" aria-modal="true"><h3>${esc(q[0])}</h3><p>${esc(q[1])}</p><button class="btn full" data-act="hqClose">Got it</button></div>`;
- o.addEventListener('click',e=>{if(e.target===o)hqClose()});document.body.appendChild(o);navPush({l:'hq'})}
-function hqClose(fromPop){const o=$('#hqo');if(!o)return;o.remove();if(fromPop!==true)navPop()}
+ o.addEventListener('click',e=>{if(e.target===o)hqClose()});
+ const hc=o.firstChild;hc.tabIndex=-1;o._opener=document.activeElement;
+ o.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const b=hc.querySelector('button');e.preventDefault();b.focus()});
+ document.body.appendChild(o);hc.focus({preventScroll:true});navPush({l:'hq'})}
+function hqClose(fromPop){const o=$('#hqo');if(!o)return;const op=o._opener;o.remove();if(op&&op.isConnected&&op.focus){try{op.focus({preventScroll:true})}catch(e){}}else{const t=$('#sheet');if(t)t.focus({preventScroll:true})}if(fromPop!==true)navPop()}
 /* ---------- Learn (data/lessons.json): lessons with a check question, glossary "?" sheets, and the Start here path for beginners ----------
    One full screen (#learn, one history entry) with three views: home (list), lesson (cards, check, Try it / Done) and glossary.
    Saved on the phone only, in forma.learn: { done:{ lessonId:1 }, start:""|"pending"|"skipped"|"done", nudge:1 }. */
@@ -3296,6 +3301,7 @@ window.addEventListener('popstate',e=>{
  if(TOUR.on){TOUR.fromPop=true;FormaTour.stop();return}
  if($('#hqo')){hqClose(true);return}
  if($('#phv')){phvClose(true);return}
+ if(UI.sheet){closeSheet(true);return}
  if($('#cam')){camClose(true);return}
  if($('#intake')){if(INT.step>0){INT.step--;navPush({l:'intake'});intakeUI()}else intakeClose(true);return}
  if($('#hist')){histClose(true);return}
@@ -3308,10 +3314,11 @@ window.addEventListener('popstate',e=>{
 });
 function openSheet(html,fn){if(!UI.sheet)navPush({l:'sheet'});UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
 function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop()}
+function ovlInert(on){document.querySelectorAll(OVLSEL).forEach(o=>{if(o.id!=='ov')o.inert=on})}
 function renderSheet(){
  let ov=$('#ov');
- if(!UI.sheet){if(ov){ov.remove();root.inert=false;a11yRestore()}return}
- if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog" aria-modal="true" aria-label="Dialog" tabindex="-1"></div>';document.body.appendChild(ov);root.inert=true;ov.addEventListener('click',e=>{if(e.target===ov)closeSheet(false)});ov.dataset.new='1'}
+ if(!UI.sheet){if(ov){ov.remove();root.inert=false;ovlInert(false);a11yRestore()}return}
+ if(!ov){ov=document.createElement('div');ov.id='ov';ov.innerHTML='<div id="sheet" role="dialog" aria-modal="true" aria-label="Dialog" tabindex="-1"></div>';document.body.appendChild(ov);root.inert=true;ovlInert(true);ov.addEventListener('click',e=>{if(e.target===ov)closeSheet(false)});ov.dataset.new='1'}
  const sh=$('#sheet');if(sh.dataset.h!==UI.sheet){sh.innerHTML=UI.sheet;queueMicrotask(a11yFix);sh.dataset.h=UI.sheet;const hd=sh.querySelector('h1,h2');sh.setAttribute('aria-label',hd&&hd.firstChild?(hd.firstChild.textContent||hd.textContent).trim()||'Dialog':sh.querySelector('.lsh')?'Log food, weight or steps':'Dialog');const af=sh.querySelector('[data-af]');if(af){af.focus();try{af.setSelectionRange(af.value.length,af.value.length)}catch(e){}}else if(ov.dataset.new)sh.focus({preventScroll:true})}
  delete ov.dataset.new;
 }
@@ -3319,9 +3326,11 @@ function renderSheet(){
 const OVL={ov:'Dialog',ped:'Edit program',lib:'Exercise library',gym:'My gym',hist:'Exercise history',learn:'Learn',cam:'Progress photos',intake:'Setup'};
 let LASTF=null;
 const OVLSEL=Object.keys(OVL).map(k=>'#'+k).join(',');
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button,a,summary,[tabindex]');if(b&&!b.closest(OVLSEL))LASTF=b.dataset&&b.dataset.act?{act:b.dataset.act,m:b.dataset.m,t:b.dataset.t,s:b.dataset.s,el:b}:{el:b}},true);
-function a11yRestore(){if(document.querySelector(OVLSEL)||!LASTF)return;let el=LASTF.el;if(!el||!el.isConnected){el=null;if(LASTF.act){const c=[...document.querySelectorAll('[data-act="'+LASTF.act+'"]')];el=c.find(x=>(LASTF.m==null||x.dataset.m===LASTF.m)&&(LASTF.t==null||x.dataset.t===LASTF.t)&&(LASTF.s==null||x.dataset.s===LASTF.s))||null}}
- LASTF=null;if(el&&el.focus)try{el.focus({preventScroll:true})}catch(e){}}
+let LASTO=null;
+function fref(b){return b.dataset&&b.dataset.act?{act:b.dataset.act,m:b.dataset.m,t:b.dataset.t,s:b.dataset.s,el:b}:{el:b}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button,a,summary,[tabindex]');if(!b)return;if(!b.closest(OVLSEL))LASTF=fref(b);else if(!b.closest('#ov'))LASTO=fref(b)},true);
+function a11yRestore(){if(document.querySelector('#ov'))return;const inner=document.querySelector(OVLSEL);const F=inner?LASTO:LASTF;if(!F)return;let el=F.el;if(!el||!el.isConnected){el=null;if(F.act){const c=[...document.querySelectorAll('[data-act="'+F.act+'"]')];el=c.find(x=>(F.m==null||x.dataset.m===F.m)&&(F.t==null||x.dataset.t===F.t)&&(F.s==null||x.dataset.s===F.s))||null}}
+ if(inner)LASTO=null;else LASTF=null;if(el&&el.focus)try{el.focus({preventScroll:true})}catch(e){}}
 new MutationObserver(ms=>{let gone=false;for(const m of ms){m.addedNodes.forEach(n=>{if(n.nodeType!==1||!OVL[n.id]||n.id==='ov')return;n.setAttribute('role','dialog');n.setAttribute('aria-modal','true');if(!n.getAttribute('aria-label')){const h=n.querySelector('h1');n.setAttribute('aria-label',(h&&h.textContent.trim())||OVL[n.id])}n.tabIndex=-1;if(!n.contains(document.activeElement))n.focus({preventScroll:true})});m.removedNodes.forEach(n=>{if(n.nodeType===1&&OVL[n.id]&&n.id!=='ov')gone=true})}if(gone)a11yRestore()}).observe(document.body,{childList:true});
 /* Small fixes applied after every render: labels tied to their inputs, toggle state on segmented buttons, heading levels. */
 function a11yFix(){
