@@ -515,7 +515,7 @@ details.more{position:relative}details.more>summary{list-style:none;cursor:point
 #ped .ovb.v1,#learn .ovb.v1{padding-top:0}
 :root #ped .v1 .card{margin-top:28px}
 .pgx{position:absolute;left:0;pointer-events:none}
-#root{touch-action:pan-y}
+#root{touch-action:pan-y}html{touch-action:manipulation}button,.tabs,.fab{-webkit-user-select:none;user-select:none}
 @media (prefers-reduced-motion:reduce){.pgx{transition:none!important}}
 /* The one round button, the log sheet and the notice block (design-v1 amendments, October 24, 2026) */
 .fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 16px);z-index:26;width:56px;height:56px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}
@@ -947,7 +947,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='0b3603b45dec850b2828feb6f87ddb8388c39b0f';let verChecked=0;
+const BUILD='f8bf77b2a828171a87c10c5f66271e948e97d891';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2813,7 +2813,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.18${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.19${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3861,7 +3861,7 @@ document.addEventListener('click',async e=>{
   case 'histClose':histClose();break;
   case 'addSet':editSets(D.ex,s=>{const l=s[s.length-1]||{w:0,r:0};s.push({w:l.w,r:l.r,done:false})},{delay:2000});break;
   case 'rmSet':editSets(D.ex,s=>{if(s.length>1)s.pop()},{delay:2000});break;
-  case 'chk':if(Date.now()-(UI.wStartAt||0)<600)break;tickSet(D.ex,+D.i,'tap');break;
+  case 'chk':{if(Date.now()-(UI.wStartAt||0)<600)break;const ck=D.ex+'|'+D.i,now=Date.now();UI.chkT=UI.chkT||{};if(now-(UI.chkT[ck]||0)<350)break;UI.chkT[ck]=now;tickSet(D.ex,+D.i,'tap');break}
   case 'setDone':askMotion();doneNext('tap');break;
   case 'sdUndo':undoDone();break;
   case 'shakeTog':{const on=LS.get('forma.shake',1)!==0;LS.set('forma.shake',on?0:1);askMotion();render();toast0(on?'Shake is off.':'Shake on: shake your phone firmly to finish a set.');break}
