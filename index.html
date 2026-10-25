@@ -884,6 +884,27 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 :root[data-theme="daylight"] .mpanel{box-shadow:0 12px 32px rgba(16,17,20,.14)}
 :root[data-theme="daylight"] .toast{box-shadow:0 8px 24px rgba(16,17,20,.14)}
 :root[data-theme="daylight"] .v1 .pr.nt,:root[data-theme="daylight"] .v1 .nb{background:var(--card2)}
+/* 0.11.12 polish */
+.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 32px)}
+.v1 .xm{flex-wrap:wrap}.v1 .xm .xmb{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;flex:none}
+.v1 .rst,.v1 .rst.alt{min-height:44px;margin:-6px 0;padding:0 2px;white-space:nowrap}
+.v1 .xh .xl .lnk{min-height:44px;margin:-6px 0;padding:0 0 0 8px;display:inline-flex;align-items:center;justify-content:flex-end}
+.v1 .xa .lnk{min-height:44px;padding:0;display:inline-flex;align-items:center}
+.v1 .xa{margin-top:0}
+.v1 .dayl{margin-top:8px}.v1 .dayl .item{width:100%}.v1 .dayl .item.on .n{font-weight:600}
+.v1 .dayl .item .r{white-space:nowrap}
+#sheet{padding-left:20px;padding-right:20px}
+#intake .ih,#intake .if{padding-left:20px;padding-right:20px}
+#intake .ib2{padding-left:20px;padding-right:20px}
+#intake .bfw{margin:0 -20px}
+.ovh{padding-left:10px}
+#lib .ovh{padding-right:20px}
+.ovs .dchips.s{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}
+#sheet .chips .chip.actk{height:auto;min-height:44px;padding:0 16px;font-size:15px;font-weight:400;background:var(--card2);color:var(--txt)}
+#sheet .chips .chip.actk.b{background:var(--acc);color:var(--onacc);font-weight:600}
+#sheet .chips{gap:8px}
+.ss .fld:has(>label):not(:first-child):not(.lbl+.fld){margin-top:24px!important}
+#sheet .btn.sm,.ss .btn.sm{border-radius:14px}
 </style>
 </head>
 <body>
@@ -920,7 +941,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='6e2fdc186618891268312d4d48036b5cc2f527ee';let verChecked=0;
+const BUILD='bbad35dec42abacdd475e5f4eeca6008fd5fcc13';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1914,7 +1935,7 @@ function workoutView(){
   body=`${isT?'':`<div class="lbl">${fmtLong(sel)}${sel<T?', not logged':', planned'}</div>`}<h2 class="pt">${esc(day.name)}</h2><div class="sub">${esc(day.focus)} &middot; <span class="nw">about ${mins} min</span>${mins>sessMax()?` <span class="amb">over your ${sessMax()} min</span>`:''}</div>${!isT&&sel<T?`<button class="lnk l0" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}
   <div class="lst" style="padding-bottom:96px">${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<button class="item" data-act="cues" data-ex="${e.ex}" aria-label="Notes and pictures for ${esc(exName(e.ex))}">${thumb(e.ex,72,false,true)}<div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${pv?'Last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' x ':'')+pv[0].r:esc((exdb().exercises[e.ex]||{}).eq||'')}</div></div><div class="r mut">${e.sets} x ${esc(e.reps)}</div></button>`}).join('')}</div>`;
  }
- const chips=isT&&!swo?`<details class="vs other"${td?'':' open'}><summary class="lbl">${td?'Train a different day':'Train anyway. Pick a day'}${ic('down',16)}</summary>${(()=>{const wk=(P.weekdays||{}),used=[];[1,2,3,4,5,6,0].forEach(i=>{const id=wk[String(i)];if(id&&id!=='rest'&&!used.includes(id)&&P.days.some(x=>x.id===id))used.push(id)});const ch=x=>`<button data-act="wday" data-id="${x.id}" class="${day&&x.id===day.id?'on':''}">${esc(x.name)}<small>${dayMinutes(x)} min</small></button>`,a=used.map(id=>P.days.find(x=>x.id===id)),o=P.days.filter(x=>!used.includes(x.id));return `<div class="dchips">${(a.length?a:P.days).map(ch).join('')}</div>${a.length&&o.length?`<details class="vs"><summary class="xs mut">Other days (${o.length})${ic('down',14)}</summary><div class="dchips">${o.map(ch).join('')}</div></details>`:''}`})()}</details>`:'';
+ const chips=isT&&!swo?`<details class="vs other"${td?'':' open'}><summary class="lbl">${td?'Train a different day':'Train anyway. Pick a day'}${ic('down',16)}</summary>${(()=>{const wk=(P.weekdays||{}),used=[];[1,2,3,4,5,6,0].forEach(i=>{const id=wk[String(i)];if(id&&id!=='rest'&&!used.includes(id)&&P.days.some(x=>x.id===id))used.push(id)});const ch=x=>`<button data-act="wday" data-id="${x.id}" class="item ${day&&x.id===day.id?'on':''}"><div class="sp"><div class="n">${esc(x.name)}</div></div><div class="r">${dayMinutes(x)} min</div></button>`,a=used.map(id=>P.days.find(x=>x.id===id)),o=P.days.filter(x=>!used.includes(x.id));return `<div class="lst ml dayl">${(a.length?a:P.days).map(ch).join('')}</div>${a.length&&o.length?`<details class="vs"><summary class="xs mut">Other days (${o.length})${ic('down',14)}</summary><div class="lst ml dayl">${o.map(ch).join('')}</div></details>`:''}`})()}</details>`:'';
  const go=isT&&!swo&&day;
  return headerV1('Workout',[['libOpen','Exercise library'],['pedOpen','Edit program'],['logOpen','Log food, weight or steps']])+`<div class="v1">${nav}<div class="week w2">${strip}</div>${body}${spRows.length?`<section class="vs plan"><div class="lbl">Sport</div>${spRows.join('')}</section>`:''}${chips}</div>`+
  (go?`<button class="fab" data-act="wStart" data-id="${day.id}" aria-label="Start workout">${ic('play',26)}</button>`:logFab());
@@ -1926,7 +1947,7 @@ function liveView(wo,lg){
   const ex=effEx(wo,e.ex),inf=exdb().exercises[ex]||{n:ex},sets=(wo.sets&&wo.sets[ex])||[],prev=prevFor(ex),u=unitOf(ex);
   const swapped=ex!==e.ex,eu=exU(ex),custom=String(ex).startsWith('custom_');
   const easy=prev&&prev.length&&prev.every(x=>x.rir===3);
-  return `<section class="xsec${n?'':' first'}"><div class="rw xh">${thumb(ex,72,true,true)}<div class="sp"><div class="xn" data-act="cues" data-ex="${ex}">${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}${custom?' <span class="tag">Custom</span>':''}</div><div class="xm">${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets, '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')} <button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
+  return `<section class="xsec${n?'':' first'}"><div class="rw xh">${thumb(ex,72,true,true)}<div class="sp"><div class="xn" data-act="cues" data-ex="${ex}">${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}${custom?' <span class="tag">Custom</span>':''}</div><div class="xm"><span>${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets, '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')}</span> <span class="xmb"><button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></span></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
   <div class="xl"><button class="lnk" data-act="cues" data-ex="${ex}">Notes</button><button class="lnk" data-act="swap" data-slot="${e.ex}">Swap</button></div></div>
   <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">PREVIOUS</div><div style="text-align:center">${eu.toUpperCase()}</div><div style="text-align:center">${u}</div><div></div></div>
   ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="swr" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="set ${s.done?'dn':''}"><div class="sn">${i+1}${s.done&&setIsPR(ex,sets,i)?'<b class="prc">PR</b>':''}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
@@ -1940,7 +1961,7 @@ function liveView(wo,lg){
  const wlen=dayMinutes(day,wo),over=wlen>sessMax();
  return headerV1('Workout',[['wCancel','Discard workout'],['soundTog','Timer sound: '+(LS.get('forma.sound',1)===0?'off':'on')],['shakeTog','Shake to finish a set: '+(LS.get('forma.shake',1)===0?'off':'on')]])+`<div class="v1 live"><div class="lhero"><div class="lt"><h2 class="pt">${esc(day.name)}</h2><button class="btn ghost" data-act="wFinish">Finish</button></div>
  <button class="hn" data-act="wStarted" aria-label="Change start time"><b class="big" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b><span class="of"${over?' style="color:var(--warn)"':''}>${stt.done} of ${stt.all} sets, about ${wlen} min</span></button></div>
- ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}</div><div style="height:${130}px"></div>
+ ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}</div><div style="height:calc(168px + env(safe-area-inset-bottom))"></div>
  <div id="setdone"><div><button class="btn" data-act="setDone">${ic('check',22)} ${(()=>{const n=nextSet();return n?'Set done: '+esc((exdb().exercises[n.ex]||{}).n||'')+' '+(n.i+1)+'/'+n.n:'All sets done'})()}</button></div></div>`;
 }
 /* workout times and totals */
@@ -2783,7 +2804,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.11${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.12${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3235,7 +3256,7 @@ document.addEventListener('touchstart',spLongStart,{passive:true});document.addE
 document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-sp]'))e.preventDefault()});
 let actK='basketball';
 function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(UI.date)}</div>
- <div class="fld"><label>What</label><div id="act_k">${ACT_GROUPS.map(([g,ks])=>`<div class="xs mut" style="margin:8px 0 4px">${g}</div><div class="chips">${ks.map(k=>`<button class="chip ${k===actK?'b':''}" style="height:34px;padding:0 12px" data-act="actKind" data-k="${k}">${actName(k)}</button>`).join('')}</div>`).join('')}</div></div>
+ <div class="fld"><label>What</label><div id="act_k">${ACT_GROUPS.map(([g,ks])=>`<div class="xs mut" style="margin:8px 0 4px">${g}</div><div class="chips">${ks.map(k=>`<button class="chip actk ${k===actK?'b':''}" data-act="actKind" data-k="${k}">${actName(k)}</button>`).join('')}</div>`).join('')}</div></div>
  <div class="fld"><label>Minutes</label><input id="act_min" inputmode="numeric" placeholder="60"></div>
  <button class="btn full" data-act="actSave">Add</button>
  ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}
