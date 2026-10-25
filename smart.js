@@ -102,6 +102,43 @@
     const rate = v.rate == null ? '' : Math.abs(v.rate) < 0.05 ? c.rate.flat : fill(v.rate < 0 ? c.rate.down : c.rate.up, { n: fr(v.rate), u });
     return { title, text, protein: v.state === 'collecting' || v.state === 'collectingDays' ? '' : protein, rate, tone: v.tone, state: v.state };
   }
-  const api = { bmr, maint, weekFormula, smart, nextTarget, extraKcal, verdict, verdictText };
+  /* Next-session load suggestion (double progression). Pure, weights in kg.
+     nextLoad({ history, reps, unit, big, step }): history = recent sessions for one exercise, newest first, each an
+     array of sets { w, r, done, rir? }; reps = program range like "8-12" or "10"; unit = 'REPS' | 'SEC' | 'M'
+     (anything but REPS returns null); big = heavy compound; step = plate jump (default 2.5, or 1.25 under 20 kg).
+     Returns { w, r, reason: 'first'|'add'|'same'|'reps'|'deload', text } or null.
+     Rules: all done sets at the top of the range (or all rir 3) means add one step at the bottom of the range;
+     otherwise same weight, reps + 1 (capped at the top); failure (rir 0) on a big lift two sessions running, or
+     reps under the bottom two sessions running, means about 7.5% less. Bodyweight (w 0) suggests reps only. */
+  function nextLoad(o) {
+    const a = o || {};
+    if (a.unit && a.unit !== 'REPS') return null;
+    const m = String(a.reps == null ? '' : a.reps).match(/(\d+)\s*(?:-|to)?\s*(\d+)?/);
+    const lo = m ? +m[1] : 8, hi = m && m[2] ? Math.max(+m[2], lo) : lo;
+    const fmt = (n) => String(Math.round(n * 100) / 100);
+    const sess = (a.history || []).map((x) => (x || []).filter((s) => s && s.done && s.r > 0)).filter((x) => x.length);
+    if (!sess.length) return { w: null, r: lo, reason: 'first', text: `First time: start light and aim for ${lo} reps` };
+    const last = sess[0], wMax = Math.max(...last.map((s) => +s.w || 0));
+    const step = a.step > 0 ? a.step : (wMax < 20 ? 1.25 : 2.5);
+    const round = (n) => Math.round(n / step) * step;
+    const minR = Math.min(...last.map((s) => s.r));
+    if (wMax <= 0) {
+      const r = minR >= hi ? hi + 1 : Math.max(minR + 1, lo);
+      return { w: 0, r, reason: 'reps', text: `Try ${r} reps` };
+    }
+    const failed = (x) => x.some((s) => s.rir === 0), under = (x) => x.some((s) => s.r < lo);
+    if (sess.length >= 2 && ((a.big && failed(last) && failed(sess[1])) || (under(last) && under(sess[1])))) {
+      const w = Math.max(step, round(wMax * 0.925));
+      return { w, r: lo, reason: 'deload', text: `Ease off: try ${fmt(w)} kg x ${lo}` };
+    }
+    const allTop = last.every((s) => s.r >= hi), allEasy = last.every((s) => s.rir === 3) && minR >= lo;
+    if (allTop || allEasy) {
+      const w = round(wMax + step);
+      return { w, r: lo, reason: 'add', text: `Try ${fmt(w)} kg x ${lo}` };
+    }
+    const r = Math.min(hi, Math.max(minR + 1, lo));
+    return { w: wMax, r, reason: 'same', text: `Try ${fmt(wMax)} kg x ${r}` };
+  }
+  const api = { nextLoad, bmr, maint, weekFormula, smart, nextTarget, extraKcal, verdict, verdictText };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FormaSmart = api;
 })(this);
