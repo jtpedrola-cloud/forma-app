@@ -887,6 +887,7 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 /* 0.11.12 polish */
 .wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 32px)}
 .v1 .xm{flex-wrap:wrap}.v1 .xm .xmb{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;flex:none}
+@media (max-width:370px){.v1 .xm{font-size:14px;gap:4px 8px}.v1 .xm .xmb{gap:6px}}
 .v1 .rst,.v1 .rst.alt{min-height:44px;margin:-6px 0;padding:0 2px;white-space:nowrap}
 .v1 .xh .xl .lnk{min-height:44px;margin:-6px 0;padding:0 0 0 8px;display:inline-flex;align-items:center;justify-content:flex-end}
 .v1 .xa .lnk{min-height:44px;padding:0;display:inline-flex;align-items:center}
@@ -941,7 +942,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='bbad35dec42abacdd475e5f4eeca6008fd5fcc13';let verChecked=0;
+const BUILD='c9974375da96fd39dfd9cb2f5ba97e54d8706cfa';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1009,6 +1010,8 @@ const P_MEALS='data/meals.json',P_CHK='data/checkins.json';const P_PROFILE='data
 const base=p=>DB.files[p]&&DB.files[p].base;
 let EXC=null;
 const cur=p=>{if(!(DB.pend[p]&&DB.pend[p].length))return base(p);if(p!==P_EX)return view(p);const q=DB.pend[p],b=base(p);if(EXC&&EXC.b===b&&EXC.q===q&&EXC.n===q.length)return EXC.v;const v=view(p);EXC={b,q,n:q.length,v};return v};
+/* targets with a fallback, so a profile without targets (before setup) still renders */
+const TG=pr=>(pr&&pr.targets)||{kcal:2000,protein:120,carbs:200,fat:65};
 const profile=()=>cur(P_PROFILE),program=()=>cur(P_PROG),exdb=()=>cur(P_EX),foodsdb=()=>cur(P_FOODS);
 /* Units: data files always hold kg and cm. profile.units is 'kg' (kg, cm) or 'lb' (lb, ft and in) and only changes what is
    shown and typed. While the setup questionnaire is open its own units choice wins. */
@@ -1430,7 +1433,7 @@ function checklist(d){
 /* Design v2 hero: one big number, the bar with its band, one status line. Today adds the three macro values and the burn line; Food adds the rings
    and makes the number a tap that switches between eaten and left. */
 function calHero(d,cons,rings){
- const pr=profile(),T=pr.targets,t=totals(d),rs=rangeState('kcal',t.kcal,T),big=cons?rnd(t.kcal):rnd(T.kcal-t.kcal);
+ const pr=profile(),T=TG(pr),t=totals(d),rs=rangeState('kcal',t.kcal,T),big=cons?rnd(t.kcal):rnd(T.kcal-t.kcal);
  const st=rs.in?`In range, ${rs.band}`:rs.l==='Left'?(t.kcal<=0?`${rs.band} to eat`:`Left ${fmtN(rs.amt)} of ${rs.band}`):`<span class="amb">Over ${fmtN(rs.amt)}</span> of ${rs.band}`;
  const num_=`<b class="big">${fmtN(big)}</b><span class="of">/ ${fmtN(T.kcal)}</span>`;
  const mac=(l,k)=>{const r=rangeState(k,t[k],T);return `<div><div class="lbl">${l}</div><div class="t17">${fmtN(t[k])} g</div><div class="s15 mut">${r.in?'in range':r.l==='Left'?'left '+fmtN(r.amt):'<span class="amb">over '+fmtN(r.amt)+'</span>'}</div></div>`};
@@ -1507,7 +1510,7 @@ async function journalSnap(file){
 }
 /* ---------- Today (design v2: the date, the calories hero, today's plan) ---------- */
 function todayView(){
- const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),lg=logOf(d),isT=d===today(),rg=ranges(T).kcal;
+ const pr=profile(),T=TG(pr),d=UI.date,t=totals(d),lg=logOf(d),isT=d===today(),rg=ranges(T).kcal;
  const pd=progDay(d),wo=lg.workout,chk=checklist(d);
  const row=(ok,name,val,act,link,x,tour,rx)=>`<div class="pr"${tour?` data-tour="${tour}"`:''}${rx||''}><span class="pk${ok?' ok':''}">${ok?ic('check',14):''}</span><span class="pn">${name}</span><span class="pv">${val}</span>${link?`<button class="lnk" data-act="${act}"${x||''}>${link}</button>`:'<span></span>'}</div>`;
  const yd=addDays(today(),-1),ydp=logP(yd),ydRdy=!DB.tree[ydp]||(DB.files[ydp]&&DB.files[ydp].sha===DB.tree[ydp]);
@@ -1562,13 +1565,13 @@ function insightsView(){
  const stat=gstat;
  const rate=sm.rate==null?'':fw(Math.abs(sm.rate),2)+' '+wU();
  const status={collecting:`Learning from your logs: ${Math.min(sm.eatDays,7)} of 7 days, ${Math.min(sm.weighIns,10)} of 10 weigh-ins`,'on pace':`On pace: ${rate} a week, goal ${fw(goal,2)}`,fast:`Faster than planned: ${rate} a week. Next check-in raises calories.`,slow:`Slower than planned: ${rate} a week. Next check-in lowers calories.`}[sm.status]||'';
- return `<section class="vs ch"><div class="lbl">Calories</div><div class="xs mut">${logged}/7 days logged</div>${barChart2(cv,cl,pr.targets.kcal)}</section>
+ return `<section class="vs ch"><div class="lbl">Calories</div><div class="xs mut">${logged}/7 days logged</div>${barChart2(cv,cl,TG(pr).kcal)}</section>
  <section class="vs"><div class="g22">${stat(fmtN(sm.tdee),'kcal','Maintenance')}${stat(sm.trendNow?fw(sm.trendNow):'-',wU(),'Weight trend')}${stat(sm.avgIn?fmtN(sm.avgIn):'-','kcal','Average intake')}${stat(fmtN(sm.suggested),'kcal','Suggested target')}</div>
  <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="calcOpen">How this is calculated</button></section>`}
 function calcSheet(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
  let logged=0,defSum=0;for(let i=6;i>=0;i--){const d=addDays(T,-i),k=totals(d).kcal;if(k>0){logged++;defSum+=dayBurn(d)-k}}
- const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null,kgWk=(sm.tdee-pr.targets.kcal)*7/7700;
+ const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null,kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
  const row=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`;
  return `<h2>How this is calculated</h2>
  <p class="s15 mut cp">Maintenance is what you burn in a day. It starts as a formula from your body, your steps and your lifting. As you log food and weigh in, it moves toward what your own numbers show: what you ate, minus what your weight trend burned.</p>
@@ -1578,18 +1581,18 @@ function calcSheet(){
  ${row('Maintenance'+tq('maintenance'),fmt(sm.tdee)+' kcal')}
  ${row('Weight trend'+tq('trend-weight'),sm.trendNow?fwu(sm.trendNow):'-')}
  ${row('Suggested target for '+fw(goal,2)+' '+wU()+' a week',fmt(sm.suggested)+' kcal')}
- ${row('Current target',fmt(pr.targets.kcal)+' kcal')}
+ ${row('Current target',fmt(TG(pr).kcal)+' kcal')}
  ${lastCk?row('Last check-in',fmtShort(lastCk.date)+', '+(lastCk.prevTarget===lastCk.target?'kept '+fmt(lastCk.target):fmt(lastCk.prevTarget)+' to '+fmt(lastCk.target))):''}
  ${logged?row(defSum>=0?'Average deficit':'Average surplus',fmt(Math.abs(defSum/logged))+' kcal a day'):''}
  ${row('Body at rest',fmt(train.bmr)+' kcal')}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
- <p class="xs mut cp">At ${fmt(pr.targets.kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion. ${imperial()?'3,500 kcal is roughly 1 lb.':'7,700 kcal is roughly 1 kg.'}</p>
+ <p class="xs mut cp">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion. ${imperial()?'3,500 kcal is roughly 1 lb.':'7,700 kcal is roughly 1 kg.'}</p>
  ${!latestBF()&&(b.assumed||!b.heightCm)?`<p class="xs cp" style="color:var(--warn)">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Tell Claude your real height and age.</p>`:''}
  <button class="btn full sbtn" data-act="closeSheet">Got it</button>`}
 function foodView(){
  if(isSimple())return eatView();
  const fs=subOf('food',FOOD_SUBS),fh=headerV1('Food',[['savedOpen','Saved meals']],subSeg('food',FOOD_SUBS));
  if(fs==='insights')return fh+`<div class="v1">${insightsView()}</div>`+logFab();
- const pr=profile(),T=pr.targets,d=UI.date,t=totals(d),items=food(d).items,isCons=UI.mode==='consumed';
+ const pr=profile(),T=TG(pr),d=UI.date,t=totals(d),items=food(d).items,isCons=UI.mode==='consumed';
  const big=isCons?rnd(t.kcal):rnd(T.kcal-t.kcal);
  const ml=mealList(d);
  const secs=ml.filter(k=>items.some(i=>mealNo(i)===k)).map(k=>{
@@ -2458,7 +2461,7 @@ function smartNow(){
  for(let i=28;i>=1;i--){const d=addDays(T,-i),f=food(d).items;days.push({d,kcal:f.reduce((a,x)=>a+num(x.kcal),0),logged:f.length>0,weight:logOf(d).weight})}
  const liftDays=Object.values(program().weekdays).filter(x=>x!=='rest').length;
  const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays)+FormaSmart.extraKcal(pr.intake&&pr.intake.answers);
- return FormaSmart.smart({days,formula,targetKcal:pr.targets.kcal,goalRate:pr.goalRate||0.7});
+ return FormaSmart.smart({days,formula,targetKcal:TG(pr).kcal,goalRate:pr.goalRate||0.7});
 }
 function maintCard(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7;
@@ -2470,7 +2473,7 @@ function maintCard(){
   'on pace':['var(--ok)','On pace: losing about '+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week (goal '+fw(goal,2)+').'],
   fast:['var(--warn)','Losing faster than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). Next check-in raises calories.'],
   slow:['var(--warn)','Losing slower than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). Next check-in lowers calories.']}[sm.status];
- const kgWk=(sm.tdee-pr.targets.kcal)*7/7700;
+ const kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
  return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance${tq('maintenance')}</h3><div class="mut sm">${sm.conf>0?'Learned from your logs, '+pct+'% confident':'Formula estimate until your logs take over'}</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(sm.tdee)}</b><div class="xs mut">kcal a day</div></div></div>
  <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset);border-left:3px solid ${stTxt[0]}">${stTxt[1]}</div>
  <div style="margin-top:6px">
@@ -2478,10 +2481,10 @@ function maintCard(){
  ${row('Average intake',sm.avgIn?fmt(sm.avgIn):'-',sm.eatDays+' logged day'+(sm.eatDays===1?'':'s')+' in 28')}
  ${row('Measured from your data',sm.measured?fmt(sm.measured):'<span class="mut">not yet</span>',sm.measured?'intake + what your weight trend burned':'needs 7 logged days and 10 days of weigh-ins')}
  ${row('Formula',fmt(sm.formula),'lifting '+fmt(train.total)+', rest '+fmt(rest.total))}
- ${row('<b style="color:var(--txt)">Suggested target</b>','<b>'+fmt(sm.suggested)+'</b>','for '+fw(goal,2)+' '+wU()+' a week; current '+fmt(pr.targets.kcal))}
+ ${row('<b style="color:var(--txt)">Suggested target</b>','<b>'+fmt(sm.suggested)+'</b>','for '+fw(goal,2)+' '+wU()+' a week; current '+fmt(TG(pr).kcal))}
  ${lastCk?row('Last check-in',fmtShort(lastCk.date),lastCk.prevTarget===lastCk.target?'kept '+fmt(lastCk.target):fmt(lastCk.prevTarget)+' to '+fmt(lastCk.target)):''}
  </div>
- <div class="xs mut" style="margin-top:8px">At ${fmt(pr.targets.kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion.</div>
+ <div class="xs mut" style="margin-top:8px">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion.</div>
  <details class="xs mut" style="margin-top:8px"><summary>How the formula works</summary><div style="margin-top:6px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+fwu(train.w)+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}</div></details>
  ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Tell Claude your real height and age.</div>`:''}</div>`;
 }
@@ -2789,7 +2792,7 @@ function settingsSheet(){
  const data=`${row('exportGo','Export my data','A zip with every data file, plus food.csv and workouts.csv you can open in a spreadsheet')}
  ${SBS.user?'':`<div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>`}
  <button class="srow" data-act="force"><span class="sp">Force refresh<span class="xs">Reload everything from your account</span></span></button>
- ${pr?`${isSimple()||!(pr.targets&&pr.targets.kcal!=null)?'':`<div class="kv"><span class="mut">Calories</span><span>${pr.targets.kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${(pr.stepGoal||0).toLocaleString('en-US')}</span></div>
+ ${pr?`${isSimple()||!(pr.targets&&TG(pr).kcal!=null)?'':`<div class="kv"><span class="mut">Calories</span><span>${TG(pr).kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${(pr.stepGoal||0).toLocaleString('en-US')}</span></div>
  <div class="snote">${SBS.user?'Targets are set when you set up your plan. To change them, redo the setup in Account.':'Targets are set by the weekly check-in. To change them yourself, redo the setup in Account.'}</div>`:''}
  ${SBS.user?'':`<details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
@@ -2804,7 +2807,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.12${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.13${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
