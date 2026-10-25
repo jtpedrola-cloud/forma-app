@@ -942,7 +942,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='bc801b35e97b1739487fa005687286cc868a82e9';let verChecked=0;
+const BUILD='f08ecfdb84f4d45e67a8daa2de9c26f0dafa59cc';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2807,7 +2807,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.13${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.14${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
