@@ -32,7 +32,7 @@
     pickleball: ['pickleball', 'pickle ball'],
     football: ['football', 'soccer', 'futsal'],
     running: ['running', 'run', 'ran', 'jog', 'jogging', 'jogged'],
-    cycling: ['cycling', 'cycle', 'biking', 'bike', 'biked', 'bicycle'],
+    cycling: ['cycling', 'cycle', 'cycled', 'biking', 'bike', 'biked', 'bicycle'],
     swimming: ['swimming', 'swim', 'swam'],
     hiking: ['hiking', 'hike', 'hiked', 'trek', 'trekking'],
     boxing: ['boxing', 'sparring'],
@@ -48,7 +48,13 @@
     other: ['sport', 'sports']
   };
 
-  var NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+  var NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+    // Taglish
+    isa: 1, isang: 1, dalawa: 2, dalawang: 2, tatlo: 3, tatlong: 3, apat: 4, lima: 5, limang: 5, anim: 6, pito: 7, pitong: 7, walo: 8, walong: 8, siyam: 9, sampu: 10, sampung: 10 };
+  // Taglish words read as their English twin (applied to the line and to food names alike)
+  var SYN = { ng: 'of', nang: 'of', tasa: 'cup', tasang: 'cup', baso: 'glass', basong: 'glass', mangkok: 'bowl', piraso: 'piece', pirasong: 'piece', kape: 'coffee', tubig: 'water', gatas: 'milk', hakbang: 'steps', oras: 'hours', minuto: 'minutes', minutos: 'minutes', may: 'with' };
+  // phrases that only describe when or how, dropped before parsing
+  var NOISE = [['this', 'morning'], ['this', 'afternoon'], ['this', 'evening'], ['tonight'], ['kanina'], ['kaninang', 'umaga'], ['kaninang', 'gabi'], ['ngayong', 'umaga'], ['ngayon'], ['no', 'sugar'], ['without', 'sugar'], ['sugarless'], ['walang', 'asukal'], ['no', 'ice']];
 
   // unit words (after stemming) -> canonical unit
   var UNITS = {
@@ -59,17 +65,18 @@
     cup: 'cup', tbsp: 'tbsp', tbs: 'tbsp', tablespoon: 'tbsp', tsp: 'tsp', teaspoon: 'tsp',
     pc: 'piece', piece: 'piece', slice: 'slice', serving: 'serving', order: 'serving', srv: 'serving',
     small: 'small', medium: 'medium', large: 'large', big: 'large',
-    dozen: 'dozen'
+    dozen: 'dozen', handful: 'serving'
   };
   var FIXED_UNITS = { g: 1, kg: 1, ml: 1, l: 1, cup: 1, tbsp: 1, tsp: 1, piece: 1, slice: 1, serving: 1, small: 1, medium: 1, large: 1, dozen: 1 };
   var SIZE_FACTOR = { small: 0.75, medium: 1, large: 1.3 };
 
   // leading words that carry no meaning
-  var FILLER = { i: 1, im: 1, ive: 1, my: 1, just: 1, so: 1, uh: 1, um: 1, then: 1, ok: 1, okay: 1, today: 1, this: 1, morning: 1, now: 1, had: 1, have: 1, ate: 1, eat: 1, eating: 1, drank: 1, drink: 1, took: 1, take: 1, taking: 1, for: 1, breakfast: 1, lunch: 1, dinner: 1, snack: 1, merienda: 1, supper: 1, log: 1, add: 1, also: 1, and: 1 };
+  var FILLER = { i: 1, im: 1, ive: 1, my: 1, just: 1, so: 1, uh: 1, um: 1, then: 1, ok: 1, okay: 1, today: 1, this: 1, morning: 1, now: 1, had: 1, have: 1, ate: 1, eat: 1, eating: 1, drank: 1, drink: 1, took: 1, take: 1, taking: 1, for: 1, breakfast: 1, lunch: 1, dinner: 1, snack: 1, merienda: 1, supper: 1, log: 1, add: 1, also: 1, and: 1, was: 1, is: 1, were: 1, are: 1, of: 1, kumain: 1, kain: 1, nakain: 1, uminom: 1, inom: 1, ako: 1, ko: 1, nag: 1, ay: 1 };
   // words that may be left over around a matched food name without changing it
-  var IGNORE = { whole: 1, a: 1, an: 1, the: 1, of: 1, some: 1, my: 1, plain: 1, regular: 1, fresh: 1, cooked: 1, hot: 1, cold: 1, pc: 1 };
-  var STOP = { for: 1, a: 1, an: 1, the: 1, of: 1, in: 1, at: 1, on: 1, about: 1, around: 1, played: 1, play: 1, playing: 1, did: 1, went: 1, go: 1, and: 1, to: 1, i: 1, then: 1, today: 1, just: 1, like: 1, roughly: 1, approx: 1, each: 1, hour: 0 };
-  var CONNECT = { and: 1, plus: 1, then: 1, with: 1, also: 1 };
+  var IGNORE = { whole: 1, a: 1, an: 1, the: 1, of: 1, some: 1, my: 1, plain: 1, regular: 1, fresh: 1, cooked: 1, hot: 1, cold: 1, pc: 1, iced: 1 };
+  var STOP = { for: 1, a: 1, an: 1, the: 1, of: 1, in: 1, at: 1, on: 1, about: 1, around: 1, played: 1, play: 1, playing: 1, did: 1, went: 1, go: 1, and: 1, to: 1, i: 1, then: 1, today: 1, just: 1, like: 1, roughly: 1, approx: 1, each: 1, hour: 0, ako: 1, ko: 1, ng: 1, of: 1, nag: 1, naglaro: 1, laro: 1, naglakad: 1, lakad: 1, walk: 1, walked: 1, class: 1, session: 1, training: 1, practice: 1, na: 1, ay: 1, was: 1 };
+  var CONNECT = { and: 1, plus: 1, then: 1, with: 1, also: 1, at: 1 };
+  var BRAND = { jollibee: 1, mcdo: 1, mcdonalds: 1, kfc: 1, chowking: 1, mang: 0 };
 
   // ---------- text helpers ----------
   function stem(w) {
@@ -90,6 +97,8 @@
   // tokens: { k:'n'|'w'|'s', v, s, e, frac? }  (n number, w word, s separator)
   function tokenize(line) {
     var out = [], m, str = String(line == null ? '' : line);
+    // decimal comma after a weight word or before a weight unit: "84,6 kg", "weight 84,6" (same length, so positions hold)
+    str = str.replace(/(\d),(\d{1,2})(?=\s*(?:kgs?|kilos?|kilograms?|lbs?|pounds?)\b)/gi, '$1.$2').replace(/(\b(?:weight|weigh|weighed|wt|bw|timbang|bigat)\W+(?:(?:is|ay|ko)\s+)?\d+),(\d{1,2})(?![\d,])/gi, '$1.$2');
     TOKEN_RE.lastIndex = 0;
     while ((m = TOKEN_RE.exec(str))) {
       var x = m[0], t = { s: m.index, e: m.index + x.length };
@@ -101,7 +110,7 @@
         // a leading minus ("-5 kg", "weight -80") is remembered so the caller can reject it
         if (/[-\u2212\u2013]/.test(str.charAt(m.index - 1)) && (m.index < 2 || /[\s,;:(]/.test(str.charAt(m.index - 2)))) t.neg = true;
       }
-      else { t.k = 'w'; t.v = x.toLowerCase().replace(/['’]/g, ''); }
+      else { t.k = 'w'; t.v = x.toLowerCase().replace(/['’]/g, ''); if (SYN[t.v]) t.v = SYN[t.v]; }
       out.push(t);
     }
     // "and a half" / "and half" -> a bare 0.5 fraction token
@@ -115,6 +124,48 @@
         res.push({ k: 'n', v: 0.5, frac: true, tail: true, s: a.s, e: out[i + 1].e }); i += 1; continue;
       }
       res.push(a);
+    }
+    return post(res);
+  }
+
+  // drop "this morning" style noise, join number words ("eighty four point six"), "point" decimals, and the Taglish linker "na"
+  function post(toks) {
+    var i, j, k, t, out = [];
+    var isW = function (x, v) { return x && x.k === 'w' && x.v === v; };
+    for (i = 0; i < toks.length; i++) {
+      t = toks[i];
+      var hit = 0;
+      if (t.k === 'w') for (k = 0; k < NOISE.length && !hit; k++) {
+        var ok = true;
+        for (j = 0; j < NOISE[k].length; j++) if (!isW(toks[i + j], NOISE[k][j])) { ok = false; break; }
+        if (ok) hit = NOISE[k].length;
+      }
+      if (hit) { i += hit - 1; continue; }
+      // "na" right after a Taglish number or before "with": "apat na pandesal", "kape na may gatas"
+      if (isW(t, 'na') && ((out.length && out[out.length - 1].k === 'w' && NUMW[out[out.length - 1].v] != null) || isW(toks[i + 1], 'with'))) continue;
+      // number words of 20 or more, or any number word before "point", become one number
+      if (t.k === 'w' && NUMW[t.v] != null) {
+        var v = NUMW[t.v], e = t.e, nx = toks[i + 1], used = 0;
+        if (v >= 20 && nx && nx.k === 'w' && NUMW[nx.v] >= 1 && NUMW[nx.v] <= 9) { v += NUMW[nx.v]; e = nx.e; used = 1; nx = toks[i + 2]; }
+        var after = toks[i + 1 + used];
+        var big = after && after.k === 'w' && (after.v === 'thousand' || after.v === 'hundred' || after.v === 'quarter' || after.v === 'quarters');
+        if (!big && (v >= 20 || isW(after, 'point'))) { out.push({ k: 'n', v: v, s: t.s, e: e }); i += used; continue; }
+      }
+      out.push(t);
+    }
+    // 84 point 6 / 84 point six five
+    var res = [];
+    for (i = 0; i < out.length; i++) {
+      t = out[i];
+      if (t.k === 'n' && !t.frac && isW(out[i + 1], 'point') && res.length >= 0) {
+        var digs = '', n = i + 2, last = out[i + 1];
+        while (out[n] && ((out[n].k === 'n' && !out[n].frac && Number.isInteger(out[n].v) && digs.length < 3) || (out[n].k === 'w' && NUMW[out[n].v] >= 1 && NUMW[out[n].v] <= 9) || isW(out[n], 'zero'))) {
+          digs += isW(out[n], 'zero') ? '0' : String(out[n].k === 'n' ? out[n].v : NUMW[out[n].v]); last = out[n]; n++;
+          if (digs.length >= 3) break;
+        }
+        if (digs) { res.push({ k: 'n', v: parseFloat(t.v + '.' + digs), s: t.s, e: last.e }); i = n - 1; continue; }
+      }
+      res.push(t);
     }
     return res;
   }
@@ -160,9 +211,18 @@
     }
     // "three quarters"
     if (!(opt && opt.noQuarter) && toks[j] && toks[j].k === 'w' && (toks[j].v === 'quarter' || toks[j].v === 'quarters') && v >= 1 && v < 4) { v = v / 4; j++; }
-    else if (toks[j] && toks[j].k === 'w' && toks[j].v === 'hundred') { v *= 100; j++; if (toks[j] && toks[j].k === 'w' && toks[j].v === 'thousand') { v *= 10; j++; } }
-    else if (toks[j] && toks[j].k === 'w' && toks[j].v === 'thousand') { v *= 1000; j++; }
+    else if (toks[j] && toks[j].k === 'w' && toks[j].v === 'hundred') { v *= 100; j++; if (toks[j] && toks[j].k === 'w' && toks[j].v === 'thousand') { v *= 10; j++; } else j = addTail(toks, j, 100, function (x) { v += x; }); }
+    else if (toks[j] && toks[j].k === 'w' && toks[j].v === 'thousand') { v *= 1000; j++; j = addTail(toks, j, 1000, function (x) { v += x; }); }
     return { v: v, n: j };
+  }
+
+  // "seven thousand five hundred", "two hundred fifty": a smaller number right after is added on
+  function addTail(toks, j, below, add) {
+    var t = toks[j];
+    if (!t || t.prot || t.k === 's' || t.frac) return j;
+    var r = (t.k === 'n' || (t.k === 'w' && NUMW[t.v] != null)) ? parseQty(toks, j, { noQuarter: true }) : null;
+    if (r && r.v >= 1 && r.v < below && !(toks[r.n] && toks[r.n].k === 'w' && stem(toks[r.n].v) === 'k')) { add(r.v); return r.n; }
+    return j;
   }
 
   function fmtQ(q) {
@@ -288,7 +348,7 @@
 
   function unitLabel(u, q) {
     if (u === 'g' || u === 'ml' || u === 'tbsp' || u === 'tsp' || u === 'kg' || u === 'l') return u;
-    return u + (q > 1 ? 's' : '');
+    return u + (q > 1 ? (/(s|ch|sh|x)$/.test(u) ? 'es' : 's') : '');
   }
 
   // ---------- food pieces ----------
@@ -349,6 +409,11 @@
         again = resolvePieceAt(toks, idx, false, false);
         if (again.item) return again;
       }
+    }
+    // "jollibee 1 pc chickenjoy": a brand word in front of the quantity
+    if (out.err && toks[0] && toks[0].k === 'w' && BRAND[toks[0].v] && toks.length > 1) {
+      var nb = resolvePiece(toks.slice(1), idx);
+      if (nb.item) return nb;
     }
     return out;
   }
@@ -489,7 +554,7 @@
     return { si: si, v: best.v, from: from, to: to };
   }
 
-  var WEIGHT_KW = { weight: 1, weigh: 1, weighed: 1, weighing: 1, weighin: 1, wt: 1, bw: 1, bodyweight: 1, wait: 1, waight: 1 };
+  var WEIGHT_KW = { weight: 1, weigh: 1, weighed: 1, weighing: 1, weighin: 1, wt: 1, bw: 1, bodyweight: 1, wait: 1, waight: 1, timbang: 1, bigat: 1 };
   var KG_UNITS = { kg: 1, kgs: 1, kilo: 1, kilos: 1, kilogram: 1, kilograms: 1 };
   var LB_UNITS = { lb: 1, lbs: 1, pound: 1, pounds: 1 };
 
@@ -503,7 +568,7 @@
       var j = i + 1;
       if (t.v === 'body') j++;
       if (toks[j] && toks[j].k === 'w' && toks[j].v === 'in') j++;
-      while (toks[j] && toks[j].k === 'w' && { is: 1, was: 1, at: 1, of: 1, now: 1, today: 1, about: 1, around: 1 }[toks[j].v]) j++;
+      while (toks[j] && toks[j].k === 'w' && { is: 1, was: 1, at: 1, of: 1, now: 1, today: 1, about: 1, around: 1, ko: 1, ay: 1, ang: 1 }[toks[j].v]) j++;
       if (toks[j] && toks[j].k === 'n' && !toks[j].frac) {
         var v = toks[j].v, n = j + 1, unit = 'kg', hasUnit = false;
         if (toks[n] && toks[n].k === 'w') {
@@ -607,11 +672,21 @@
     var segs = [], cur = [];
     toks.forEach(function (t, ti) {
       var isSep = t.k === 's' || (t.k === 'w' && CONNECT[t.v] && !t.prot);
+      if (isSep && t.v === 'at' && ti > 0 && toks[ti - 1].k === 'w' && (WEIGHT_KW[toks[ti - 1].v] || MEASURE_WORDS[toks[ti - 1].v] || stem(toks[ti - 1].v) === 'step')) isSep = false; // "weight at 84"
       if (isSep && t.v === 'and' && ti > 0 && toks[ti + 1] && toks[ti + 1].k === 'n' && toks[ti - 1].k === 'w' && HOUR[stem(toks[ti - 1].v)]) isSep = false; // "1 hour and 30 min" 
       if (isSep) { if (cur.length) segs.push(cur); cur = []; }
       else cur.push(t);
     });
     if (cur.length) segs.push(cur);
+    // "rice, 2 cups": a lone "<qty> <unit>" segment belongs to the food segment before it
+    segs = segs.reduce(function (acc, sg) {
+      var prev = acc[acc.length - 1], u = sg.length > 1 && sg[0].k === 'n' && sg[1].k === 'w' && !sg[0].prot ? stem(sg[1].v) : null;
+      if (prev && u && (UNITS[u] || idx.units[u]) && u !== 'kg' && u !== 'kilo' && sg.length === 2 && !hasLeadingQty(prev) &&
+        prev.some(function (x) { return isFoodWord(x, idx); }) && !prev.some(function (x) { return WEIGHT_KW[x.v] || stem(x.v) === 'step' || MEASURE_WORDS[x.v]; }) && !findSport(prev)) {
+        acc[acc.length - 1] = sg.concat(prev);
+      } else acc.push(sg);
+      return acc;
+    }, []);
 
     function pushAction(a) { res.actions.push(a); }
     function hasNeg(seg) { return seg.some(function (t) { return t.k === 'n' && t.neg; }); }
@@ -694,6 +769,7 @@
 
       // food
       var pieces = splitPieces(seg, idx);
+      if (pieces.length > 1) pieces = pieces.filter(function (pc) { return !(pc.length === 1 && pc[0].k === 'w' && BRAND[pc[0].v]); }); // lone "jollibee" before "1 pc chickenjoy"
       pieces.forEach(function (pc) {
         var out = resolvePiece(pc, idx);
         if (out.item) {
