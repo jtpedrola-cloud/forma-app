@@ -8,9 +8,9 @@
  *     lastMealAt: ISO string or ms of the last logged item; now: ms or ISO (default Date.now())
  *   actions:
  *     { k:"weight", kg }
- *     { k:"steps", n }
+ *     { k:"steps", n, estimated? }  estimated: note when steps came from a walked distance
  *     { k:"measure", site, cm }                     tape measurement: waist, hips, chest, arm, thigh or neck, stored in cm
- *     { k:"sport", kind, min, kcal, assumed? }      assumed: no weightKg given, 80 kg used
+ *     { k:"sport", kind, min, kcal, assumed?, estimated? }  estimated: note when minutes came from a typical pace ("ran 5k")      assumed: no weightKg given, 80 kg used
  *     { k:"note", text }
  *     { k:"food", meal, items:[{ name, amount, kcal, protein, carbs, fat, foodId, assumed? }] }
  *   unknown: the pieces of the line that were not understood, untouched (nothing is ever guessed).
@@ -418,6 +418,20 @@
     return out;
   }
 
+  // "rice egg": two known foods side by side with no connector (longest first part wins)
+  function splitKnown(toks, idx, depth) {
+    for (var cut = toks.length - 1; cut >= 1; cut--) {
+      var L = toks.slice(0, cut), R = toks.slice(cut);
+      if (R[0].k !== 'w' || R[0].prot) continue;
+      var a = resolvePiece(L, idx);
+      if (!a.item) continue;
+      var b = resolvePiece(R, idx);
+      if (b.item) return [a, b];
+      if (depth < 3) { var sub = splitKnown(R, idx, depth + 1); if (sub) return [a].concat(sub); }
+    }
+    return null;
+  }
+
   function resolvePieceAt(toks, idx, useQty, noQuarter) {
     var q = null, i = 0, r;
     if (useQty && toks[0] && !toks[0].prot) {
@@ -468,7 +482,46 @@
       foodId: f.id
     };
     if (c.assumed) it.assumed = true;
-    return { item: it };
+    return { item: it, meta: { food: f, mult: c.mult, explicit: q != null } };
+  }
+
+  // ---------- distance, workouts, compound food lines ----------
+  var DIST_UNITS = { km: 1, kilometer: 1, kilometre: 1, k: 1, mile: 1.609344, mi: 1.609344 };
+  var PACE = { running: 6, cycling: 3, hiking: 12 }; // minutes per km when no time is given
+  var STEPS_PER_KM = 1300;
+  var WALK_WORDS = { walk: 1, walked: 1, walking: 1, lakad: 1, naglakad: 1, nilakad: 1 };
+  var WORKOUT_WORDS = { gym: 1, lift: 1, lifted: 1, lifting: 1, workout: 1, weightlifting: 1, weights: 1, exercise: 1, exercised: 1 };
+
+  // "5k", "5 km", "3.2 miles": first number followed by a distance unit
+  function findDistance(toks) {
+    for (var i = 0; i < toks.length; i++) {
+      if (toks[i].k !== 'n' && toks[i].k !== 'w') continue;
+      var r = parseQty(toks, i, { noQuarter: true });
+      if (!r || !toks[r.n] || toks[r.n].k !== 'w') continue;
+      var f = DIST_UNITS[stem(toks[r.n].v)];
+      if (f) return { km: r.v * f, from: i, to: r.n + 1 };
+    }
+    return null;
+  }
+
+  // a dish that already holds its components (omelette holds eggs): a stated component count scales the dish, an unstated one is absorbed
+  function mergeDishes(items, metas) {
+    var drop = {};
+    items.forEach(function (it, i) {
+      var m = metas[i], d = m && m.food.contains;
+      if (!d || drop[i]) return;
+      for (var j = 0; j < items.length; j++) {
+        if (j === i || drop[j] || !metas[j] || d.ids.indexOf(metas[j].food.id) < 0) continue;
+        if (metas[j].explicit) {
+          var cnt = metas[j].mult, mult = cnt / d.n, f = m.food, lab = fmtQ(cnt) + (cnt === 1 ? ' egg' : ' eggs');
+          items[i] = { name: f.name.replace(/\b\d+ eggs?\b/, lab), amount: lab,
+            kcal: Math.round(f.kcal * mult), protein: Math.round(f.protein * mult), carbs: Math.round(f.carbs * mult), fat: Math.round(f.fat * mult), foodId: f.id };
+        }
+        drop[j] = true;
+        break;
+      }
+    });
+    return { items: items.filter(function (_, i) { return !drop[i]; }) };
   }
 
   // ---------- sport, steps, weight ----------
@@ -635,7 +688,7 @@
     var res = { actions: [], unknown: [], issues: [] };
     var idx = buildIndex(ctx.foods);
     var kg = (typeof ctx.weightKg === 'number' && ctx.weightKg > 0) ? ctx.weightKg : null;
-    var foodItems = [], foodAt = -1;
+    var foodItems = [], foodMeta = [], foodAt = -1;
 
     function bad(txt, why) {
       txt = String(txt).trim();
@@ -717,6 +770,51 @@
         return;
       }
 
+      // bare "10k": steps when there is no distance or food context
+      var bare = seg.filter(function (t) { return !(t.k === 'w' && (t.v === 'today' || t.v === 'steps' || t.v === 'step')); });
+      if (bare.length === 2 && bare[0].k === 'n' && !bare[0].frac && !bare[0].prot && bare[1].k === 'w' && bare[1].v === 'k' && !findSport(seg)) {
+        var bn = bare[0].v * 1000;
+        if (hasNeg(seg)) { bad(pieceText(text, seg), 'steps cannot be negative'); return; }
+        if (!(bn >= 100 && bn <= 200000)) { bad(pieceText(text, seg), 'that step count looks off'); return; }
+        pushAction({ k: 'steps', n: Math.round(bn) });
+        return;
+      }
+
+      // distance: "ran 5k", "ran 5 km in 30 min", "walked 3 km"
+      var ds = findDistance(seg), spd = ds ? findSport(seg) : null;
+      if (ds && (!spd || PACE[spd.kind])) {
+        var kd = spd ? spd.kind : null, wk = -1;
+        for (i = 0; i < seg.length; i++) if (seg[i].k === 'w' && WALK_WORDS[seg[i].v]) { wk = i; break; }
+        if (!kd && wk < 0) { bad(pieceText(text, seg), 'ran or walked? say which'); return; }
+        if (hasNeg(seg)) { bad(pieceText(text, seg), 'distance cannot be negative'); return; }
+        if (!(ds.km > 0 && ds.km <= 300)) { bad(pieceText(text, seg), 'that distance looks off'); return; }
+        var skipD = {};
+        for (i = ds.from; i < ds.to; i++) skipD[i] = true;
+        if (spd) for (i = spd.from; i < spd.to; i++) skipD[i] = true;
+        if (wk >= 0) skipD[wk] = true;
+        var dur = findDuration(seg, skipD);
+        used = {};
+        Object.keys(skipD).forEach(function (k) { used[k] = true; });
+        if (dur) Object.keys(dur.used).forEach(function (k) { used[k] = true; });
+        if (!kd && !dur) { // walking with no time is steps
+          var wsteps = Math.round(ds.km * STEPS_PER_KM);
+          if (!(wsteps >= 100 && wsteps <= 200000)) { bad(pieceText(text, seg), 'that step count looks off'); return; }
+          pushAction({ k: 'steps', n: wsteps, estimated: 'about ' + STEPS_PER_KM + ' steps per km' });
+        } else {
+          var skind = kd || 'other', est = null, smin;
+          if (dur) smin = dur.min;
+          else { smin = ds.km * PACE[kd]; est = 'about ' + Math.round(smin) + ' min at ' + PACE[kd] + ' min per km'; }
+          if (!(smin > 0 && smin <= 600)) { bad(pieceText(text, seg), 'that duration looks off'); return; }
+          var da = { k: 'sport', kind: skind, min: Math.round(smin * 10) / 10, kcal: sportKcal(skind, smin, kg || DEFAULT_KG) };
+          if (kg == null) da.assumed = true;
+          if (est) da.estimated = est;
+          pushAction(da);
+        }
+        rest = seg.filter(function (_, n) { return !used[n]; });
+        processSeg(stripLead(rest, STOP), depth + 1);
+        return;
+      }
+
       // sport
       var sp = findSport(seg);
       if (sp) {
@@ -736,6 +834,15 @@
         rest = seg.filter(function (_, n) { return !used[n]; });
         processSeg(stripLead(rest, STOP), depth + 1);
         return;
+      }
+
+      // lifting is logged with Start workout, never as a sport
+      for (i = 0; i < seg.length; i++) {
+        var wv = seg[i].k === 'w' && !seg[i].prot ? seg[i].v : '';
+        if (WORKOUT_WORDS[wv] || (wv === 'worked' && seg[i + 1] && seg[i + 1].v === 'out') || (wv === 'weight' && seg[i + 1] && /^(training|lifting|session|workout)$/.test(seg[i + 1].v))) {
+          bad(pieceText(text, seg), 'lifting goes in Start workout, not here');
+          return;
+        }
       }
 
       // weight
@@ -768,14 +875,19 @@
       }
 
       // food
+      // "one scoop whey in 300 ml milk": "in" before a quantity joins two foods
+      seg = seg.filter(function (t, n) { return !(t.k === 'w' && t.v === 'in' && !t.prot && n > 0 && seg[n + 1] && parseQty(seg, n + 1, null)); });
       var pieces = splitPieces(seg, idx);
       if (pieces.length > 1) pieces = pieces.filter(function (pc) { return !(pc.length === 1 && pc[0].k === 'w' && BRAND[pc[0].v]); }); // lone "jollibee" before "1 pc chickenjoy"
       pieces.forEach(function (pc) {
-        var out = resolvePiece(pc, idx);
-        if (out.item) {
-          if (foodAt < 0) { foodAt = res.actions.length; res.actions.push(null); }
-          foodItems.push(out.item);
-        } else bad(pieceText(text, pc), out.err);
+        var out = resolvePiece(pc, idx), outs = [out];
+        if (!out.item && out.err === 'not in the food list') { var sk = splitKnown(pc, idx, 0); if (sk) outs = sk; }
+        outs.forEach(function (o) {
+          if (o.item) {
+            if (foodAt < 0) { foodAt = res.actions.length; res.actions.push(null); }
+            foodItems.push(o.item); foodMeta.push(o.meta);
+          } else bad(pieceText(text, pc), o.err);
+        });
       });
     }
     segs.forEach(function (s) { processSeg(s, 0); });
@@ -783,6 +895,7 @@
     if (noteText) pushAction({ k: 'note', text: noteText });
 
     if (foodItems.length) {
+      foodItems = mergeDishes(foodItems, foodMeta).items;
       res.actions[foodAt] = { k: 'food', items: foodItems, meal: mealNumber(ctx) };
     }
     res.actions = res.actions.filter(Boolean);
