@@ -942,7 +942,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='1458d45bf8abd2704e2c163056b34a20d1699efa';let verChecked=0;
+const BUILD='469f488026e0785a366eb8815a5f7d2d0ed6b9f7';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1850,7 +1850,7 @@ function pedEx(e,di,i,n){const inf=exdb().exercises[e.ex]||{},sec=inf.u==='s';
 const JUMPY=['volleyball','basketball','badminton','football','tennis','pickleball'];
 function legWarn(doc,i){const sp=((doc.sports||{})[String(i)]||[]).find(s=>JUMPY.includes(s.kind));if(!sp)return '';const d=doc.days.find(x=>x.id===doc.weekdays[String(i)]);if(!d)return '';
  const n=d.exercises.filter(e=>((exdb().exercises[e.ex]||{}).p||[]).some(m=>m==='quads'||m==='hamstrings'||m==='glutes')).length;
- return n>=2?`<div class="xs" style="color:var(--warn);margin:0 0 6px">Legs on a ${sp.kind} day. Your legs may be tired for it.</div>`:''}
+ return n>=2?`<div class="xs" style="color:var(--warn);margin:0 0 6px">Legs on a ${esc(actName(sp.kind))} day. Your legs may be tired for it.</div>`:''}
 function pedDraw(){const el=$('#ped');if(!el||!PED)return;const y=($('#ped_b')||{}).scrollTop||0,doc=PED.doc,days=doc.days;
  const chip=(w,id,l,on)=>`<button class="chip pwc ${on?'b':''}" data-act="pedWd" data-w="${w}" data-id="${esc(id)}">${esc(l)}</button>`;
  el.innerHTML=`<div class="ovh"><button class="ib" data-act="pedBack" aria-label="Back">${ic('left')}</button><h1>Edit program</h1>${hqBtn('ped')}</div>
@@ -2077,8 +2077,9 @@ let SW=null;
 function toastUndo(m,fn){document.querySelectorAll('.toast.undo').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast undo';t.innerHTML=`<span>${esc(m)}</span><button>Undo</button>`;
  t.querySelector('button').onclick=()=>{t.remove();fn()};document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function delSet(ex,i){const before=clone(((logOf(woDate()).workout||{}).sets||{})[ex]||[]);if(!before[i])return;
+ const gone=before[i];
  editSets(ex,s=>{s.splice(i,1)},{delay:1500});
- toastUndo('Set '+(i+1)+' deleted.',()=>{editSets(ex,s=>{s.length=0;before.forEach(z=>s.push(z))},{delay:1500})})}
+ toastUndo('Set '+(i+1)+' deleted.',()=>{editSets(ex,s=>{s.splice(Math.min(i,s.length),0,clone(gone))},{delay:1500})})}
 document.addEventListener('touchstart',e=>{const w=e.target.closest&&e.target.closest('.swr');if(!w||e.touches.length!==1){SW=null;return}const t=e.touches[0];SW={w,row:w.querySelector('.set'),x:t.clientX,y:t.clientY,dx:0,on:false,width:w.offsetWidth}},{passive:true});
 document.addEventListener('touchmove',e=>{if(!SW)return;const t=e.touches[0],dx=t.clientX-SW.x,dy=t.clientY-SW.y;
  if(!SW.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){SW=null;return}if(dx<-12&&Math.abs(dx)>Math.abs(dy)*1.5){SW.on=true;SW.w.classList.add('sw');if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else return}
@@ -2807,7 +2808,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.16${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.17${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3312,7 +3313,7 @@ function renderSheet(){
 function logDayToggle(d){
  const el=$('#cmd_in');if(el)cmdText=el.value;
  UI.logAway=d!==today()&&UI.tab!=='today'&&UI.tab!=='food';UI.date=d;logDayOpen=false;loadDay(d);render();openSheet(logSheet(),logSheet)}
-let cmdText='',cmdHi=-1;const CMD={res:null,line:'',date:'',acts:[],wkg:80,ctx:null,busy:false,aiErr:'',aiNotes:[],seq:0};
+let cmdText='',cmdHi=-1;const CMD={bad:{},res:null,line:'',date:'',acts:[],wkg:80,ctx:null,busy:false,aiErr:'',aiNotes:[],seq:0};
 let cmdHOpen=false,logDayOpen=false;
 const snapPref=()=>LS.get('forma.snapPref','cam');
 const photoRow=(act,icn,l)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div></div>${ic('right',18)}</button>`;
@@ -3336,23 +3337,43 @@ function cmdRun(){
  let res;try{res=FormaCmd.parse(pline,ctx)}catch(e){toast('Could not read that line.');return}
  if(isSimple()){const fa=res.actions.find(x=>x.k==='food'),iss=res.issues||[],other=res.actions.filter(x=>x.k!=='food');
   res.issues=[];res.actions=other;
-  if(fa||iss.length){const txt=other.length?[].concat(fa?fa.items.map(i=>i.name):[],iss.map(u=>u.text)).join(', '):pline;
+  if(fa||iss.length){const txt=other.length?[].concat(fa?fa.items.map(i=>i.src||i.name):[],iss.map(u=>u.text)).join(', '):pline;
    if(!other.length){journalText(d,txt);cmdText='';render();toast0(SC().eat.toastText);return}
    res.actions=other.concat([{k:'journal',text:txt}])}
   if(!res.actions.length){toast(SC().eat.cmdNone);return}}
  if(!res.actions.length&&!(res.issues||[]).length){toast('Nothing to log in that line.');return}
- CMD.res=res;CMD.line=line;CMD.date=d;CMD.wkg=ctx.weightKg||80;CMD.acts=JSON.parse(JSON.stringify(res.actions));CMD.ctx=ctx;CMD.seq++;CMD.busy=false;CMD.aiErr='';CMD.aiNotes=[];
+ CMD.res=res;CMD.line=line;CMD.date=d;CMD.wkg=ctx.weightKg||80;CMD.acts=JSON.parse(JSON.stringify(res.actions));CMD.ctx=ctx;CMD.seq++;CMD.busy=false;CMD.aiErr='';CMD.aiNotes=[];CMD.bad={};
  openSheet(cmdSheet(),cmdSheet);
 }
 function journalText(d,text){const item={id:uid(),meal:snapMealNo(d),name:String(text).slice(0,120),amount:'',kcal:0,protein:0,carbs:0,fat:0,by:'app',t:new Date().toISOString(),journal:true};mutate(foodP(d),{k:'foodAdd',item},{quiet:true})}
 const cmdEst=e=>e?`<div class="xs mut" style="margin-top:2px">${esc(e.charAt(0).toUpperCase()+e.slice(1))}, edit if different</div>`:'';
 function cmdWhy(w){w=String(w||'Not understood.');const m=/^(.*?)(Start workout)(.*)$/.exec(w);return m?esc(m[1])+`<button class="lnk" style="min-height:44px;padding:0;display:inline;text-decoration:underline" data-act="cmdWorkout">${m[2]}</button>`+esc(m[3]):esc(w)}
-function cmdRow(i,j,title,sub,val,unit,fld,est){return `<div class="crow"><div class="sp"><div class="n">${esc(title)}</div><div class="xs mut">${sub}</div>${cmdEst(est)}</div>${fld?`<div class="cin"><input inputmode="decimal" value="${esc(val)}" data-ci="${i}" data-cj="${j}" data-cf="${fld}" aria-label="${esc(title)}"><span class="xs mut">${esc(unit)}</span></div>`:''}<button class="ib" data-act="cmdDrop" data-ci="${i}" data-cj="${j}" aria-label="Remove ${esc(title)}">${ic('x',18)}</button></div>`}
+/* Same limits as the normal sheets: weight 20 to 400 kg, steps whole 0 to 100,000, kcal at most 5,000 and macros at most 500 g per item, sport 1 to 600 minutes, tape 5 to 250 cm */
+function cmdMsg(a,f,v,cj){
+ if(f==='weight'){const kg=u2kg(v);return kg>=20&&kg<=400?'':'Enter a weight from '+fw(20,0)+' to '+fw(400,0)+' '+wU()+'.'}
+ if(f==='steps')return v>=0&&v<=100000&&Math.floor(v)===v?'':'Enter steps from 0 to 100,000.';
+ if(f==='min')return v>=1&&v<=600&&Math.floor(v)===v?'':'Enter 1 to 600 minutes.';
+ if(f==='measure'){const cm=uCm(v);return cm>=5&&cm<=250?'':'That measurement looks off. Check the number.'}
+ if(f==='kcal'){
+  if(!(v>=0))return 'Calories cannot be below 0.';
+  if(v>5000)return 'Calories are at most 5,000 per item.';
+  const it=(a.items||[])[cj];if(it){const r=it.kcal>0?v/it.kcal:1;for(const [k,l] of [['protein','Protein'],['carbs','Carbs'],['fat','Fat']])if(Math.round(num(it[k])*r)>500)return l+' is at most 500 g per item.'}}
+ return ''}
+function cmdModelMsg(a,f,j){
+ if(f==='weight')return cmdMsg(a,f,kg2u(a.kg));
+ if(f==='steps')return cmdMsg(a,f,a.n);
+ if(f==='min')return cmdMsg(a,f,a.min);
+ if(f==='measure')return cmdMsg(a,f,cmU(a.cm));
+ if(f==='kcal'){const it=(a.items||[])[j];return it?cmdMsg(a,f,num(it.kcal),j):''}
+ return ''}
+function cmdAnyErr(){return Object.keys(CMD.bad||{}).length>0||CMD.acts.some((a,i)=>a.k==='food'?a.items.some((_,j)=>cmdModelMsg(a,'kcal',j)):cmdModelMsg(a,{weight:'weight',steps:'steps',sport:'min',measure:'measure'}[a.k]))}
+function cmdRow(i,j,title,sub,val,unit,fld,est){const b=fld&&(CMD.bad||{})[i+':'+j+':'+fld],em=fld?(b?b.m:cmdModelMsg(CMD.acts[i]||{},fld,j)):'';if(b)val=b.raw;
+ return `<div class="crow"><div class="sp"><div class="n">${esc(title)}</div><div class="xs mut">${sub}</div>${cmdEst(est)}${em?`<div class="ferr" role="alert">${esc(em)}</div>`:''}</div>${fld?`<div class="cin"><input inputmode="decimal" value="${esc(val)}" data-ci="${i}" data-cj="${j}" data-cf="${fld}" aria-label="${esc(title)}"${em?' aria-invalid="true"':''}><span class="xs mut">${esc(unit)}</span></div>`:''}<button class="ib" data-act="cmdDrop" data-ci="${i}" data-cj="${j}" aria-label="Remove ${esc(title)}">${ic('x',18)}</button></div>`}
 function cmdSheet(){
  const rows=[];
  CMD.acts.forEach((a,i)=>{
   if(a.k==='weight')rows.push(cmdRow(i,-1,'Weight','Body weight',fw(a.kg),wU(),'weight'));
-  else if(a.k==='steps')rows.push(cmdRow(i,-1,'Steps',CMD.date===today()?'Today':fmtShort(CMD.date),a.n,'steps','steps',a.estimated));
+  else if(a.k==='steps')rows.push(cmdRow(i,-1,a.atLeast?'Steps at least '+fmtN(a.n)+(a.km?' (from '+a.km+' km)':''):'Steps',CMD.date===today()?'Today':fmtShort(CMD.date),a.n,'steps','steps',a.estimated));
   else if(a.k==='sport')rows.push(cmdRow(i,-1,actName(a.kind),'About '+a.kcal+' kcal'+(a.assumed?' (assumed 80 kg)':''),a.min,'min','min',a.estimated));
   else if(a.k==='measure')rows.push(cmdRow(i,-1,measName(a.site),'Tape measurement',fmc(a.cm),mU(),'measure'));
   else if(a.k==='journal')rows.push(cmdRow(i,-1,'Food journal',esc(a.text),'','',''));
@@ -3364,7 +3385,7 @@ function cmdSheet(){
  const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiReady()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
  const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
  return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}${CMD.date!==today()?`<br>For ${dayWord(CMD.date).toLowerCase()==='yesterday'?'yesterday':fmtLong(CMD.date)}`:''}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
- <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
+ <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n&&!cmdAnyErr()?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
  if(!CMD.res||CMD.busy)return;
@@ -3386,18 +3407,22 @@ async function cmdAI(){
  if(UI.sheet&&UI.sheetFn===cmdSheet)openSheet(cmdSheet(),cmdSheet);
 }
 function cmdEdit(t){
- const a=CMD.acts[+t.dataset.ci];if(!a)return;const v=num(t.value),f=t.dataset.cf;
- if(f==='weight'&&v>0)a.kg=+u2kg(v).toFixed(2);
- else if(f==='steps'&&v>=0)a.n=Math.round(v);
- else if(f==='measure'&&v>0)a.cm=+uCm(v).toFixed(1);
- else if(f==='min'&&v>0){a.min=Math.round(v);a.kcal=actKcal(a.kind,a.min,CMD.wkg)}
- else if(f==='kcal'&&v>=0){const it=a.items[+t.dataset.cj];if(it){const r=it.kcal>0?v/it.kcal:1;['protein','carbs','fat'].forEach(k=>{it[k]=Math.round(num(it[k])*r)});it.kcal=Math.round(v)}}
+ const a=CMD.acts[+t.dataset.ci];if(!a)return;const v=num(t.value),f=t.dataset.cf,key=t.dataset.ci+':'+t.dataset.cj+':'+f;
+ CMD.bad=CMD.bad||{};const m=cmdMsg(a,f,v,+t.dataset.cj);
+ if(m){CMD.bad[key]={raw:t.value.trim(),m};return}
+ delete CMD.bad[key];
+ if(f==='weight')a.kg=+u2kg(v).toFixed(2);
+ else if(f==='steps')a.n=Math.round(v);
+ else if(f==='measure')a.cm=+uCm(v).toFixed(1);
+ else if(f==='min'){a.min=Math.round(v);a.kcal=actKcal(a.kind,a.min,CMD.wkg)}
+ else if(f==='kcal'){const it=a.items[+t.dataset.cj];if(it){const r=it.kcal>0?v/it.kcal:1;['protein','carbs','fat'].forEach(k=>{it[k]=Math.round(num(it[k])*r)});it.kcal=Math.round(v)}}
 }
 function cmdSave(){
+ if(cmdAnyErr()){openSheet(cmdSheet(),cmdSheet);return}
  const d=CMD.date;let n=0;
  CMD.acts.forEach(a=>{
   if(a.k==='weight'){mutate(logP(d),{k:'weight',v:+a.kg.toFixed(2)},{quiet:true});n++}
-  else if(a.k==='steps'){mutate(logP(d),{k:'steps',v:Math.round(a.n)},{quiet:true});n++}
+  else if(a.k==='steps'){const cur=num(logOf(d).steps);mutate(logP(d),{k:'steps',v:Math.round(a.atLeast?Math.max(cur,a.n):a.n)},{quiet:true});n++}
   else if(a.k==='measure'){mutate(logP(d),{k:'measure',v:{[a.site]:+(+a.cm).toFixed(1)}},{quiet:true});n++}
   else if(a.k==='note'){const old=(logOf(d).note||'').trim();mutate(logP(d),{k:'note',v:old?old+'. '+a.text:a.text},{quiet:true});n++}
   else if(a.k==='journal'){journalText(d,a.text);n++}
@@ -3565,7 +3590,7 @@ document.addEventListener('click',async e=>{
   case 'cmdCancel':CMD.seq++;CMD.busy=false;closeSheet();break;
   case 'cmdAI':cmdAI();break;
   case 'cmdSave':cmdSave();break;
-  case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
+  case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;CMD.bad={};if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
   case 'cmdWorkout':CMD.seq++;CMD.busy=false;closeSheet();cmdText='';{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render()}break;
   case 'cmdHand':{const u=(CMD.res.issues||[])[+D.k];const fa=CMD.acts.find(x=>x.k==='food');const m=fa?fa.meal:Math.max(0,...food(CMD.date).items.map(mealNo))+1;
    closeSheet();foodMeal=m;foodPhoto=null;openSheet(foodSheet(null,m,{name:u?u.text:''}));break}

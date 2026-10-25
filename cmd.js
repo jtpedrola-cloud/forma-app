@@ -8,7 +8,7 @@
  *     lastMealAt: ISO string or ms of the last logged item; now: ms or ISO (default Date.now())
  *   actions:
  *     { k:"weight", kg }
- *     { k:"steps", n, estimated? }  estimated: note when steps came from a walked distance
+ *     { k:"steps", n, estimated?, atLeast? }  estimated: note when steps came from a walked distance; atLeast: the app only raises the day's steps to n, never lowers them
  *     { k:"measure", site, cm }                     tape measurement: waist, hips, chest, arm, thigh or neck, stored in cm
  *     { k:"sport", kind, min, kcal, assumed?, estimated? }  estimated: note when minutes came from a typical pace ("ran 5k")      assumed: no weightKg given, 80 kg used
  *     { k:"note", text }
@@ -447,6 +447,7 @@
     else if (unit) return { err: 'not in the food list' };
     else return { err: 'not in the food list' };
     var f = m.food, assumed = false;
+    if (q != null && !(q > 0)) return { err: 'how many? that quantity is zero' };
     var qty = q;
     if (qty == null) {
       qty = 1;
@@ -473,8 +474,12 @@
       foodId: f.id
     };
     if (eggLab) { it.name = f.name.replace(/\b\d+ eggs?\b/, eggLab); it.amount = eggLab; }
+    else if (f.contains && c.mult !== 1 && c.mult > 0) { // "2 omelettes": name the dish by its real egg count
+      var real = c.mult * f.contains.n;
+      it.name = f.name.replace(/\b\d+ eggs?\b/, fmtQ(real) + (real === 1 ? ' egg' : ' eggs'));
+    }
     if (c.assumed) it.assumed = true;
-    return { item: it, meta: { food: f, mult: c.mult, explicit: q != null } };
+    return { item: it, meta: { food: f, mult: c.mult, explicit: q != null, scaled: !!eggLab || c.mult !== 1 } };
   }
 
   // ---------- distance, workouts, compound food lines ----------
@@ -504,6 +509,8 @@
       if (!d || drop[i]) return;
       for (var j = 0; j < items.length; j++) {
         if (j === i || drop[j] || !metas[j] || d.ids.indexOf(metas[j].food.id) < 0) continue;
+        // only "omelette with 2 eggs" is one dish; a separate "2 eggs" (comma, "and") or an already scaled dish stays its own item
+        if (!metas[j].via || m.scaled) continue;
         if (metas[j].explicit) {
           var cnt = metas[j].mult, mult = cnt / d.n, f = m.food, lab = fmtQ(cnt) + (cnt === 1 ? ' egg' : ' eggs');
           items[i] = { name: f.name.replace(/\b\d+ eggs?\b/, lab), amount: lab,
@@ -680,7 +687,7 @@
     var res = { actions: [], unknown: [], issues: [] };
     var idx = buildIndex(ctx.foods);
     var kg = (typeof ctx.weightKg === 'number' && ctx.weightKg > 0) ? ctx.weightKg : null;
-    var foodItems = [], foodMeta = [], foodAt = -1;
+    var foodItems = [], foodMeta = [], foodAt = -1, mealSet = 0, segVia = false;
 
     function bad(txt, why) {
       txt = String(txt).trim();
@@ -714,21 +721,21 @@
     }
 
     // split into segments at separators and connector words
-    var segs = [], cur = [];
+    var segs = [], cur = [], conn = null;
     toks.forEach(function (t, ti) {
       var isSep = t.k === 's' || (t.k === 'w' && CONNECT[t.v] && !t.prot);
       if (isSep && t.v === 'at' && ti > 0 && toks[ti - 1].k === 'w' && (WEIGHT_KW[toks[ti - 1].v] || MEASURE_WORDS[toks[ti - 1].v] || stem(toks[ti - 1].v) === 'step')) isSep = false; // "weight at 84"
       if (isSep && t.v === 'and' && ti > 0 && toks[ti + 1] && toks[ti + 1].k === 'n' && toks[ti - 1].k === 'w' && HOUR[stem(toks[ti - 1].v)]) isSep = false; // "1 hour and 30 min" 
-      if (isSep) { if (cur.length) segs.push(cur); cur = []; }
+      if (isSep) { if (cur.length) { cur.via = conn === 'with'; segs.push(cur); } cur = []; conn = t.v; }
       else cur.push(t);
     });
-    if (cur.length) segs.push(cur);
+    if (cur.length) { cur.via = conn === 'with'; segs.push(cur); }
     // "rice, 2 cups": a lone "<qty> <unit>" segment belongs to the food segment before it
     segs = segs.reduce(function (acc, sg) {
       var prev = acc[acc.length - 1], u = sg.length > 1 && sg[0].k === 'n' && sg[1].k === 'w' && !sg[0].prot ? stem(sg[1].v) : null;
       if (prev && u && (UNITS[u] || idx.units[u]) && u !== 'kg' && u !== 'kilo' && sg.length === 2 && !hasLeadingQty(prev) &&
         prev.some(function (x) { return isFoodWord(x, idx); }) && !prev.some(function (x) { return WEIGHT_KW[x.v] || stem(x.v) === 'step' || MEASURE_WORDS[x.v]; }) && !findSport(prev)) {
-        acc[acc.length - 1] = sg.concat(prev);
+        var mg = sg.concat(prev); mg.via = prev.via; acc[acc.length - 1] = mg;
       } else acc.push(sg);
       return acc;
     }, []);
@@ -746,6 +753,12 @@
       seg = stripLead(seg, FILLER);
       if (!seg.length || depth > 6) return;
       var i, used, rest;
+
+      // "meal 2: rice": a meal number in front of the foods, not a quantity
+      if (seg[0].k === 'w' && seg[0].v === 'meal' && !seg[0].prot && seg[1] && !seg[1].prot && !seg[1].neg) {
+        var mn = seg[1].k === 'n' && !seg[1].frac ? seg[1].v : (seg[1].k === 'w' && NUMW[seg[1].v] != null ? NUMW[seg[1].v] : 0);
+        if (mn >= 1 && mn <= 20 && Math.floor(mn) === mn) { mealSet = mn; processSeg(seg.slice(2), depth + 1); return; }
+      }
 
       // steps
       var st = findSteps(seg);
@@ -791,11 +804,11 @@
         if (!kd && !dur) { // walking with no time is steps
           var wsteps = Math.round(ds.km * STEPS_PER_KM);
           if (!(wsteps >= 100 && wsteps <= 200000)) { bad(pieceText(text, seg), 'that step count looks off'); return; }
-          pushAction({ k: 'steps', n: wsteps, estimated: 'about ' + STEPS_PER_KM + ' steps per km' });
+          pushAction({ k: 'steps', n: wsteps, atLeast: true, km: Math.round(ds.km * 10) / 10, estimated: 'about ' + STEPS_PER_KM + ' steps per km' });
         } else {
           var skind = kd || 'other', est = null, smin;
           if (dur) smin = dur.min;
-          else { smin = ds.km * PACE[kd]; est = 'about ' + Math.round(smin) + ' min at ' + PACE[kd] + ' min per km'; }
+          else { smin = Math.round(ds.km * PACE[kd]); est = 'about ' + Math.round(smin) + ' min at ' + PACE[kd] + ' min per km'; }
           if (!(smin > 0 && smin <= 600)) { bad(pieceText(text, seg), 'that duration looks off'); return; }
           var da = { k: 'sport', kind: skind, min: Math.round(smin * 10) / 10, kcal: sportKcal(skind, smin, kg || DEFAULT_KG) };
           if (kg == null) da.assumed = true;
@@ -877,19 +890,20 @@
         outs.forEach(function (o) {
           if (o.item) {
             if (foodAt < 0) { foodAt = res.actions.length; res.actions.push(null); }
+            o.item.src = pieceText(text, pc); o.meta.via = segVia;
             foodItems.push(o.item); foodMeta.push(o.meta);
           } else bad(pieceText(text, pc), o.err);
         });
       });
     }
-    segs.forEach(function (s) { processSeg(s, 0); });
+    segs.forEach(function (s) { segVia = !!s.via; processSeg(s, 0); });
 
     if (noteText) pushAction({ k: 'note', text: noteText });
 
     if (foodItems.length) {
       foodItems = mergeDishes(foodItems, foodMeta).items;
-      res.actions[foodAt] = { k: 'food', items: foodItems, meal: mealNumber(ctx) };
-    }
+      res.actions[foodAt] = { k: 'food', items: foodItems, meal: mealSet || mealNumber(ctx) };
+    } else if (mealSet) bad('meal ' + mealSet, 'what did you eat?');
     res.actions = res.actions.filter(Boolean);
     return res;
   }
