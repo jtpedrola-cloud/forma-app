@@ -174,7 +174,8 @@
         "push_up_weighted",
         "smith_bench",
         "paused_bench",
-        "decline_bench_press"
+        "decline_bench_press",
+        "push_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
@@ -335,7 +336,8 @@
         "overhead_press",
         "smith_shoulder_press",
         "z_press",
-        "single_arm_db_press"
+        "single_arm_db_press",
+        "pike_push_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Press/0.jpg",
@@ -376,7 +378,6 @@
         "machine_lateral_raise",
         "upright_row",
         "seated_lateral_raise",
-        "db_front_raise",
         "band_lateral_raise"
       ],
       "img": [
@@ -447,7 +448,8 @@
         "dips",
         "machine_triceps_extension",
         "v_bar_pushdown",
-        "single_arm_pushdown"
+        "single_arm_pushdown",
+        "close_grip_push_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/0.jpg",
@@ -599,7 +601,7 @@
       "c": [
         "Hinge to about 45 degrees, back flat, knees soft.",
         "Pull the bar to the lower stomach, elbows past the body.",
-        "No jerking with the hips. Strict reps keep the arms fresh for Friday."
+        "No jerking with the hips. Keep every rep strict."
       ],
       "pose": {
         "a": {
@@ -647,7 +649,8 @@
         "seated_cable_row",
         "seated_row_wide",
         "t_bar_row",
-        "pendlay_row"
+        "pendlay_row",
+        "inverted_row_feet_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg",
@@ -1114,7 +1117,8 @@
         "goblet_squat",
         "smith_squat",
         "pin_squat",
-        "barbell_lunge"
+        "barbell_lunge",
+        "bodyweight_squat"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/0.jpg",
@@ -1202,7 +1206,7 @@
         "bulgarian_split_squat",
         "pendulum_squat",
         "single_leg_press",
-        "trap_bar_deadlift"
+        "bodyweight_squat"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg",
@@ -1212,7 +1216,6 @@
     "bulgarian_split_squat": {
       "n": "Bulgarian split squat",
       "eq": "Dumbbells, bench",
-      "big": true,
       "p": [
         "quads",
         "glutes"
@@ -1357,7 +1360,7 @@
         "spanish_squat",
         "reverse_nordic",
         "wall_sit",
-        "squat"
+        "terminal_knee_extension"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/0.jpg",
@@ -1565,7 +1568,8 @@
         "db_row",
         "db_incline_row",
         "t_bar_row",
-        "barbell_row"
+        "barbell_row",
+        "inverted_row_feet_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/0.jpg",
@@ -1637,7 +1641,8 @@
         "high_to_low_cable_fly",
         "cable_chest_press",
         "low_to_high_cable_fly",
-        "single_arm_cable_fly"
+        "single_arm_cable_fly",
+        "band_chest_press"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/0.jpg",
@@ -1969,7 +1974,8 @@
         "landmine_press",
         "smith_shoulder_press",
         "z_press",
-        "push_press"
+        "push_press",
+        "pike_push_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Military_Press/0.jpg",
@@ -2083,7 +2089,8 @@
         "cable_curl",
         "cable_bayesian_curl",
         "concentration_curl",
-        "db_spider_curl"
+        "db_spider_curl",
+        "band_curl"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Curl/0.jpg",
@@ -2135,7 +2142,8 @@
         "rope_pushdown",
         "db_triceps_kickback",
         "machine_triceps_extension",
-        "single_arm_overhead_cable_ext"
+        "single_arm_overhead_cable_ext",
+        "close_grip_push_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
@@ -2189,7 +2197,8 @@
         "zottman_curl",
         "barbell_curl",
         "incline_hammer_curl",
-        "hammer_preacher_curl"
+        "hammer_preacher_curl",
+        "band_hammer_curl"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/0.jpg",
@@ -2387,7 +2396,8 @@
         "hyperextension_45",
         "deadlift",
         "good_morning",
-        "deficit_deadlift"
+        "deficit_deadlift",
+        "single_leg_glute_bridge"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg",
@@ -2867,7 +2877,6 @@
     "arnold_press": {
       "n": "Arnold press",
       "eq": "Dumbbells",
-      "big": true,
       "p": [
         "delts_front",
         "delts_side"
@@ -3141,7 +3150,6 @@
     "assisted_pull_up": {
       "n": "Assisted pull-up",
       "eq": "Machine or band",
-      "big": true,
       "p": [
         "lats"
       ],
@@ -3324,7 +3332,8 @@
         "machine_preacher_curl",
         "cable_bayesian_curl",
         "concentration_curl",
-        "ez_bar_curl"
+        "ez_bar_curl",
+        "band_curl"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bicep_Curl/0.jpg",
@@ -3374,7 +3383,8 @@
         "machine_preacher_curl",
         "ez_bar_curl",
         "cable_curl",
-        "db_curl"
+        "db_curl",
+        "band_curl"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/0.jpg",
@@ -3680,7 +3690,6 @@
     "goblet_squat": {
       "n": "Goblet squat",
       "eq": "Dumbbell or kettlebell",
-      "big": true,
       "p": [
         "quads",
         "glutes"
@@ -3708,7 +3717,6 @@
     "walking_lunge": {
       "n": "Walking lunge",
       "eq": "Dumbbells",
-      "big": true,
       "p": [
         "quads",
         "glutes"
@@ -3740,7 +3748,6 @@
     "reverse_lunge": {
       "n": "Reverse lunge",
       "eq": "Dumbbells",
-      "big": true,
       "p": [
         "quads",
         "glutes"
@@ -3953,7 +3960,8 @@
         "seated_row_close",
         "seated_row_wide",
         "t_bar_row",
-        "db_incline_row"
+        "db_incline_row",
+        "inverted_row_feet_up"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Iso_Row/0.jpg",
@@ -4232,7 +4240,6 @@
     "landmine_press": {
       "n": "Landmine press",
       "eq": "Barbell in a landmine",
-      "big": true,
       "p": [
         "delts_front",
         "chest"
@@ -4530,7 +4537,6 @@
     "single_leg_rdl": {
       "n": "Single-leg Romanian deadlift",
       "eq": "One dumbbell",
-      "big": true,
       "p": [
         "hamstrings",
         "glutes"
@@ -4654,7 +4660,7 @@
       "a": [
         "lying_leg_curl",
         "nordic_curl",
-        "romanian_deadlift",
+        "band_leg_curl",
         "sliding_leg_curl",
         "glute_ham_raise",
         "single_leg_seated_curl"
@@ -5148,7 +5154,8 @@
         "rope_hammer_curl",
         "barbell_curl",
         "zottman_curl",
-        "seated_hammer_curl"
+        "seated_hammer_curl",
+        "band_hammer_curl"
       ],
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Hammer_Curls/0.jpg",
@@ -8208,7 +8215,6 @@
     "single_arm_landmine_press": {
       "n": "Single-arm landmine press",
       "eq": "Barbell in a landmine",
-      "big": true,
       "p": [
         "delts_front",
         "chest"

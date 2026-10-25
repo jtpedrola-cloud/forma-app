@@ -947,7 +947,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='f8bf77b2a828171a87c10c5f66271e948e97d891';let verChecked=0;
+const BUILD='9bfe6eee4e19e8ad27808c51d59ca12829ff0429';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1532,7 +1532,7 @@ function todayView(){
  if(isT){const l=learnNudge();if(l)notices.push(l)}
  const hero=isSimple()?simpleToday(d):modOn('food')?calHero(d,true,false):'';
  if(isSimple())simpleWarm();
- return headerV1('',[['cal','Calendar']])+`<div class="v1"><div class="tt"><button class="ptb" data-act="cal" aria-label="Pick a day"><h2 class="pt">${dayWord(d)}</h2></button><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day" ${isT?'disabled':''}>${ic('right',20)}</button></div>${isT?'':'<button class="lnk l0 btt" data-act="toToday">Back to today</button>'}${hero}<section class="vs plan" data-tour="chk"><div class="lbl">${isT?"Today's plan":'Plan'}</div>${rows.join('')}${notices.join('')}</section></div>`+logFab();
+ return headerV1('',[['cal','Calendar']])+`<div class="v1">${DEMO?'<div class="xs mut" style="padding:8px 0 0">Sample data. <button class="lnk" style="font-size:inherit;padding:0;min-height:0" data-act="leaveDemo">Start your own</button></div>':''}<div class="tt"><button class="ptb" data-act="cal" aria-label="Pick a day"><h2 class="pt">${dayWord(d)}</h2></button><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day" ${isT?'disabled':''}>${ic('right',20)}</button></div>${isT?'':'<button class="lnk l0 btt" data-act="toToday">Back to today</button>'}${hero}<section class="vs plan" data-tour="chk"><div class="lbl">${isT?"Today's plan":'Plan'}</div>${rows.join('')}${notices.join('')}</section></div>`+logFab();
 }
 
 /* ---------- Food ---------- */
@@ -2749,17 +2749,18 @@ function setupView(){
  const keyName=encodeURIComponent(`Forma ${dev} ${d.toISOString().slice(0,10)} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`);
  const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=${keyName}&description=Forma+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
  const acct=sbOn();
- return `<div class="setup"><h1>Pulzo</h1>${acct?`<div class="mut" style="margin-bottom:18px">Track food, workouts and steps. Sign in with your email, no password.</div>
- <div class="card"><h3>Sign in</h3><div class="sm mut" style="margin:2px 0 10px">We email you a link. Open it on this phone.</div>${sbSignInBox()}${sbServerFields()}</div>
- <details class="sm" style="margin-top:14px"><summary><b>Personal mode</b> (my own GitHub repo)</summary><div class="mut" style="margin:10px 0 14px">The app needs a key to open your private data on GitHub. It takes about a minute.</div>`
- :`<div class="mut" style="margin-bottom:18px">One-time setup. The app needs a key to open your private data on GitHub. It takes about a minute.</div>`}
- <div class="card"><h3>Step 1: make your key</h3>
+ const adv=`<details id="s_adv" class="sm mut" style="margin-top:28px"><summary style="min-height:44px;display:flex;align-items:center">Advanced: use your own GitHub repo</summary><div style="margin-top:6px"><div class="card"><h3>Step 1: make your key</h3>
  <a class="btn full" style="text-decoration:none;margin:10px 0 14px" href="${keyUrl}" target="_blank" rel="noopener">Create my key on GitHub</a>
  <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>forma</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
  <div class="card"><h3>Step 2: paste it here</h3>
  <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
  <div id="s_err" class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
- <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details>${acct?'</details>':`<details class="sm mut" style="margin-top:10px"><summary>Pulzo account (beta)</summary>${sbServerFields()}</details>`}</div>`;
+ <details class="sm mut" style="margin-top:14px"><summary>Advanced</summary><div class="fld" style="margin-top:10px"><label>Repository</label><input id="s_repo" value="${esc(cfg.repo)}" autocapitalize="off" autocorrect="off"></div></details></div></details>`;
+ return `<div class="setup"><h1>Pulzo</h1><div class="mut" style="margin-bottom:18px">Track food, workouts and steps.</div>
+ <button class="btn full" data-act="tryDemo">Try it with sample data</button>
+ <div class="xs mut" style="margin:8px 0 0;text-align:center">Nothing is saved. Look around first.</div>
+ ${acct?`<button class="btn ghost full" style="margin-top:14px" data-act="acctOpen">Create an account</button>`:''}
+ ${adv}</div>`;
 }
 async function setupSave(){
  const repo=$('#s_repo').value.trim(),tok=$('#s_tok').value.trim(),err=$('#s_err');
@@ -2813,7 +2814,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.19${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.20${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3616,6 +3617,8 @@ document.addEventListener('click',async e=>{
   case 'roverClose':{const r=$('#rover');if(r)r.remove();break}
   case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
   case 'setupSave':setupSave();break;
+  case 'tryDemo':{const u=new URL(location.href);u.searchParams.set('demo','1');location.href=u.toString();break}
+  case 'leaveDemo':{const u=new URL(location.href);u.searchParams.delete('demo');location.href=u.toString();break}
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Switch repo anyway?'))break;cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
   case 'aiSave':{const el=$('#ai_key'),v=el?el.value.trim():'';if(!v){toast('Paste your Claude API key first.');break}
    if(!/^sk-ant-[\w-]{20,}$/.test(v)){toast('That is not a Claude key. It starts with sk-ant-.');break}
