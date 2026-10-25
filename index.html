@@ -920,7 +920,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='5729fe9af010f2d1ab826543ed41eb772fe2d559';let verChecked=0;
+const BUILD='6e2fdc186618891268312d4d48036b5cc2f527ee';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1903,7 +1903,7 @@ function workoutView(){
  let body='';
  if(swo){
   const ns=Object.values(swo.sets||{}).reduce((a,s)=>a+s.filter(x=>x.done).length,0),dn=dayOf(swo.dayId);
-  const exs=[...dn.exercises.map(e=>e.ex),...(swo.extra||[]).map(x=>x.ex)].map(sl=>{const ex=effEx(swo,sl),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
+  const sl0=[...dn.exercises.map(e=>e.ex),...(swo.extra||[]).map(x=>x.ex)],cov=new Set(sl0.map(x=>effEx(swo,x)));const exs=[...sl0,...Object.keys(swo.sets||{}).filter(k=>!cov.has(k))].map(sl=>{const ex=effEx(swo,sl),sets=((swo.sets||{})[ex]||[]).filter(x=>x.done);if(!sets.length)return '';const u=unitOf(ex);
    return `<div class="item"><div class="sp"><div class="n">${esc(exName(ex))}</div><div class="xs mut">${sets.map(z=>setTxt(z,exU(ex))).join(', ')}${u==='SEC'?' s':u==='M'?' m':exU(ex)!==wU()?' '+exU(ex):''}</div></div><div class="r mut sm">${sets.length} set${sets.length===1?'':'s'}</div></div>`}).join('');
   body=`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><div class="row tl"><h2 class="pt sp">${esc(dn.name)}</h2><span class="dn">${ic('check',16)} Done</span></div><div class="sub">${swo.marked?'Marked done, no sets logged':ns+(ns===1?' set, ':' sets, ')+mmss((new Date(swo.finishedAt)-new Date(swo.startedAt))/1000)+', '+rnd(kg2u(woStats(swo).vol)).toLocaleString('en-US')+' '+wU()}${swo.marked?'':`<br>${clock(swo.startedAt)} to ${clock(swo.finishedAt)}`}</div>${swo.note?`<div class="s15" style="margin-top:6px;color:var(--soft)">${esc(swo.note)}</div>`:''}${!isT&&swo.marked?`<button class="lnk l0" data-act="wUnmark" data-d="${sel}">Undo</button>`:`<button class="lnk l0" data-act="wEdit" data-d="${sel}">Edit</button>`}
   ${swo.marked?'':`<div class="lst">${exs||'<div class="empty">No sets were checked off.</div>'}</div>`}`;
@@ -2783,7 +2783,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.10${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.11${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
