@@ -942,7 +942,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='a49ddc0f67c23f41bd6a26f1c90726b88425544f';let verChecked=0;
+const BUILD='1458d45bf8abd2704e2c163056b34a20d1699efa';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2807,7 +2807,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.15${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.16${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3345,19 +3345,21 @@ function cmdRun(){
  openSheet(cmdSheet(),cmdSheet);
 }
 function journalText(d,text){const item={id:uid(),meal:snapMealNo(d),name:String(text).slice(0,120),amount:'',kcal:0,protein:0,carbs:0,fat:0,by:'app',t:new Date().toISOString(),journal:true};mutate(foodP(d),{k:'foodAdd',item},{quiet:true})}
-function cmdRow(i,j,title,sub,val,unit,fld){return `<div class="crow"><div class="sp"><div class="n">${esc(title)}</div><div class="xs mut">${sub}</div></div>${fld?`<div class="cin"><input inputmode="decimal" value="${esc(val)}" data-ci="${i}" data-cj="${j}" data-cf="${fld}" aria-label="${esc(title)}"><span class="xs mut">${esc(unit)}</span></div>`:''}<button class="ib" data-act="cmdDrop" data-ci="${i}" data-cj="${j}" aria-label="Remove ${esc(title)}">${ic('x',18)}</button></div>`}
+const cmdEst=e=>e?`<div class="xs mut" style="margin-top:2px">${esc(e.charAt(0).toUpperCase()+e.slice(1))}, edit if different</div>`:'';
+function cmdWhy(w){w=String(w||'Not understood.');const m=/^(.*?)(Start workout)(.*)$/.exec(w);return m?esc(m[1])+`<button class="lnk" style="min-height:44px;padding:0;display:inline;text-decoration:underline" data-act="cmdWorkout">${m[2]}</button>`+esc(m[3]):esc(w)}
+function cmdRow(i,j,title,sub,val,unit,fld,est){return `<div class="crow"><div class="sp"><div class="n">${esc(title)}</div><div class="xs mut">${sub}</div>${cmdEst(est)}</div>${fld?`<div class="cin"><input inputmode="decimal" value="${esc(val)}" data-ci="${i}" data-cj="${j}" data-cf="${fld}" aria-label="${esc(title)}"><span class="xs mut">${esc(unit)}</span></div>`:''}<button class="ib" data-act="cmdDrop" data-ci="${i}" data-cj="${j}" aria-label="Remove ${esc(title)}">${ic('x',18)}</button></div>`}
 function cmdSheet(){
  const rows=[];
  CMD.acts.forEach((a,i)=>{
   if(a.k==='weight')rows.push(cmdRow(i,-1,'Weight','Body weight',fw(a.kg),wU(),'weight'));
-  else if(a.k==='steps')rows.push(cmdRow(i,-1,'Steps',CMD.date===today()?'Today':fmtShort(CMD.date),a.n,'steps','steps'));
-  else if(a.k==='sport')rows.push(cmdRow(i,-1,actName(a.kind),'About '+a.kcal+' kcal'+(a.assumed?' (assumed 80 kg)':''),a.min,'min','min'));
+  else if(a.k==='steps')rows.push(cmdRow(i,-1,'Steps',CMD.date===today()?'Today':fmtShort(CMD.date),a.n,'steps','steps',a.estimated));
+  else if(a.k==='sport')rows.push(cmdRow(i,-1,actName(a.kind),'About '+a.kcal+' kcal'+(a.assumed?' (assumed 80 kg)':''),a.min,'min','min',a.estimated));
   else if(a.k==='measure')rows.push(cmdRow(i,-1,measName(a.site),'Tape measurement',fmc(a.cm),mU(),'measure'));
   else if(a.k==='journal')rows.push(cmdRow(i,-1,'Food journal',esc(a.text),'','',''));
   else if(a.k==='note')rows.push(cmdRow(i,-1,'Note',esc(a.text),'','',''));
   else if(a.k==='food'){rows.push(`<div class="cmeal">Meal ${a.meal}</div>`);a.items.forEach((it,j)=>rows.push(cmdRow(i,j,it.name,esc(it.amount||'')+(it.assumed&&!/assumed/.test(it.amount||'')?' (assumed)':'')+'<br>P '+rnd(it.protein)+'g, C '+rnd(it.carbs)+'g, F '+rnd(it.fat)+'g',rnd(it.kcal),'kcal','kcal')))}
  });
- const unk=(CMD.res.issues||[]).map((u,k)=>`<div class="cunk"><div class="n">${esc(u.text)}</div><div class="xs">${esc(u.why||'Not understood.')}</div><button class="btn ghost sm" style="margin-top:8px" data-act="cmdHand" data-k="${k}">Add by hand</button></div>`).join('');
+ const unk=(CMD.res.issues||[]).map((u,k)=>`<div class="cunk"><div class="n">${esc(u.text)}</div><div class="xs">${cmdWhy(u.why)}</div><button class="btn ghost sm" style="margin-top:8px" data-act="cmdHand" data-k="${k}">Add by hand</button></div>`).join('');
  const n=CMD.acts.reduce((a,x)=>a+(x.k==='food'?x.items.length:1),0);
  const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiReady()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
  const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
@@ -3564,6 +3566,7 @@ document.addEventListener('click',async e=>{
   case 'cmdAI':cmdAI();break;
   case 'cmdSave':cmdSave();break;
   case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
+  case 'cmdWorkout':CMD.seq++;CMD.busy=false;closeSheet();cmdText='';{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render()}break;
   case 'cmdHand':{const u=(CMD.res.issues||[])[+D.k];const fa=CMD.acts.find(x=>x.k==='food');const m=fa?fa.meal:Math.max(0,...food(CMD.date).items.map(mealNo))+1;
    closeSheet();foodMeal=m;foodPhoto=null;openSheet(foodSheet(null,m,{name:u?u.text:''}));break}
   case 'roverClose':{const r=$('#rover');if(r)r.remove();break}
