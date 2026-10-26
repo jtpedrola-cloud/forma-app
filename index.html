@@ -1055,7 +1055,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='2c97be503266b1dc595ba567d8d379538b3bb1c0';let verChecked=0;
+const BUILD='d1cbdc58916ca941c2d6ead978b54dca452a0823';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1785,11 +1785,11 @@ function savedSheet(){
  const d=UI.date,prev=addDays(d,-1),pf=food(prev).items,pt=sumItems(pf),ms=savedMeals();
  const cpv=(LS.get('forma.copied',{})||{})[d],cpIds=Array.isArray(cpv)?cpv:null,cpHeld=cpv&&(cpIds?cpIds.some(id=>food(d).items.some(i=>i.id===id)):food(d).items.length>0);
  const cp=cpHeld?'':pf.length?`<button class="item" data-act="copyPrev"><div class="sp"><div class="n">${d===today()?'Copy yesterday':'Copy '+DOW[parseD(prev).getDay()]}</div><div class="xs mut">${new Set(pf.map(mealNo)).size} meal${new Set(pf.map(mealNo)).size===1?'':'s'} from ${fmtShort(prev)}</div></div><div class="r"><div>${fmtN(pt.kcal)} kcal</div><div class="xs mut">${rnd(pt.protein)}g protein</div></div></button>`:`<div class="xs mut" style="padding:10px 0">Nothing logged on ${fmtShort(prev)} to copy.</div>`;
- const rows=ms.map(m=>{const t=sumItems(m.items||[]);return `<button class="item smr" data-act="mealUse" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r"><div>${fmtN(t.kcal)} kcal</div><div class="xs mut">${rnd(t.protein)}g protein</div></div></button>`}).join('');
- return `<h2>Saved meals</h2><div class="xs mut" style="margin:-6px 0 8px">Tap one to log it as Meal ${nextMealNo(d)}${d===today()?'':' on '+fmtShort(d)}. Hold one to delete it.</div>${cp}${rows||`<div class="empty">No saved meals yet. Open a meal in the Food log and tap Save meal.</div>`}`}
+ const rows=ms.map(m=>{const t=sumItems(m.items||[]);return `<div class="lrw"><button class="item smr" data-act="mealUse" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r"><div>${fmtN(t.kcal)} kcal</div><div class="xs mut">${rnd(t.protein)}g protein</div></div></button><button class="lnk" style="min-height:44px;min-width:56px;color:var(--mut)" data-act="mealDel" data-id="${esc(m.id)}" aria-label="Delete ${esc(m.name)}">Delete</button></div>`}).join('');
+ return `<h2>Saved meals</h2><div class="xs mut" style="margin:-6px 0 8px">Tap one to log it as Meal ${nextMealNo(d)}${d===today()?'':' on '+fmtShort(d)}.</div>${cp}${rows||`<div class="empty">No saved meals yet. Open a meal in the Food log and tap Save meal.</div>`}`}
 let SMLP={t:null,at:0};
 function smLongStart(e){const r=e.target.closest&&e.target.closest('.smr');if(!r)return;clearTimeout(SMLP.t);SMLP.t=setTimeout(()=>{SMLP.at=Date.now();const m=savedMeals().find(x=>x.id===r.dataset.id);if(!m)return;try{navigator.vibrate&&navigator.vibrate(30)}catch(x){}
- openSheet(`<h2>Delete "${esc(m.name)}"?</h2><div class="mut sm" style="margin-bottom:14px">It only removes the saved copy. Food you already logged stays.</div><button class="btn red full" data-act="mealDelGo" data-id="${esc(m.id)}">Delete saved meal</button><button class="btn ghost full" style="margin-top:8px" data-act="savedOpen">Keep it</button>`)},550)}
+ askConfirm({title:'Delete "'+m.name+'"?',body:'It only removes the saved copy. Food you already logged stays.',yes:'Delete saved meal',no:'Keep it'},()=>{mutate(P_MEALS,{k:'mealDel',id:m.id},{quiet:true});openSheet(savedSheet(),savedSheet)})},550)}
 function smLongStop(){clearTimeout(SMLP.t)}
 document.addEventListener('touchstart',smLongStart,{passive:true});document.addEventListener('mousedown',smLongStart);
 ['touchend','touchmove','touchcancel','mouseup','mouseleave','scroll'].forEach(n=>document.addEventListener(n,smLongStop,{passive:true,capture:true}));
@@ -2167,7 +2167,7 @@ function pedBuild(key){
 function pedOpen(){if($('#ped'))return;PED={doc:clone(program()),dirty:false,pend:null};PED.doc.days=PED.doc.days||[];PED.doc.weekdays=PED.doc.weekdays||{};
  const el=document.createElement('div');el.id='ped';document.body.appendChild(el);navPush({l:'ped'});pedDraw()}
 function pedClose(fromPop){const el=$('#ped');if(!el)return;el.remove();PED=null;if(fromPop!==true)navPop()}
-function pedBack(){if(PED&&PED.dirty&&!confirm('Discard your changes?'))return;pedClose()}
+function pedBack(){if(PED&&PED.dirty){askConfirm({title:'Discard your changes?',body:'The edits to your program will be lost.',yes:'Discard',no:'Keep editing'},()=>pedClose());return}pedClose()}
 function pedEx(e,di,i,n){const inf=exdb().exercises[e.ex]||{},sec=inf.u==='s';
  return `<div class="pe"><div class="row">${thumb(e.ex,40,true)}<div class="sp"><div class="n" style="font-weight:600">${esc(exName(e.ex))}</div><div class="xs mut">${esc(inf.eq||'None')}</div></div>
  <button class="ib s" data-act="pedExUp" data-d="${di}" data-i="${i}" aria-label="Move up" ${i?'':'disabled'}>${ic('up',18)}</button><button class="ib s" data-act="pedExDn" data-d="${di}" data-i="${i}" aria-label="Move down" ${i<n-1?'':'disabled'}>${ic('down',18)}</button><button class="ib s" data-act="pedExDel" data-d="${di}" data-i="${i}" aria-label="Remove exercise">${ic('x',18)}</button></div>
@@ -3595,8 +3595,10 @@ async function sbSend(){
  try{sbWire();await SB.auth.signIn(email);SBS.sent=email}
  catch(e){SBS.msg=e instanceof TypeError?'No connection. Try again when you are online.':e.status===429?'Too many tries. Wait a minute and try again.':String(e&&e.message||'Could not send the link.')}
  SBS.busy=false;sbRedraw()}
-async function sbOut(){
- if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))return;
+function sbOut(){
+ if(pendCount()){askConfirm({title:'Sign out?',body:'Some changes have not synced yet and will be lost.',yes:'Sign out anyway',no:'Stay signed in'},sbOutGo);return}
+ sbOutGo()}
+async function sbOutGo(){
  const k=dbKey();try{await SB.auth.signOut()}catch(e){}
  LS.del(k);sbSwitch(null);SBS.sent='';SBS.msg='';closeSheet();render();if(hasAcct())refresh(true)}
 function sbCfgSave(){
@@ -3685,11 +3687,16 @@ window.addEventListener('popstate',e=>{
  if($('#learn')){if(LRN.view!=='home'){LRN.view='home';navPush({l:'learn'});learnDraw();return}learnClose(true);return}
  if($('#lib')){libClose(true);return}
  if($('#gym')){gymClose(true);return}
- if($('#ped')){if(PED&&PED.dirty&&!confirm('Discard your changes?')){navPush({l:'ped'});return}pedClose(true);return}
+ if($('#ped')){if(PED&&PED.dirty){navPush({l:'ped'});askConfirm({title:'Discard your changes?',body:'The edits to your program will be lost.',yes:'Discard',no:'Keep editing'},()=>pedClose());return}pedClose(true);return}
  const t=(e.state&&e.state.tab)||'today';if(t!==UI.tab){UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render()}
 });
 function openSheet(html,fn){if(!UI.sheet)navPush({l:'sheet'});UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
 function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop()}
+/* One themed confirm sheet (0.12.2): replaces every native confirm(). Cancel or Back returns to the sheet underneath. */
+let CONF=null;
+function askConfirm(o,fn){const prev={h:UI.sheet,f:UI.sheetFn};CONF={fn,prev};
+ openSheet(`<h2>${esc(o.title)}</h2>${o.body?`<div class="mut sm" style="margin-bottom:14px">${esc(o.body)}</div>`:''}<button class="btn red full" data-act="confYes">${esc(o.yes||'Delete')}</button><button class="btn ghost full" style="margin-top:8px" data-act="confNo">${esc(o.no||'Keep it')}</button>`)}
+function confBack(){const c=CONF;CONF=null;if(!c)return null;if(c.prev.h)openSheet(c.prev.h,c.prev.f);else closeSheet();return c}
 function ovlInert(on){document.querySelectorAll(OVLSEL).forEach(o=>{if(o.id!=='ov')o.inert=on})}
 function renderSheet(){
  let ov=$('#ov');
@@ -4028,7 +4035,7 @@ document.addEventListener('click',async e=>{
   case 'setupSave':setupSave();break;
   case 'tryDemo':{const u=new URL(location.href);u.searchParams.set('demo','1');location.href=u.toString();break}
   case 'leaveDemo':{const u=new URL(location.href);u.searchParams.delete('demo');location.href=u.toString();break}
-  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Switch repo anyway?'))break;cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)}else toast('The repo should look like owner/name.');break}
+  case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){const go=()=>{cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)};if(pendCount()){askConfirm({title:'Switch repo?',body:'Some changes have not synced yet and will be lost.',yes:'Switch anyway',no:'Stay on this repo'},go);break}go()}else toast('The repo should look like owner/name.');break}
   case 'aiSave':{const el=$('#ai_key'),v=el?el.value.trim():'';if(!v){toast('Paste your Claude API key first.');break}
    if(!/^sk-ant-[\w-]{20,}$/.test(v)){toast('That is not a Claude key. It starts with sk-ant-.');break}
    aiKeySet(v);LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key saved on this phone. Tap Test.');break}
@@ -4054,7 +4061,7 @@ document.addEventListener('click',async e=>{
   case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());break;
   case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodPhoto=null;addOpen(m,{photo:ph||''});break}
   case 'force':closeSheet();refresh(true);break;
-  case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
+  case 'signout':{const go=()=>{LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render()};if(pendCount()){askConfirm({title:'Sign out?',body:'Some changes have not synced yet and will be lost.',yes:'Sign out anyway',no:'Stay signed in'},go);break}go();break}
   case 'gotoWorkout':{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render();break}
   case 'cal':UI.calPick=false;UI.calM=ym(UI.date);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
   case 'calNav':UI.calM=shiftMonth(UI.calM,+D.n);loadDays(monthDates(UI.calM));openSheet(calSheet(),calSheet);break;
@@ -4081,7 +4088,7 @@ document.addEventListener('click',async e=>{
   case 'pedWd':PED.doc.weekdays[String(D.w)]=D.id;pedDirty();pedDraw();break;
   case 'pedAddDay':{const ds=PED.doc.days;let id='d'+Date.now().toString(36);while(ds.some(x=>x.id===id))id+='x';ds.push({id,name:'Day '+(ds.length+1),focus:'',exercises:[]});pedDirty();pedDraw();break}
   case 'pedDayUp':case 'pedDayDn':{const ds=PED.doc.days,i=+D.d,j=a==='pedDayUp'?i-1:i+1;if(j<0||j>=ds.length)break;[ds[i],ds[j]]=[ds[j],ds[i]];pedDirty();pedDraw();break}
-  case 'pedDayDel':{const ds=PED.doc.days,d=ds[+D.d];if(!d)break;if(d.exercises.length&&!confirm('Delete '+d.name+' and its '+d.exercises.length+' exercises?'))break;ds.splice(+D.d,1);PED.doc.retired=(PED.doc.retired||[]).filter(x=>x.id!==d.id).concat([{id:d.id,name:d.name}]);Object.keys(PED.doc.weekdays).forEach(k=>{if(PED.doc.weekdays[k]===d.id)PED.doc.weekdays[k]='rest'});pedDirty();pedDraw();break}
+  case 'pedDayDel':{const ds=PED.doc.days,d=ds[+D.d];if(!d)break;const go=()=>{const i=ds.indexOf(d);if(i<0)return;ds.splice(i,1);PED.doc.retired=(PED.doc.retired||[]).filter(x=>x.id!==d.id).concat([{id:d.id,name:d.name}]);Object.keys(PED.doc.weekdays).forEach(k=>{if(PED.doc.weekdays[k]===d.id)PED.doc.weekdays[k]='rest'});pedDirty();pedDraw()};if(d.exercises.length){askConfirm({title:'Delete '+d.name+'?',body:'This removes the day and its '+d.exercises.length+' exercise'+(d.exercises.length===1?'':'s')+' from your program. Past workouts stay.',yes:'Delete day',no:'Keep it'},go);break}go();break}
   case 'pedExUp':case 'pedExDn':{const xs=PED.doc.days[+D.d].exercises,i=+D.i,j=a==='pedExUp'?i-1:i+1;if(j<0||j>=xs.length)break;[xs[i],xs[j]]=[xs[j],xs[i]];pedDirty();pedDraw();break}
   case 'pedExDel':PED.doc.days[+D.d].exercises.splice(+D.i,1);pedDirty();pedDraw();break;
   case 'pedAddEx':PICK={mode:'ed',d:+D.d};openSheet(pedPickSheet());break;
@@ -4155,7 +4162,7 @@ document.addEventListener('click',async e=>{
   case 'trackTog':{const to=isSimple()?'count':'simple';mutate(P_PROFILE,{k:'merge',data:{track:to}},{delay:300});openSheet(settingsSheet());render();toast0(to==='count'?SC().settings.toastOn:SC().settings.toastOff);break}
   case 'guideOpen':openSheet(guideSheet());break;
   case 'jView':openSheet(journalSheet(D.d,D.id));break;
-  case 'jDel':mutate(foodP(D.d),{k:'foodDel',id:D.id},{quiet:true});closeSheet();render();break;
+  case 'jDel':{const dd=D.d,it=food(dd).items.find(i=>i.id===D.id),keep=it&&clone(it);mutate(foodP(dd),{k:'foodDel',id:D.id},{quiet:true});closeSheet();render();if(keep)toastUndo('Deleted.',()=>{mutate(foodP(dd),{k:'foodAdd',item:keep},{quiet:true});render()});break}
   case 'habTog':{const d=UI.date,on=!(logOf(d).habits||{})[D.id];mutate(logP(d),{k:'habit',id:D.id,v:on},{delay:300});render();break}
   case 'habEdit':HAB_EDIT=true;render();break;
   case 'habDone':HAB_EDIT=false;render();break;
@@ -4187,7 +4194,7 @@ document.addEventListener('click',async e=>{
    const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
    if(foodPhoto==='remove')delete item.photo;
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
-  case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
+  case 'foodDel':{const dd=UI.date,it=food(dd).items.find(i=>i.id===D.id),keep=it&&clone(it);mutate(foodP(dd),{k:'foodDel',id:D.id});closeSheet();if(keep)toastUndo('Deleted '+keep.name+'.',()=>{mutate(foodP(dd),{k:'foodAdd',item:keep})});break}
   case 'wday':UI.wDay=D.id;UI.wPick=true;UI.wSel=T;render();break;
   case 'wStart':UI.wStartAt=Date.now();UI.wPick=false;window.scrollTo(0,0);askMotion();askNotify();if(UI.wDay&&D.id)startWorkout(D.id);break;
   case 'wFinish':finMode='drop';openSheet(finishSheet());break;
@@ -4221,8 +4228,10 @@ document.addEventListener('click',async e=>{
    mutate(P_MEALS,{k:'mealAdd',meal:{id:uid(),name,items:its.map(i=>({name:i.name,amount:i.amount||'',kcal:rnd(num(i.kcal)),protein:rnd(num(i.protein)),carbs:rnd(num(i.carbs)),fat:rnd(num(i.fat))})),by:'app',t:new Date().toISOString()}},{quiet:true});
    closeSheet();render();toast0('Saved "'+name+'". Find it under Saved meal.');break}
   case 'savedOpen':{const prev=addDays(UI.date,-1);openSheet(savedSheet(),savedSheet);loadDays([prev]);break}
-  case 'mealUse':{if(Date.now()-SMLP.at<900)break;const m=savedMeals().find(x=>x.id===D.id);if(!m)break;const no=nextMealNo(UI.date);mealItemsAdd(UI.date,no,m.items||[]);closeSheet();render();toast0('Added '+m.name+' as Meal '+no+'.');break}
-  case 'mealDelGo':mutate(P_MEALS,{k:'mealDel',id:D.id},{quiet:true});openSheet(savedSheet(),savedSheet);break;
+  case 'mealUse':{if(Date.now()-SMLP.at<900)break;const m=savedMeals().find(x=>x.id===D.id);if(!m)break;const dd=UI.date,no=nextMealNo(dd),ids=[];mealItemsAdd(dd,no,m.items||[],ids);closeSheet();render();toastUndo('Added '+m.name+' as Meal '+no+'.',()=>{ids.forEach(id=>mutate(foodP(dd),{k:'foodDel',id},{quiet:true}));render()});break}
+  case 'mealDel':{const m=savedMeals().find(x=>x.id===D.id);if(!m)break;askConfirm({title:'Delete "'+m.name+'"?',body:'It only removes the saved copy. Food you already logged stays.',yes:'Delete saved meal',no:'Keep it'},()=>{mutate(P_MEALS,{k:'mealDel',id:m.id},{quiet:true});openSheet(savedSheet(),savedSheet)});break}
+  case 'confYes':{const c=confBack();if(c)c.fn();break}
+  case 'confNo':confBack();break;
   case 'copyPrev':{const d=UI.date,pf=food(addDays(d,-1)).items;if(!pf.length)break;const nos=[...new Set(pf.map(mealNo))].sort((a,b)=>a-b),base=nextMealNo(d)-1;
    const cids=[];nos.forEach((n,k)=>mealItemsAdd(d,base+k+1,pf.filter(i=>mealNo(i)===n),cids));{const cd=LS.get('forma.copied',{})||{};cd[d]=cids;LS.set('forma.copied',cd)}closeSheet();render();toast0('Copied '+pf.length+' food'+(pf.length===1?'':'s')+' from '+fmtShort(addDays(d,-1))+'.');break}
   case 'shareOpen':shareOpen(program());break;
@@ -4299,7 +4308,7 @@ document.addEventListener('click',async e=>{
   case 'nxSave':{const nm=NEWX.name.trim();if(!nm){toast('Give the exercise a name.');break}if(!NEWX.mu){toast('Pick the main muscle.');break}
    const slug=nm.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'exercise',ex=exdb().exercises;let id='custom_'+slug,n=2;while(ex[id])id='custom_'+slug+'_'+(n++);
    mutate(P_EX,{k:'exNew',id,ex:{n:nm,eq:NEWX.eq||'Other',p:[NEWX.mu],s:[],c:[],a:[]}},{quiet:true,delay:700});if(PICK&&PICK.mode==='lib'){closeSheet();if($('#lib'))libDraw();toast0('Exercise created.');break}usePick(id);break}
-  case 'exDel':if(confirm('Remove this exercise from today\'s workout?'))mutate(logP(woDate()),{k:'wExtraDel',ex:D.ex},{delay:1000});break;
+  case 'exDel':{const ex=D.ex;askConfirm({title:'Remove this exercise?',body:'It leaves today\'s workout, with any sets you logged for it.',yes:'Remove',no:'Keep it'},()=>mutate(logP(woDate()),{k:'wExtraDel',ex},{delay:1000}));break}
   case 'doSwap':{const W=woDate(),wo=logOf(W).workout;const from=effEx(wo,D.slot);mutate(logP(W),{k:'wSwap',slot:D.slot,alt:D.to,moved:true,from,to:D.to},{delay:1000});closeSheet();break}
  }
 });
