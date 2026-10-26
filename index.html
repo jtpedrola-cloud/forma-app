@@ -619,6 +619,9 @@ header.hv2 .psub .seg{margin:0}
 .lsh .lrow{display:flex;align-items:center;justify-content:space-between;min-height:44px}
 .lsh .dchip{height:32px;padding:0 14px;border-radius:16px;background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);color:var(--txt);font-size:15px;font-weight:500}
 .lsh .dopt{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.lsh .dopt button{height:40px;padding:0 14px;border-radius:12px;background:var(--inset);font-size:15px}.lsh .dopt button.on{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.dsel{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.dsel button{min-height:44px;padding:0 14px;border-radius:12px;background:var(--inset);color:var(--txt);font-size:15px}.dsel button.on{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.dsr{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:12px}
+svg rect.bh{cursor:pointer;fill:transparent}svg rect.bh:focus-visible{outline:2px solid var(--acc)}
 .v1 .dnav2{display:flex;align-items:center;min-height:56px;margin-top:4px}
 .v1 .dnav2 .dd{flex:1;font-size:17px}
 .v1 .dnav2 .ib{width:44px;height:44px;color:var(--mut)}
@@ -1055,7 +1058,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='d1cbdc58916ca941c2d6ead978b54dca452a0823';let verChecked=0;
+const BUILD='446285f584fd285702c6b4c4621e6b815ee11df1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1568,10 +1571,10 @@ function checklist(d){
 /* Design v2 hero: one big number, the bar with its band, one status line. Today adds the three macro values and the burn line; Food adds the rings
    and makes the number a tap that switches between eaten and left. */
 function calHero(d,cons,rings){
- const pr=profile(),T=TG(pr),t=totals(d),rs=rangeState('kcal',t.kcal,T),big=cons?rnd(t.kcal):rnd(T.kcal-t.kcal);
+ const pr=profile(),T=TG(pr),t=totals(d),rs=rangeState('kcal',t.kcal,T),big=cons?rnd(t.kcal):rnd(T.kcal-t.kcal),nil=!food(d).items.length;
  const st=rs.in?`In range, ${rs.band}`:rs.l==='Left'?(t.kcal<=0?`${rs.band} to eat`:`Left ${fmtN(rs.amt)} of ${rs.band}`):`<span class="amb">Over ${fmtN(rs.amt)}</span> of ${rs.band}`;
- const num_=`<b class="big">${fmtN(big)}</b><span class="of">/ ${fmtN(T.kcal)}</span>`;
- const mac=(l,k)=>{const r=rangeState(k,t[k],T);return `<div><div class="lbl">${l}</div><div class="t17">${fmtN(t[k])} g</div><div class="s15 mut">${r.in?'in range':r.l==='Left'?'left '+fmtN(r.amt):'<span class="amb">over '+fmtN(r.amt)+'</span>'}</div></div>`};
+ const num_=`<b class="big">${nil&&cons?'-':fmtN(big)}</b><span class="of">/ ${fmtN(T.kcal)}</span>`;
+ const mac=(l,k)=>{const r=rangeState(k,t[k],T);return `<div><div class="lbl">${l}</div><div class="t17">${nil?'-':fmtN(t[k])+' g'}</div><div class="s15 mut">${r.in?'in range':r.l==='Left'?'left '+fmtN(r.amt):'<span class="amb">over '+fmtN(r.amt)+'</span>'}</div></div>`};
  let h=`<section class="hero" id="fmain" data-tour="cal"><div class="lbl">Calories${rings?(cons?' eaten':' left'):''}</div>`;
  h+=rings?`<button class="hn" data-act="mode" data-m="${cons?'remaining':'consumed'}" aria-label="Switch between eaten and left">${num_}</button>`:`<div class="hn">${num_}</div>`;
  h+=calBar(t.kcal,T)+`<div class="s15 stl">${st}</div>`;
@@ -1651,9 +1654,9 @@ function todayView(){
  const yd=addDays(today(),-1),ydp=logP(yd),ydRdy=!DB.tree[ydp]||(DB.files[ydp]&&DB.files[ydp].sha===DB.tree[ydp]);
  if(isT&&new Date().getHours()<12&&!ydRdy)loadDay(yd);
  const nudge=isT&&new Date().getHours()<12&&ydRdy&&logOf(yd).weight==null;
- const rows=[row(lg.weight!=null,'Weigh in'+(nudge?`<button class="lnk sl" data-act="weightYest">Yesterday missing, add</button>`:''),lg.weight!=null?fwu(lg.weight):'','weightEdit',lg.weight!=null?'Edit':'Log')];
- if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo&&t.kcal<=rg.hi,'Food',fmtN(t.kcal)+' of '+fmtN(T.kcal),'foodAdd','Add',` data-m="${nextMealNo(d)}"`));
- if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',(st==null?'0':st.toLocaleString('en-US'))+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
+ const rows=[row(lg.weight!=null,'Weigh in'+(nudge?`<button class="lnk sl" data-act="weightYest">Yesterday missing, add</button>`:''),lg.weight!=null?fwu(lg.weight):'-','weightEdit',lg.weight!=null?'Edit':'Log')];
+ if(modOn('food')&&!isSimple())rows.push(row(t.kcal>=rg.lo&&t.kcal<=rg.hi,'Food',food(d).items.length?fmtN(t.kcal)+' of '+fmtN(T.kcal):'-','foodAdd','Add',` data-m="${nextMealNo(d)}"`));
+ if(modOn('activity')){const st=lg.steps;rows.push(row(st!=null&&st>=pr.stepGoal,'Steps',st==null?'-':st.toLocaleString('en-US')+' of '+pr.stepGoal.toLocaleString('en-US'),'stepsEdit',st==null?'Log':'Edit',null,'steps'))}
  if((pd||(wo&&wo.dayId))&&modOn('workout')){const done=wo&&wo.finishedAt,live=wo&&!wo.finishedAt;rows.push(row(!!done,'Workout',esc(wo&&wo.dayId?dayName(wo.dayId,pd?pd.name:wo.dayId):pd.name),'gotoWorkout',done?'View':live?'Continue':isT?'Start':'See'))}
  if(modOn('activity'))rows.push(...sportRows(d));
  chk.filter(x=>x.act==='gotoBody'||x.act==='measureEdit').forEach(x=>rows.push(row(x.ok,x.l,'',x.act,'Add',x.d?` data-d="${x.d}"`:'')));
@@ -1687,12 +1690,13 @@ function deficitRow(d,kcal){const burn=dayBurn(d),def=burn-kcal,sport=actsOf(d).
  return `<div class="row xs" style="margin-top:8px"><span class="mut sp">Burn ~${burn.toLocaleString('en-US')}${sport?' (maintenance + sport '+sport+')':' (maintenance)'}${tq('maintenance')}</span><b class="df ${def>=0?'pos':'neg'}" style="color:${def>=0?'var(--ok)':'var(--warn)'}">${def>=0?'Deficit':'Surplus'} ${Math.abs(def).toLocaleString('en-US')}</b>${tq(def>=0?'deficit':'surplus')}</div>`}
 /* Stats screens (design v2): the chart, a 2 by 2 grid of four numbers, one status line, one link to the explanation. */
 const gstat=(v,u,l)=>`<div class="gs"><div class="gv">${v}${v!=='-'&&u?`<small>${u}</small>`:''}</div><div class="lbl">${l}</div></div>`;
-function barChart2(vals,labels,target,what){
+function barChart2(vals,labels,target,what,hit){
  const W=350,H=140,pb=22,top=6,rt=44,n=vals.length,mx=Math.max(target||0,...vals,1)*1.08,slot=(W-rt)/n,bw=slot*.6,ch=H-pb-top;
  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${what||'Calories for the last 7 days'}, target ${fmtN(target)}">`;
  vals.forEach((v,i)=>{const x=i*slot+(slot-bw)/2,h=v>0?Math.max(2,v/mx*ch):0;
   g+=v>0?`<rect x="${x.toFixed(1)}" y="${(top+ch-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" style="fill:var(--acc)"/>`:`<rect x="${x.toFixed(1)}" y="${top+ch-2}" width="${bw.toFixed(1)}" height="2" rx="1" style="fill:var(--track)"/>`;
-  g+=`<text x="${(x+bw/2).toFixed(1)}" y="${H-5}" font-size="12" text-anchor="middle" style="fill:var(--mut)">${labels[i]}</text>`});
+  g+=`<text x="${(x+bw/2).toFixed(1)}" y="${H-5}" font-size="12" text-anchor="middle" style="fill:var(--mut)">${labels[i]}</text>`;
+  if(hit)g+=`<rect class="bh" x="${(i*slot).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${H}" data-act="stepsBar" data-d="${hit[i]}" role="button" tabindex="0" aria-label="${esc(fmtShort(hit[i]))}, ${v>0?fmtN(v)+' steps':'no steps logged'}. Edit"/>`});
  if(target){const y=top+ch-target/mx*ch;g+=`<line x1="0" x2="${W-rt+6}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--faint)" stroke-width="1"/><text x="${W}" y="${(y+4).toFixed(1)}" font-size="12" text-anchor="end" style="fill:var(--mut)">${fmtN(target)}</text>`}
  return g+'</svg>'}
 function insightsView(){
@@ -1702,7 +1706,7 @@ function insightsView(){
  const rate=sm.rate==null?'':fw(Math.abs(sm.rate),2)+' '+wU();
  const status={collecting:`Learning from your logs: ${Math.min(sm.eatDays,7)} of 7 days, ${Math.min(sm.weighIns,10)} of 10 weigh-ins`,'on pace':`On pace: ${rate} a week, goal ${fw(goal,2)}`,fast:`Faster than planned: ${rate} a week. The weekly check-in can raise calories.`,slow:`Slower than planned: ${rate} a week. The weekly check-in can lower calories.`}[sm.status]||'';
  return `<section class="vs ch"><div class="lbl">Calories</div><div class="xs mut">${logged}/7 days logged</div>${barChart2(cv,cl,TG(pr).kcal)}</section>
- <section class="vs"><div class="g22">${stat(fmtN(sm.tdee),'kcal','Maintenance')}${stat(sm.trendNow?fw(sm.trendNow):'-',wU(),'Weight trend')}${stat(sm.avgIn?fmtN(sm.avgIn):'-','kcal','Average intake')}${stat(fmtN(sm.suggested),'kcal','Suggested target')}</div>
+ <section class="vs"><div class="g22">${stat(sm.eatDays||sm.weighIns?fmtN(sm.tdee):'-','kcal','Maintenance')}${stat(sm.trendNow?fw(sm.trendNow):'-',wU(),'Weight trend')}${stat(sm.avgIn?fmtN(sm.avgIn):'-','kcal','Average intake')}${stat(sm.status==='collecting'?'-':fmtN(sm.suggested),'kcal','Suggested target')}</div>
  <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="ckOpen">Weekly check-in</button><button class="lnk l0" data-act="calcOpen">How this is calculated</button></section>`}
 function calcSheet(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
@@ -2630,9 +2634,21 @@ function measCard(){
   return `<div class="item"><div class="sp"><div class="n">${l}</div><div class="xs mut">${fmtShort(last.d)}${a.length>1&&chv!==0?', '+(chv>0?'+':'')+chv+' since first':''}</div></div><div class="r">${fmc(last.v)} ${u}</div></div>`}).join('');
  return `<section class="vs"><div class="rw"><div class="lbl sp" style="margin:0">Measurements, ${u==='in'?'inches':'cm'}</div><button class="lnk" data-act="measureEdit">Log measurements</button></div>
  ${has?'':'<div class="s15 mut" style="margin-top:4px">Waist, hips, chest, arm, thigh and neck. Measure once a week, relaxed, same spot.</div>'}<div class="lst ml">${rows}</div></section>`}
+/* One date control for the things you can log for a past day: tape measurements, progress photos (Photos tab). Chips for Today and Yesterday, then a month picker.
+   k says what the date is for; dsApply carries the pick back to it. */
+const DP={k:'',m:'',cur:''};
+function dateChips(k,d){const T=today(),y=addDays(T,-1),far=d!==T&&d!==y,b=(l,on,act,dd)=>`<button data-act="${act}" data-k="${k}" data-d="${dd}" class="${on?'on':''}" aria-pressed="${on}">${l}</button>`;
+ return `<div class="dsel" role="group" aria-label="Date">${b('Today',d===T,'dsSet',T)}${b('Yesterday',d===y,'dsSet',y)}${b(far?fmtShort(d):'Pick a date',far,'dsPick',d)}</div>`}
+function dsSheet(){const T=today(),m=DP.m;
+ return `<h2>Pick a date</h2><div class="mnav"><button class="ib" data-act="dsNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="dsNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${monthGrid(m,d=>({cls:d===DP.cur?'sel':''}),'dsGo')}<button class="lnk l0" data-act="dsBack">Back</button>`}
+function dsApply(k,d){
+ if(k==='meas'){measOpen(d);return}
+ if(k==='pp'){UI.ppDate=d===today()?null:d;UI.ppOpen=false;if(UI.sheet)closeSheet();render()}}
+function measOpen(d){MEAS_TOUCH=false;openSheet(measureSheet(d));
+ loadAllLogs().then(()=>{if(!MEAS_TOUCH&&UI.sheet&&UI.sheet.indexOf('id="m_waist"')>=0){UI.sheet=measureSheet(d);renderSheet()}})}
 function measureSheet(date){const m=measHistory(),u=mU(),dm=logOf(date).measure||{};
- return `<h2>Log measurements</h2><div class="xs mut" style="margin:-6px 0 10px">${date===today()?'Today':fmtShort(date)}. Your last values are filled in, and only the ones you change are saved.</div>
- <div class="g2">${MEAS.map(([k,l])=>{const a=m[k],cur=dm[k]!=null?dm[k]:(a.length?a[a.length-1].v:null),v=cur==null?'':fmc(cur);return `<div class="fld"><label for="m_${k}">${l} (${u})</label><input id="m_${k}" inputmode="decimal" data-orig="${v}" value="${v}" placeholder="-" autocomplete="off"></div>`}).join('')}</div>
+ return `<h2>Log measurements</h2><div class="xs mut" style="margin:-6px 0 10px">Your last values are filled in, and only the ones you change are saved.</div>${dateChips('meas',date)}
+ <div class="g2">${MEAS.map(([k,l])=>{const a=m[k].filter(x=>x.d<=date),cur=dm[k]!=null?dm[k]:(a.length?a[a.length-1].v:null),v=cur==null?'':fmc(cur);return `<div class="fld"><label for="m_${k}">${l} (${u})</label><input id="m_${k}" inputmode="decimal" data-orig="${v}" value="${v}" placeholder="-" autocomplete="off"></div>`}).join('')}</div>
  <div class="row" style="margin-top:6px"><button class="btn sp" data-act="measureSave" data-d="${date}">Save</button></div>`}
 function measureSave(date){const dm=logOf(date).measure||{},v={};let bad=false;
  MEAS.forEach(([k,l])=>{const el=$('#m_'+k);if(!el)return;const s=el.value.trim(),o=el.dataset.orig||'';if(s===o||(s!==''&&o!==''&&Math.abs(num(s)-num(o))<1e-9))return;
@@ -2660,6 +2676,7 @@ function bodyCard(part){
  const gal=last?timelineHTML(ph):'';
  return `<section class="vs">${gal||'<div class="s15 mut">No photos yet. Take the first one today and in a month you can see where you started.</div>'}
  <input type="file" id="pp_in" accept="image/*" multiple hidden><input type="file" id="pp_cam" accept="image/*" capture="environment" hidden>
+ <div class="dsr"><div class="sp s15">Photo date: ${ppDay()===today()?'today':esc(fmtShort(ppDay()))}</div><button class="lnk" data-act="ppDateT" aria-expanded="${!!UI.ppOpen}">${UI.ppOpen?'Done':'Change'}</button></div>${UI.ppOpen?dateChips('pp',ppDay()):''}
  <div class="lst plst">${photoRows(photoRow('ppCam','camera','Take a photo'),photoRow('ppGal','image','Choose from gallery'))}${last&&ph.length>1?`<button class="item ph2" data-act="bodyCmp">${ic('hist',20)}<div class="sp"><div class="n">Compare two photos</div></div>${ic('right',18)}</button>`:''}${last?`<button class="item ph2" data-act="bodyAll">${ic('grid',20)}<div class="sp"><div class="n">All photos</div></div>${ic('right',18)}</button>`:''}<button class="item ph2" data-act="camOpen">${ic('camera',20)}<div class="sp"><div class="n">Use the app camera</div></div>${ic('right',18)}</button></div></section>`;
 }
 function bfHowSheet(){const nv=navyBF(),w=latestWeight();
@@ -2671,6 +2688,8 @@ function bfHowSheet(){const nv=navyBF(),w=latestWeight();
  <button class="btn full sbtn" data-act="closeSheet">Got it</button>`}
 const bfCard=()=>bodyCard('bf'),photosCard=()=>bodyCard('photos');
 
+/* Progress photos and the app camera save to the day picked on the Photos tab (UI.ppDate), today when none. It resets after a batch is saved or the camera closes. */
+const ppDay=()=>UI.ppDate&&UI.ppDate<=today()?UI.ppDate:today();
 const poseOf=p=>{const m=p.match(/\/(front|side|back)-[^/]*$/);return m?m[1]:'other'};
 function tlEntries(ph,pose){const out=[];ph.forEach(x=>{if(pose==='all'){const all=dayLatest(x.ps);if(all.length)out.push({d:x.d,p:all[0],all});return}const ps=x.ps.filter(p=>poseOf(p)===pose);if(ps.length)out.push({d:x.d,p:ps[ps.length-1]})});return out}
 const tlGrid=e=>e.all.map(p=>`<div>${pimg(p,`alt="" data-act="phView"`)}<div class="xs mut">${poseOf(p)}</div></div>`).join('');
@@ -2678,6 +2697,7 @@ function timelineHTML(ph){
  const have=['front','side','back'].filter(z=>ph.some(x=>x.ps.some(p=>poseOf(p)===z)));
  if(!UI.tlPose||(UI.tlPose!=='all'&&!have.includes(UI.tlPose)))UI.tlPose='all';
  const es=tlEntries(ph,UI.tlPose);if(!es.length)return '';
+ if(UI.tlDate){const k=es.findIndex(x=>x.d===UI.tlDate);if(k>=0)UI.tlIdx=k;UI.tlDate=null}
  if(UI.tlIdx==null||UI.tlIdx>=es.length)UI.tlIdx=es.length-1;
  es.forEach(e=>(e.all||[e.p]).forEach(photoURL));
  const e=es[UI.tlIdx];
@@ -2711,7 +2731,7 @@ function camFit(){const v=$('#cam video'),vw=$('#cam .vw'),fr=$('#cam .fr');if(!
  const ar=v.videoWidth/v.videoHeight,W=vw.clientWidth,H=vw.clientHeight,w=W/H>ar?H*ar:W,h=W/H>ar?H:W/ar;
  Object.assign(fr.style,{left:(W-w)/2+'px',top:(H-h)/2+'px',width:w+'px',height:h+'px'})}
 window.addEventListener('resize',()=>camFit());
-function camClose(fromPop){CAM.onb=false;if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
+function camClose(fromPop){CAM.onb=false;UI.ppDate=null;UI.ppOpen=false;if(CAM.stream)CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null;CAM.shot=null;const el=$('#cam');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
 function camUI(){
  const el=$('#cam');if(!el)return;
  requestAnimationFrame(camFit);
@@ -2720,7 +2740,7 @@ function camUI(){
  el.querySelector('.gl').style.display=CAM.grid&&!CAM.shot?'':'none';
  const sh=el.querySelector('.shot');sh.hidden=!CAM.shot;if(CAM.shot)sh.src=CAM.shot;
  el.querySelectorAll('.top .cb').forEach(b=>{if(b.dataset.act==='camGrid')b.classList.toggle('on',CAM.grid);if(b.dataset.act==='camFlipG')b.classList.toggle('on',CAM.flip)});
- $('#cam_t').textContent=CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+(gp?'':' (no earlier photo)');
+ $('#cam_t').textContent=CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+(CAM.onb||ppDay()===today()?'':', '+fmtShort(ppDay()))+(gp?'':' (no earlier photo)');
  const bot=$('#cam_bot');
  if(CAM.shot){bot.innerHTML=`<div class="row" style="gap:10px;padding:10px 0"><button class="btn ghost sp" style="color:#fff;border-color:#333" data-act="camRetake">Retake</button><button class="btn sp" data-act="camUse">Save ${CAM.pose}</button></div>`;return}
  bot.innerHTML=`${CAM.onb?'':`<div class="pz">${['front','side','back'].map(z=>`<button data-act="camPose" data-p="${z}" class="${CAM.pose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>`}
@@ -2742,8 +2762,8 @@ function camShoot(){
  const iv=setInterval(()=>{n--;if(n<=0){clearInterval(iv);cd.hidden=true;go()}else{cd.textContent=n;camTick(n)}},1000);
 }
 function camUse(){
- const p='data/progress/'+today()+'/'+CAM.pose+'-'+uid()+'.jpg';DB.photos[p]=CAM.shot.split(',')[1];PHOTOS[p]=CAM.shot;persist();flushSoon(300);
- toast0(CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+' saved.');CAM.shot=null;
+ const pd=CAM.onb?today():ppDay(),p='data/progress/'+pd+'/'+CAM.pose+'-'+uid()+'.jpg';DB.photos[p]=CAM.shot.split(',')[1];PHOTOS[p]=CAM.shot;persist();flushSoon(300);UI.tlDate=pd;
+ toast0(CAM.pose[0].toUpperCase()+CAM.pose.slice(1)+' saved'+(pd===today()?'.':' to '+fmtShort(pd)+'.'));CAM.shot=null;
  if(CAM.onb){INT.photo=p;INT.a.photoSkipped=false;camClose();document.body.style.overflow='hidden';if($('#intake'))intakeUI();return}
  const order=['front','side','back'],i=order.indexOf(CAM.pose);if(i<order.length-1){CAM.pose=order[i+1];camUI()}else{UI.tlIdx=null;camClose()}
 }
@@ -2890,9 +2910,9 @@ function progressView(){
 }
 function activityView(){
  const pr=profile(),T=today();
- const sv=[],sl=[];for(let i=13;i>=0;i--){const d=addDays(T,-i);sv.push(logOf(d).steps);sl.push(parseD(d).getDate())}
+ const sv=[],sl=[],sdt=[];for(let i=13;i>=0;i--){const d=addDays(T,-i);sv.push(logOf(d).steps);sl.push(parseD(d).getDate());sdt.push(d)}
  const sd=sv.filter(x=>x!=null),savg=sd.length?rnd(sd.reduce((a,b)=>a+b,0)/sd.length):0;
- const stepsCard=`<section class="vs ch"><div class="lbl">Last 14 days</div><div class="xs mut">${sd.length?'Average '+savg.toLocaleString('en-US')+' a day':'No steps logged yet'}</div>${sd.length?barChart2(sv,sl,pr.stepGoal,'Steps for the last 14 days'):''}</section>`;
+ const stepsCard=`<section class="vs ch"><div class="lbl">Last 14 days</div><div class="xs mut">${sd.length?'Average '+savg.toLocaleString('en-US')+' a day':'No steps logged yet'}</div>${sd.length?barChart2(sv,sl,pr.stepGoal,'Steps for the last 14 days',sdt):''}<div class="xs mut">Tap a day to add or fix its steps.</div></section>`;
  const sub=subOf('activity',ACT_SUBS),hdr=headerV1('Activity',[],subSeg('activity',ACT_SUBS)),W=(x,fab)=>hdr+`<div class="v1">${x}</div>`+(fab||logFab());
  if(sub==='calendar')return W(stepsCalCard());
  if(sub==='sport')return W(sportCard(),`<button class="fab" data-act="actNew" aria-label="Log sport">${ic('plus',28)}</button>`);
@@ -2948,7 +2968,7 @@ function stepsCalCard(){
  const md=monthDates(m).filter(d=>d<=T&&d>=st);
  const full=md.filter(dayFull).length,fullStreak=streakOf(d=>d>=st&&dayFull(d));
  let best=0,c=0;for(let d=st;d<=T;d=addDays(d,1)){if(dayFull(d)){c++;if(c>best)best=c}else if(d<T)c=0}
- const did=md.filter(d=>woDone(d)).length,planned=md.filter(d=>progDay(d)&&(d<T||woDone(d))).length;
+ const any=md.some(d=>{const f=dayFlags(d);return f.food||f.wo||f.steps||f.weight||f.sport}),did=md.filter(d=>woDone(d)).length,planned=md.filter(d=>progDay(d)&&(d<T||woDone(d))).length;
  const sv=md.map(d=>logOf(d).steps).filter(x=>x!=null),savg=sv.length?rnd(sv.reduce((a,b)=>a+b,0)/sv.length):0;
  const wv=md.map(d=>logOf(d).weight).filter(x=>x!=null),wd=wv.length>1?wv[wv.length-1]-wv[0]:null;
  const chip=(k,l,i)=>`<button data-act="calF" data-k="${k}" class="${f===k?'on':''}" aria-label="${l}" aria-pressed="${f===k}">${ic(i,20)}</button>`;
@@ -2961,8 +2981,8 @@ function stepsCalCard(){
  const kk=n=>n>=1000?(Math.round(n/100)/10)+'k':String(n);
  return `<section class="vs cl2"><div class="cfl" role="group" aria-label="Show">${chip('all','All',"grid")}${CAL_KINDS.map(([k,l,i])=>chip(k,l,i)).join('')}</div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}</section>
- <section class="vs"><div class="g22">${gstat(did+'<small>of '+Math.max(planned,did)+'</small>','','Workouts')}${gstat(savg?kk(savg):'-','','Steps a day')}${gstat(wd==null?'-':(wd>0?'+':wd<0?'-':'')+fw(Math.abs(wd)),wd==null?'':wU(),'Weight change')}${gstat(full+'<small>of '+md.length+'</small>','','Full days')}</div>
- <div class="s15 mut stl">Full-day streak ${fullStreak}, best ${best}.</div><button class="lnk l0" data-act="calHow">How to read this</button></section>`;
+ <section class="vs"><div class="g22">${gstat(any&&Math.max(planned,did)?did+'<small>of '+Math.max(planned,did)+'</small>':'-','','Workouts')}${gstat(savg?kk(savg):'-','','Steps a day')}${gstat(wd==null?'-':(wd>0?'+':wd<0?'-':'')+fw(Math.abs(wd)),wd==null?'':wU(),'Weight change')}${gstat(any?full+'<small>of '+md.length+'</small>':'-','','Full days')}</div>
+ <div class="s15 mut stl">${best?`Full-day streak ${fullStreak}, best ${best}.`:any?'No full day yet.':'Nothing logged this month yet.'}</div><button class="lnk l0" data-act="calHow">How to read this</button></section>`;
 }
 function calHowSheet(){return `<h2>How to read the calendar</h2>
  <div class="srow2"><b>Solid icon</b><span>Done that day.</span></div>
@@ -3530,7 +3550,7 @@ async function termOpen(id){const L=await lessonsLoad(),g=(L.glossary||[]).find(
  const ls=TERM_LESSON[id]&&(L.lessons||[]).find(x=>x.id===TERM_LESSON[id]);
  openSheet(`<h2>${esc(g.term)}</h2><div class="sm" style="font-weight:600;margin-bottom:8px">${esc(g.short)}</div><div class="sm" style="color:var(--soft);line-height:1.5">${esc(g.long)}</div>
  ${ls?`<button class="btn ghost full" style="margin-top:14px" data-act="termLesson" data-id="${esc(ls.id)}">${ic('book',18)} Lesson: ${esc(ls.title)}</button>`:''}<button class="btn full" style="margin-top:10px" data-act="closeSheet">Got it</button>`)}
-document.addEventListener('keydown',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('tq')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();t.click()}});
+document.addEventListener('keydown',e=>{const t=e.target;if(t&&t.classList&&(t.classList.contains('tq')||t.classList.contains('bh'))&&(e.key==='Enter'||e.key===' ')){e.preventDefault();t.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.wd!=null&&PED){PED.doc.weekdays[String(t.dataset.wd)]=t.value;pedDirty();pedDraw()}
  if(t&&t.dataset&&t.dataset.spf&&PED){const s=((PED.doc.sports||{})[t.dataset.w]||[])[+t.dataset.j];if(!s)return;const f=t.dataset.spf;
   if(f==='kind')s.kind=t.value;else if(f==='time'){if(t.value)s.time=t.value;else delete s.time}else s.min=Math.max(5,Math.min(600,Math.round(num(t.value))||60));
@@ -3654,7 +3674,7 @@ function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><
  <button class="btn full" data-act="actSave">Add</button>
  ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}
 const dayLine=d=>d===today()?'':`<div class="xs mut" style="margin:-6px 0 8px">${dayWord(d)}${d<addDays(today(),-1)?'':', '+fmtShort(d)}</div>`;
-function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2>${dayLine(UI.date)}<div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">${personalMode()?'Type the number from your phone\'s step counter, or let Forma Steps on Android send it every hour (Settings, Personal mode).':'Type the number from your phone\'s step counter. A web page cannot read it for you.'}</div><button class="btn full" data-act="stepsSave">Save</button>`}
+function stepsSheet(d){d=d||UI.date;const s=logOf(d).steps;return `<h2>Steps</h2>${dayLine(d)}<div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">${personalMode()?'Type the number from your phone\'s step counter, or let Forma Steps on Android send it every hour (Settings, Personal mode).':'Type the number from your phone\'s step counter. A web page cannot read it for you.'}</div><button class="btn full" data-act="stepsSave" data-d="${d}">Save</button>`}
 function weightSheet(d){d=d||UI.date;const w=logOf(d).weight;return `<h2>Weight</h2>${dayLine(d)}<div class="fld"><label>${imperial()?'Pounds':'Kilograms'}</label><input id="v_weight" inputmode="decimal" value="${w==null?'':fw(w)}" placeholder="${imperial()?'185.0':'85.0'}"></div><button class="btn full" data-act="weightSave" data-d="${d}">Save</button>`}
 
 /* ---------- sheet ---------- */
@@ -4071,7 +4091,8 @@ document.addEventListener('click',async e=>{
   case 'wsel':UI.wSel=D.d;UI.wPick=false;loadDay(D.d);render();break;
   case 'wwk':UI.wWk+=+D.n;{const wk=weekDates(addDays(T,7*UI.wWk));loadDays(wk)}render();break;
   case 'stepsEdit':openSheet(stepsSheet());break;
-  case 'stepsSave':{const v=$('#v_steps').value.trim();if(v!==''&&!(/^\d[\d,]*(\.\d+)?$/.test(v)&&num(v.replace(/,/g,''))<=100000)){ferr('v_steps','Enter steps from 0 to 100,000.');break}mutate(logP(UI.date),{k:'steps',v:v===''?null:Math.round(num(v.replace(/,/g,'')))});closeSheet();break}
+  case 'stepsBar':loadDay(D.d);openSheet(stepsSheet(D.d));break;
+  case 'stepsSave':{const v=$('#v_steps').value.trim();if(v!==''&&!(/^\d[\d,]*(\.\d+)?$/.test(v)&&num(v.replace(/,/g,''))<=100000)){ferr('v_steps','Enter steps from 0 to 100,000.');break}mutate(logP(D.d||UI.date),{k:'steps',v:v===''?null:Math.round(num(v.replace(/,/g,'')))});closeSheet();break}
   case 'weightEdit':openSheet(weightSheet());break;
   case 'weightYest':{const y=addDays(T,-1);loadDay(y);openSheet(weightSheet(y));break}
   case 'weightSave':{const v=$('#v_weight').value.trim();if(v!==''){const kg=u2kg(num(v));if(!(kg>=20&&kg<=400)){ferr('v_weight','Enter a weight from '+fw(20,0)+' to '+fw(400,0)+' '+wU()+'.');break}}mutate(logP(D.d||UI.date),{k:'weight',v:v===''?null:+u2kg(num(v)).toFixed(imperial()?2:1)});closeSheet();break}
@@ -4172,8 +4193,13 @@ document.addEventListener('click',async e=>{
   case 'trackOn':{mutate(P_PROFILE,{k:'merge',data:{track:'count'}},{delay:300});render();toast0(SC().settings.toastOn);break}
   case 'modTog':{const ms=Object.assign({food:true,workout:true,activity:true},profile().modules||{});ms[D.m]=!ms[D.m];if(!ms.food&&!ms.workout&&!ms.activity){toast('Keep at least one.');break}
    mutate(P_PROFILE,{k:'merge',data:{modules:ms}},{delay:300});if(UI.tab===D.m&&!ms[D.m])UI.tab='today';openSheet(settingsSheet());render();break}
-  case 'measureEdit':{const d=D.d||today();MEAS_TOUCH=false;openSheet(measureSheet(d));
-   loadAllLogs().then(()=>{if(!MEAS_TOUCH&&UI.sheet&&UI.sheet.indexOf('id="m_waist"')>=0){UI.sheet=measureSheet(d);renderSheet()}});break}
+  case 'measureEdit':measOpen(D.d||today());break;
+  case 'dsSet':dsApply(D.k,D.d);break;
+  case 'dsPick':DP.k=D.k;DP.cur=D.d;DP.m=ym(D.d);openSheet(dsSheet(),dsSheet);break;
+  case 'dsNav':DP.m=shiftMonth(DP.m,+D.n);openSheet(dsSheet(),dsSheet);break;
+  case 'dsGo':dsApply(DP.k,D.d);break;
+  case 'dsBack':dsApply(DP.k,DP.cur);break;
+  case 'ppDateT':UI.ppOpen=!UI.ppOpen;render();break;
   case 'measureSave':measureSave(D.d||today());break;
   case 'measTog':{const ms=Object.assign({food:true,workout:true,activity:true},profile().modules||{});ms.measure=!modOn('measure');mutate(P_PROFILE,{k:'merge',data:{modules:ms}},{delay:300});openSheet(settingsSheet());render();break}
   case 'bodyAll':openSheet(bodyAllSheet(),bodyAllSheet);break;
@@ -4322,9 +4348,10 @@ document.addEventListener('change',async e=>{
   try{const u=await shrinkImage(f);const p='data/progress/'+today()+'/front-'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;persist();flushSoon(300);INT.photo=p;INT.a.photoSkipped=false;if($('#intake'))intakeUI()}catch(x){toast(OC().errors.photo)}
   return}
  if((e.target.id==='pp_in'||e.target.id==='pp_cam')&&e.target.files&&e.target.files.length){
-  const fl=[...e.target.files];e.target.value='';let n=0;
-  for(const f of fl){try{const u=await shrinkImage(f);const p='data/progress/'+today()+'/'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;n++}catch(x){}}
-  persist();toast0(n+' photo'+(n===1?'':'s')+' saved. Add your waist and neck under Measurements for a body fat estimate.');render();flushSoon(300);return;
+  const fl=[...e.target.files],pd=ppDay();e.target.value='';let n=0;
+  for(const f of fl){try{const u=await shrinkImage(f);const p='data/progress/'+pd+'/'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;n++}catch(x){}}
+  UI.ppDate=null;UI.ppOpen=false;UI.tlDate=pd;if(pd!==today())loadDay(pd);
+  persist();toast0(n+' photo'+(n===1?'':'s')+' saved'+(pd===today()?'':' to '+fmtShort(pd))+'. Add your waist and neck under Measurements for a body fat estimate.');render();flushSoon(300);return;
  }
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
