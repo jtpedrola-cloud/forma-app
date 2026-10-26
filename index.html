@@ -757,6 +757,12 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 .v1 .tlr{margin-top:12px}
 .v1 input[type=range]{margin:8px 0 0}
 .v1 .ch .gv{margin:0}
+.v1 .ovc .s15{margin-top:12px}.v1 .ovc .ovn{margin-top:4px}
+.v1 .gb{display:grid;grid-template-columns:1fr auto 1fr;gap:8px}
+.v1 .gb>div:nth-child(2){text-align:center}.v1 .gb>div:last-child{text-align:right}
+.v1 .gb b{font-weight:400;font-size:17px;font-variant-numeric:tabular-nums}.v1 .gb .lbl{margin:4px 0 0}
+.v1 .gbar{height:6px;border-radius:3px;background:var(--inset);overflow:hidden;margin-top:12px}.v1 .gbar i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.v1 .gl .s15{margin-top:12px}
 .v1 .vs .rw.sp0{align-items:center}
 /* Learn: list rows, one lime button per lesson */
 #learn .lrow{padding:16px 0;border-top:1px solid var(--line)}
@@ -975,7 +981,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3eab8f30e739d212034542fd748681ce44c7c265';let verChecked=0;
+const BUILD='803dfdb96977627d72539bf03bb522846b3ddbb2';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1327,7 +1333,7 @@ function headerV1(title,items,sub=''){
  const mi=([act,label,attr])=>`<button class="mi" data-act="${act}"${attr||''}>${label}</button>`;
  const syn={synced:'Synced',syncing:'Syncing',offline:'Offline, tap to retry',error:'Sync failed, tap to retry'}[UI.sync]||'Sync status';
  const bad=UI.sync==='offline'||UI.sync==='error';
- return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}${bad?'<i class="sb"></i>':''}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
+ return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}${bad?'<i class="sb"></i>':''}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
 }
 const logFab=()=>`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
 document.addEventListener('click',e=>{document.querySelectorAll('details.more[open]').forEach(d=>{if(!d.contains(e.target)||e.target.closest('.mi'))d.open=false})});
@@ -2692,14 +2698,54 @@ function maintCard(){
 const PROG_SUBS=[['overview','Overview'],['photos','Photos'],['weight','Body']],ACT_SUBS=[['steps','Steps'],['calendar','Calendar'],['sport','Sport']];
 function spark(pts){if(pts.length<2)return '';const vs=pts.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs),r=hi-lo||1,n=pts[pts.length-1].i||1;
  return `<svg class="ovsp" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="${pts.map(p=>(p.i/n*100).toFixed(1)+','+(25-(p.v-lo)/r*22).toFixed(1)).join(' ')}"/></svg>`}
-function progOverview(o){
- const pr=profile(),bf=latestBF(),sm=smartNow(),ph=progPhotos(),w=latestWeight(),ls=lrnList(),n=lrnCount();
- const rate=sm.rate!=null&&sm.weighIns>=4?(sm.rate>0?'Gaining ':'Losing ')+fw(Math.abs(sm.rate),2)+' '+wU()+' a week, goal '+fw(Math.abs(pr.goalRate||0),2):'Weigh in daily to see a trend';
- const link=(t,sk,label,val)=>`<button class="item ph2" data-act="goto" data-t="${t}" data-s="${sk}"><div class="sp"><div class="n">${label}</div></div><span class="r mut">${val}</span>${ic('right',18)}</button>`;
- return `<section class="vs"><div class="g22">${gstat(o.now==null?'-':fw(o.now),o.now==null?'':wU(),'Weight')}${gstat(o.now==null?'-':(o.delta>0?'+':o.delta<0?'-':'')+fw(Math.abs(o.delta)),o.now==null?'':wU(),'Since start')}${gstat(bf?'~'+bf.pct+'<small>%</small>':'-','','Body fat')}${gstat(String(ph.length),'','Photo sessions')}</div>
- <div class="s15 mut stl">${rate}</div>
- <div class="lst plst">${link('progress','weight','Body','Weight, measurements')}${link('progress','photos','Photos',ph.length?'Last '+fmtShort(ph[ph.length-1].d):'None yet')}<button class="item ph2" data-act="learnOpen"><div class="sp"><div class="n">Learn</div></div><span class="r mut">${ls.length?n+' of '+ls.length:''}</span>${ic('right',18)}</button></div></section>`;
+/* Overview weight data. wp = weigh-ins of the last 30 days as {i,v} (i 0..29, 29 = today). The trend is the same 0.1 smoothing the chart draws;
+   the weekly rate is a least-squares slope over those weigh-ins, shown once there are 4 over at least a week, and "solid" (5 over 10 days, like Claude's check-in) before it forecasts weeks. */
+function weightFit(wp){
+ let t=null;wp.forEach(p=>{t=t==null?p.v:t+0.1*(p.v-t)});
+ const n=wp.length,span=n?wp[n-1].i-wp[0].i:0;let rate=null;
+ if(n>=4&&span>=7){const mx=wp.reduce((a,p)=>a+p.i,0)/n,my=wp.reduce((a,p)=>a+p.v,0)/n,sxx=wp.reduce((a,p)=>a+(p.i-mx)**2,0);rate=sxx?wp.reduce((a,p)=>a+(p.i-mx)*(p.v-my),0)/sxx*7:null}
+ return {trend:t,rate,solid:rate!=null&&n>=5&&span>=10,n,span,recent:wp.filter(p=>p.i>=20).length};
 }
+function latestWeighIn(){const T=today();for(let i=0;i<60;i++){const d=addDays(T,-i),w=logOf(d).weight;if(w!=null)return {d,w}}return null}
+/* Goal weight: profile.goalWeight (kg) when set, else the weight at which today's lean mass is 15% body fat (the planner's reference weight; 25% for women). Gain goals need goalWeight. */
+function goalWeight(){
+ const pr=profile(),g=pr.goalWeight;if(typeof g==='number'&&g>0)return {kg:g,own:true};
+ const bf=latestBF(),w=latestWeight();if(!bf||!(pr.goalRate>0))return null;
+ const kg=+(w*(1-bf.pct/100)/((pr.body||{}).sex==='female'?0.75:0.85)).toFixed(1);
+ return kg<=pr.startWeight-0.5?{kg,own:false}:null;
+}
+const sgn=v=>v>0?'+':v<0?'-':'';
+function progOverview(o){
+ const pr=profile(),bf=latestBF(),wp=o.wp,ft=weightFit(wp),li=latestWeighIn(),gl=pr.goalRate||0,gab=Math.abs(gl);
+ const rateTxt=ft.rate==null?'-':sgn(+fw(ft.rate,1))+fw(Math.abs(ft.rate),1);
+ let chart;
+ if(ft.recent<2){const m=2-ft.recent;chart=`<div class="s15 mut">${m} more weigh-in${m===1?'':'s'} to show a trend</div><div class="xs mut ovn">Log your weight from the round button.</div>`}
+ else{
+  let line;
+  if(ft.rate==null){const m=Math.max(0,4-ft.n);line=m?`${m} more weigh-in${m===1?'':'s'} to show your weekly rate`:`Weigh in a few more days to show your weekly rate`}
+  else{const lose=-ft.rate,pace=!gl?(Math.abs(ft.rate)<0.25?'holding as planned':'drifting from the plan to hold'):lose>gl+0.25?'faster than the planned '+fw(gab,1):lose<gl-0.25?'slower than the planned '+fw(gab,1):'on pace for '+fw(gab,1);
+   line=`${rateTxt} ${wU()} a week, ${pace}`}
+  chart=lineChart(wp,+fw(pr.startWeight))+`<div class="s15 mut">${line}</div>`;
+ }
+ const gw=goalWeight();let goal='';
+ if(gw&&li&&Math.abs(pr.startWeight-gw.kg)>=0.5){
+  const p=Math.max(0,Math.min(1,(pr.startWeight-li.w)/(pr.startWeight-gw.kg))),dir=pr.startWeight>gw.kg?1:-1,left=(ft.trend==null?li.w-gw.kg:ft.trend-gw.kg)*dir;
+  let wk='';
+  if(left<=0)wk='Goal reached';
+  else if(ft.solid&&ft.rate*dir<0){const w=Math.ceil(left/Math.abs(ft.rate));wk=w>52?'more than a year at your pace':'about '+w+' week'+(w===1?'':'s')+' at your pace'}
+  else if(ft.solid)wk='Your trend is not moving toward the goal yet';
+  goal=`<section class="vs gl"><div class="gb"><div><b>${fw(pr.startWeight)}</b><div class="lbl">Start</div></div><div><b>${fw(li.w)}</b><div class="lbl">Now</div></div><div><b>${fw(gw.kg)}</b><div class="lbl">Goal</div></div></div><div class="gbar"><i style="width:${(p*100).toFixed(1)}%"></i></div>${wk?`<div class="s15 mut">${wk}</div>`:''}</section>`;
+ }
+ return `<section class="vs ch ovc"><div class="lbl">Weight, last 30 days</div>${chart}</section>
+ <section class="vs"><div class="g22">${gstat(li?fw(li.w):'-',li?wU():'','Weight'+(li?', '+fmtShort(li.d):''))}${gstat(li?sgn(+fw(li.w-pr.startWeight))+fw(Math.abs(li.w-pr.startWeight)):'-',li?wU():'','Since start')}${gstat(bf?'~'+bf.pct+'<small>%</small>':'-','','Body fat'+(bf?', '+fmtShort(bf.d):''))}${gstat(rateTxt,ft.rate==null?'':wU(),'Weekly rate')}</div></section>
+ ${goal}<button class="lnk l0" data-act="ovHow">How this is calculated</button>`;
+}
+function ovHowSheet(){return `<h2>How this is calculated</h2>
+ <div class="srow2"><b>The line</b><span>Your weight with the daily ups and downs smoothed out. Dots are single weigh-ins.</span></div>
+ <div class="srow2"><b>Weekly rate</b><span>The slope through your weigh-ins from the last 30 days. It needs 4 weigh-ins over at least a week, and 5 over 10 days before it predicts anything.</span></div>
+ <div class="srow2"><b>Goal</b><span>Your own goal weight if you set one. Otherwise the weight where your lean mass is 15% body fat (25% for women), the same reference your protein is built on. It needs a body fat estimate.</span></div>
+ <div class="srow2"><b>Weeks at your pace</b><span>Distance to the goal divided by your weekly rate.</span></div>
+ <button class="btn full sbtn" data-act="closeSheet">Done</button>`}
 function progressView(){
  const pr=profile(),T=today();
  const wp=[];for(let i=0;i<30;i++){const d=addDays(T,-(29-i)),w=logOf(d).weight;if(w!=null)wp.push({i,v:w})}
@@ -2708,8 +2754,8 @@ function progressView(){
  const weightCard=`<section class="vs ch"><div class="lbl">Weight, last 30 days</div><div class="rw"><div class="gv sp" style="font-size:28px">${now==null?'-':fw(now)}<small>${wU()}</small></div><div class="s15 mut">${now==null?'':(delta>0?'+':delta<0?'-':'')+fw(Math.abs(delta))+' since start'}</div></div>${wcard}</section>`;
  const sub=subOf('progress',PROG_SUBS),hdr=headerV1('Progress',[['camOpen','Take progress photos']],subSeg('progress',PROG_SUBS)),W=x=>hdr+`<div class="v1">${x}</div>`+logFab();
  if(sub==='photos')return W(photosCard());
- if(sub==='weight'){if(!MEAS_WARM){MEAS_WARM=true;loadAllLogs().then(()=>{if(UI.tab==='progress')softRender()})}return W(weightCard+measCard()+bfCard())}
- return W(progOverview({now,delta,wp}));
+ if(sub==='weight'){if(!MEAS_WARM){MEAS_WARM=true;loadAllLogs().then(()=>{if(UI.tab==='progress')softRender()})}return W((isSimple()?weightCard:'')+measCard()+bfCard())}
+ return W(progOverview({wp}));
 }
 function activityView(){
  const pr=profile(),T=today();
@@ -2978,7 +3024,7 @@ function settingsSheet(){
  const sw=(label,act,on,attr='')=>`<div class="sctl"><span class="sp">${label}</span><button class="swt${on?' on':''}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="${act}"${attr}><i></i></button></div>`;
  const anc=[['account','Account'],['units','Units'],['reminders','Reminders'],['data','Data'],['app','App']];
  const account=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
- ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
+ ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}${row('learnOpen','Learn',lrnList().length?lrnCount()+' of '+lrnList().length+' lessons done':'')}${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
  <button class="srow bad" data-act="${SBS.user?'sbOut':'signout'}">Sign out</button>`;
  const units=`${ctl('Weight in',`<div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div>`)}
  ${ctl('Height in',`<div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div>`)}
@@ -3201,7 +3247,7 @@ const TOUR_STEPS={
   {id:'cal',before:tourSub('activity','calendar'),target:'.cal',title:'Calendar',text:'One icon per day: a dumbbell for a workout, a walker for steps and a ball for sport.'},
   {id:'sport',before:tourSub('activity','sport'),target:'[data-act=actNew]',title:'Sport',text:'Log a game or a session here, and its calories count toward your day.'}],
  progress:[
-  {id:'ov',before:tourSub('progress','overview'),target:'.g22',title:'Overview',text:'Weight, change, body fat and photos in four numbers. The rows under them open Body, Photos and Learn.'},
+  {id:'ov',before:tourSub('progress','overview'),target:'.g22',title:'Overview',text:'Your weight trend, then weight, change since start, body fat and weekly rate. Learn is in the three-dot menu.'},
   {id:'cam',full:1,before:tourSub('progress','photos'),target:'.v1 [data-act=camOpen]',title:'Progress photos',text:'The camera takes front, side and back photos with a faint ghost of your last one so you line up the same way.'},
   {id:'weight',target:'[data-s=weight]',title:'Body',text:'Your weight trend, body fat estimates and tape measurements live here.'}],
  settings:[
@@ -3215,7 +3261,7 @@ function tourMiniSteps(screen){const ss=(TOUR_STEPS[screen]||[]).filter(tourOk).
  ss.push({id:'end',title:'That is '+TOUR_SCREENS[screen],text:screen==='settings'?'You can run the full tour from here any time.':'Learn more opens a short lesson, or take the full tour of the whole app.',actions:screen==='settings'?[{id:'full',label:'Full tour'}]:acts});return ss}
 function tourFullSteps(){const out=[];
  ['today','food','workout','progress'].forEach(sc=>{if(sc!=='today'&&sc!=='progress'&&!modOn(sc))return;TOUR_STEPS[sc].filter(s=>s.full&&tourOk(s)).forEach(s=>out.push(Object.assign({},s,{tab:TOUR_TAB[sc]})))});
- out.push({id:'gear',target:'header details.more summary',title:'Settings and help',text:'The three-dot menu opens Settings, and the ? on each screen explains just that screen.'});return out}
+ out.push({id:'gear',target:'header details.more summary',title:'Settings and help',text:'The three-dot menu opens Learn and Settings, and the ? on each screen explains just that screen.'});return out}
 function tourTab(name){if(UI.tab===name)return;UI.tab=name;window.scrollTo(0,0);render()}
 function tourEnd(){if(!TOUR.on)return;TOUR.on=false;UI.sub=TOUR.sub||UI.sub;if(TOUR.tab&&UI.tab!==TOUR.tab)UI.tab=TOUR.tab;
  if(TOUR.kind==='full')LS.set('forma.tourSeen',1);if(!TOUR.fromPop)navPop();TOUR.fromPop=false;render();tourRefocus()}
@@ -3857,6 +3903,7 @@ document.addEventListener('click',async e=>{
   case 'calcOpen':openSheet(calcSheet());break;
   case 'calHow':openSheet(calHowSheet());break;
   case 'bfHow':openSheet(bfHowSheet());break;
+  case 'ovHow':openSheet(ovHowSheet());break;
   case 'noteFull':{const x=t.closest('.xfr');if(x&&!x.classList.contains('ani'))x.classList.toggle('full');break}
   case 'noteAni':noteAni(!document.querySelector('.xfr.ani'));break;
   case 'phCam':case 'phGal':{LS.set('forma.snapPref',a==='phCam'?'cam':'gal');const el=$(a==='phCam'?'#f_photo_cam':'#f_photo');if(el)el.click();break}
@@ -4055,7 +4102,7 @@ document.addEventListener('click',async e=>{
   case 'learnOpen':learnOpen({});break;
   case 'learnClose':learnClose();break;
   case 'learnBack':LRN.view='home';LRN.path=false;learnDraw();break;
-  case 'learnSkip':lrnSet('start','skipped');learnClose();toast0('Learn is under Progress any time.');break;
+  case 'learnSkip':lrnSet('start','skipped');learnClose();toast0('Learn is in the three-dot menu any time.');break;
   case 'learnPath':{const id=LRN_PATH.find(x=>!lrnDone(x))||LRN_PATH[0];lrnStart(id,LRN_PATH,true);learnDraw();break}
   case 'learnZero':{const ls=lrnList().map(l=>l.id),q=ls.filter(x=>!lrnDone(x));const qq=q.length?q:ls;lrnStart(qq[0],qq,false);learnDraw();break}
   case 'learnTeach':lrnStart(D.id,[D.id],false);learnDraw();break;
