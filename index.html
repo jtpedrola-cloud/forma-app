@@ -533,7 +533,7 @@ body:has(#ov,#cam,#lib,#ped,#gym,#hist,#svm,#tpl,#learn,#intake,#rover) .fab{dis
 .lsh .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:500}
 .lch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .lch button{min-height:52px;border-radius:14px;background:var(--inset);display:flex;align-items:center;gap:10px;padding:0 14px;font-size:15px;font-weight:500;text-align:left}
-.lch button svg{color:var(--soft);flex:none}.lch button:active{background:var(--line)}
+.lch button small{display:block;font-size:12px;font-weight:400;color:var(--mut)}.lch button svg{color:var(--soft);flex:none}.lch button:active{background:var(--line)}
 .v1 .nb{background:var(--note);border-radius:16px;padding:12px 8px 4px 16px;margin-top:24px}
 .v1 .nb .lbl{margin:0 0 2px}
 .v1 .nl{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;color:var(--soft)}
@@ -1055,7 +1055,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='ce8f32dea37c63ca28f3f7bf8fdeeb62d5a52b11';let verChecked=0;
+const BUILD='2c97be503266b1dc595ba567d8d379538b3bb1c0';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1142,7 +1142,7 @@ const exU=ex=>{const p=profile(),m=p&&p.exUnits;return (m&&m[ex])||wU()};
 const kgTo=(kg,u)=>u==='lb'?kg/KG:kg,toKgU=(v,u)=>(typeof v==='number'&&u==='lb')?+(v*KG).toFixed(2):v;
 const fwU=(kg,u,dp=1)=>kg==null||kg===''?'':String(+kgTo(+kg,u).toFixed(dp));
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
-const blank=p=>{if(p==='data/meals.json')return {meals:[]};if(p==='data/recipes.json')return {recipes:[]};if(p==='data/myfoods.json')return {foods:[]};const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
+const blank=p=>{if(p==='data/meals.json')return {meals:[]};if(p==='data/checkins.json')return {checkins:[]};if(p==='data/recipes.json')return {recipes:[]};if(p==='data/myfoods.json')return {foods:[]};const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
 
 /* ---------- ops: every change is a small op re-applied on top of the latest server copy ---------- */
 function applyOp(d,o){
@@ -1178,6 +1178,8 @@ function applyOp(d,o){
   case 'recDel':d.recipes=(d.recipes||[]).filter(r=>r.id!==o.id);break;
   case 'myfAdd':d.foods=d.foods||[];if(!d.foods.some(f=>f.id===o.food.id))d.foods.push(clone(o.food));break;
   case 'myfDel':d.foods=(d.foods||[]).filter(f=>f.id!==o.id);break;
+  case 'ckAdd':d.checkins=(d.checkins||[]).filter(x=>x.date!==o.rec.date).concat([clone(o.rec)]);break;
+  case 'ckDel':d.checkins=(d.checkins||[]).filter(x=>x.date!==o.date);break;
   case 'measure':{d.measure=Object.assign(d.measure||{},o.v);Object.keys(d.measure).forEach(k=>{if(d.measure[k]==null)delete d.measure[k]});if(!Object.keys(d.measure).length)delete d.measure;break}
   case 'habit':{d.habits=d.habits||{};if(o.v)d.habits[o.id]=true;else delete d.habits[o.id];if(!Object.keys(d.habits).length)delete d.habits;break}
   case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
@@ -1341,7 +1343,7 @@ async function doFlush(){
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
  finally{flushing=false;flushP=null;if(again){again=false;flushSoon(300)}}
 }
-function commitMsg(p,ops){if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p==='data/recipes.json')return 'app: recipes';if(p==='data/myfoods.json')return 'app: my foods';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
+function commitMsg(p,ops){if(p===P_CHK)return 'app: weekly check-in';if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p==='data/recipes.json')return 'app: recipes';if(p==='data/myfoods.json')return 'app: my foods';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
 async function writePath(p){
  for(let attempt=0;attempt<4;attempt++){
   const ops=DB.pend[p].slice();if(!ops.length)return;
@@ -1657,6 +1659,7 @@ function todayView(){
  chk.filter(x=>x.act==='gotoBody'||x.act==='measureEdit').forEach(x=>rows.push(row(x.ok,x.l,'',x.act,'Add',x.d?` data-d="${x.d}"`:'')));
  const notices=[];
  if(isT&&(!pr.intake)&&!LS.get('forma.intakeSeen',0))notices.push(`<div class="pr nt"><span class="pk nd"></span><span class="pn">${OC().card.title}</span><button class="lnk" data-act="inOpen">${OC().card.start}</button><button class="ib s" data-act="inDismiss" aria-label="${OC().card.later}">${ic('x',16)}</button></div>`);
+ if(isT&&ckDue())notices.unshift(`<div class="pr nt"><span class="pk nd"></span><span class="pn">Weekly check-in</span><button class="lnk" data-act="ckOpen">Review</button></div>`);
  if(isT){const l=learnNudge();if(l)notices.push(l)}
  const hero=isSimple()?simpleToday(d):modOn('food')?calHero(d,true,false):'';
  if(isSimple())simpleWarm();
@@ -1697,14 +1700,14 @@ function insightsView(){
  for(let i=6;i>=0;i--){const d=addDays(T,-i),k=totals(d).kcal;cv.push(k);cl.push('SMTWTFS'[parseD(d).getDay()]);if(k>0)logged++}
  const stat=gstat;
  const rate=sm.rate==null?'':fw(Math.abs(sm.rate),2)+' '+wU();
- const status={collecting:`Learning from your logs: ${Math.min(sm.eatDays,7)} of 7 days, ${Math.min(sm.weighIns,10)} of 10 weigh-ins`,'on pace':`On pace: ${rate} a week, goal ${fw(goal,2)}`,fast:`Faster than planned: ${rate} a week. Next check-in raises calories.`,slow:`Slower than planned: ${rate} a week. Next check-in lowers calories.`}[sm.status]||'';
+ const status={collecting:`Learning from your logs: ${Math.min(sm.eatDays,7)} of 7 days, ${Math.min(sm.weighIns,10)} of 10 weigh-ins`,'on pace':`On pace: ${rate} a week, goal ${fw(goal,2)}`,fast:`Faster than planned: ${rate} a week. The weekly check-in can raise calories.`,slow:`Slower than planned: ${rate} a week. The weekly check-in can lower calories.`}[sm.status]||'';
  return `<section class="vs ch"><div class="lbl">Calories</div><div class="xs mut">${logged}/7 days logged</div>${barChart2(cv,cl,TG(pr).kcal)}</section>
  <section class="vs"><div class="g22">${stat(fmtN(sm.tdee),'kcal','Maintenance')}${stat(sm.trendNow?fw(sm.trendNow):'-',wU(),'Weight trend')}${stat(sm.avgIn?fmtN(sm.avgIn):'-','kcal','Average intake')}${stat(fmtN(sm.suggested),'kcal','Suggested target')}</div>
- <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="calcOpen">How this is calculated</button></section>`}
+ <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="ckOpen">Weekly check-in</button><button class="lnk l0" data-act="calcOpen">How this is calculated</button></section>`}
 function calcSheet(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
  let logged=0,defSum=0;for(let i=6;i>=0;i--){const d=addDays(T,-i),k=totals(d).kcal;if(k>0){logged++;defSum+=dayBurn(d)-k}}
- const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null,kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
+ const lastCk=ckLast(),kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
  const row=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`;
  return `<h2>How this is calculated</h2>
  <p class="s15 mut cp">Maintenance is what you burn in a day. It starts as a formula from your body, your steps and your lifting. As you log food and weigh in, it moves toward what your own numbers show: what you ate, minus what your weight trend burned.</p>
@@ -1718,9 +1721,42 @@ function calcSheet(){
  ${lastCk?row('Last check-in',fmtShort(lastCk.date)+', '+(lastCk.prevTarget===lastCk.target?'kept '+fmt(lastCk.target):fmt(lastCk.prevTarget)+' to '+fmt(lastCk.target))):''}
  ${logged?row(defSum>=0?'Average deficit':'Average surplus',fmt(Math.abs(defSum/logged))+' kcal a day'):''}
  ${row('Body at rest',fmt(train.bmr)+' kcal')}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}
- <p class="xs mut cp">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion. ${imperial()?'3,500 kcal is roughly 1 lb.':'7,700 kcal is roughly 1 kg.'}</p>
- ${!latestBF()&&(b.assumed||!b.heightCm)?`<p class="xs cp" style="color:var(--warn)">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Tell Claude your real height and age.</p>`:''}
+ <p class="xs mut cp">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. The weekly check-in, on Sundays, moves the target at most 150 kcal toward the suggestion, only when you tap Apply. ${imperial()?'3,500 kcal is roughly 1 lb.':'7,700 kcal is roughly 1 kg.'}</p>
+ ${!latestBF()&&(b.assumed||!b.heightCm)?`<p class="xs cp" style="color:var(--warn)">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Set your real height and age by redoing the setup in Settings, Account.</p>`:''}
  <button class="btn full sbtn" data-act="closeSheet">Got it</button>`}
+/* ---------- Weekly check-in, in the app. Same maths as scripts/checkin.js: FormaSmart.smart over the last 28 days, then FormaSmart.nextTarget
+   (at most 150 kcal toward the suggestion, nothing under 50), protein and fat fixed, carbs take the change. Nothing is written until the person
+   taps Apply. Signed-in accounts cannot write data/checkins.json, so the last check-in is also kept on this phone. ---------- */
+function ckNow(){
+ const pr=profile(),T=today(),tg=TG(pr),cur=tg.kcal,goalRate=pr.goalRate!=null?pr.goalRate:0.7,sm=smartNow(goalRate);
+ const next=sm.status==='collecting'?cur:FormaSmart.nextTarget(cur,sm.suggested);
+ const tgt={kcal:next,protein:tg.protein,carbs:Math.max(80,Math.round((next-tg.protein*4-tg.fat*9)/4)),fat:tg.fat};
+ const rec={date:T,weight:latestWeight(),trendKg:sm.trendNow&&+sm.trendNow.toFixed(2),rateKgWk:sm.rate==null?null:+sm.rate.toFixed(2),goalRate,avgIntake:sm.avgIn&&Math.round(sm.avgIn),loggedDays:sm.eatDays,weighIns:sm.weighIns,measured:sm.measured&&Math.round(sm.measured),confidence:+sm.conf.toFixed(2),formula:Math.round(sm.formula),tdee:Math.round(sm.tdee),suggested:sm.suggested,status:sm.status,prevTarget:cur,target:next};
+ return {sm,rec,tgt,cur,next,goalRate};
+}
+function ckLast(){const a=((view(P_CHK)||{checkins:[]}).checkins||[]),b=LS.get('forma.ckLast',null),x=a.length?a[a.length-1]:null;return b&&(!x||b.date>x.date)?b:x}
+const ckDays=d=>Math.round((Date.parse(today())-Date.parse(d))/864e5);
+/* Today shows the check-in row on Sundays, until one is done that day */
+const ckDue=()=>{const pr=profile();if(!pr||!pr.targets||isSimple()||!modOn('food')||parseD(today()).getDay()!==0)return false;const l=ckLast();return !(l&&ckDays(l.date)<6)};
+function ckSheet(){
+ const c=ckNow(),sm=c.sm,pr=profile(),rate=sm.rate==null?'':fw(Math.abs(sm.rate),2)+' '+wU(),goal=fw(c.goalRate,2)+' '+wU();
+ const kv=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`,last=ckLast();
+ const line={collecting:`Not enough data yet. It needs 7 days of food logged and at least 5 weigh-ins spread over 10 days. You have ${sm.eatDays} logged days and ${sm.weighIns} weigh-ins over ${sm.span} days. Calories stay as they are.`,
+  'on pace':`On pace: ${rate} a week against a plan of ${goal}.`,
+  fast:`Faster than planned: ${rate} a week against a plan of ${goal}.`,
+  slow:`Slower than planned: ${rate} a week against a plan of ${goal}.`}[sm.status]||'';
+ const changed=c.next!==c.cur,body=sm.status==='collecting'?'':`${kv('Weight trend',sm.trendNow?fwu(sm.trendNow):'-')}${kv('Average intake',sm.avgIn?fmtN(sm.avgIn)+' kcal':'-')}${kv('Maintenance',fmtN(sm.tdee)+' kcal')}${kv('Calories now',fmtN(c.cur)+' kcal')}${kv(changed?'New calories':'Calories stay',fmtN(c.next)+' kcal')}`;
+ const note=sm.status==='collecting'?'':changed?`<p class="xs mut cp">Calories move by at most 150 a week. Carbs change to ${c.tgt.carbs} g to make room. Protein ${c.tgt.protein} g and fat ${c.tgt.fat} g stay.</p>`:`<p class="xs mut cp">Your target is already where the numbers point, so nothing changes.</p>`;
+ const act=sm.status==='collecting'?'<button class="btn full sbtn" data-act="closeSheet">Got it</button>':`<div class="row" style="margin-top:12px"><button class="btn ghost" data-act="closeSheet">Not now</button><button class="btn sp" data-act="ckApply">${changed?'Apply':'Keep '+fmtN(c.cur)}</button></div>`;
+ return `<h2>Weekly check-in</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(today())}${last?'. Last one '+fmtShort(last.date):''}</div><p class="s15 cp">${line}</p>${body}${note}${act}`}
+function ckApply(){
+ const c=ckNow(),pr=profile(),before=Object.assign({},TG(pr)),prevLast=ckLast();if(!pr||!pr.targets)return;
+ const set=(tg)=>mutate(P_PROFILE,{k:'merge',data:{targets:Object.assign({},pr.targets,tg)}},{quiet:true});
+ set(c.tgt);LS.set('forma.ckLast',c.rec);
+ if(acctKind()!=='supabase')mutate(P_CHK,{k:'ckAdd',rec:c.rec},{quiet:true});
+ flushSoon(300);closeSheet();render();
+ const msg=c.next===c.cur?'Check-in done. Calories stay at '+fmtN(c.cur)+'.':'Calories '+fmtN(c.cur)+' to '+fmtN(c.next)+'. Carbs now '+c.tgt.carbs+' g.';
+ toastUndo(msg,()=>{set(before);if(prevLast)LS.set('forma.ckLast',prevLast);else LS.del('forma.ckLast');if(acctKind()!=='supabase')mutate(P_CHK,{k:'ckDel',date:c.rec.date},{quiet:true});flushSoon(300);render();toast0('Check-in undone.')})}
 function foodView(){
  if(isSimple())return eatView();
  const fs=subOf('food',FOOD_SUBS),fh=headerV1('Food',[['savedOpen','Saved meals']],subSeg('food',FOOD_SUBS));
@@ -2575,11 +2611,17 @@ function measHistory(){const m={};MEAS.forEach(([k])=>{m[k]=[]});
  [...ps].sort().forEach(p=>{const l=view(p);if(l&&l.measure)MEAS.forEach(([k])=>{const v=l.measure[k];if(typeof v==='number'&&v>0)m[k].push({d:l.date,v})})});return m}
 /* US Navy body fat from the latest waist and neck (and hips for women), all in cm. Needs height; null when something is missing. */
 function navyBF(){const b=(profile()||{}).body||{},h=+b.heightCm;if(!(h>0))return null;
- const m=measHistory(),last=k=>m[k].length?m[k][m[k].length-1].v:null,waist=last('waist'),neck=last('neck'),hip=last('hips');if(!waist||!neck)return null;
+ const m=measHistory(),last=k=>m[k].length?m[k][m[k].length-1].v:null,lastD=k=>m[k].length?m[k][m[k].length-1].d:'',waist=last('waist'),neck=last('neck'),hip=last('hips');if(!waist||!neck)return null;
  let bf;
  if(b.sex==='female'){if(!hip||waist+hip-neck<=0)return null;bf=495/(1.29579-0.35004*Math.log10(waist+hip-neck)+0.22100*Math.log10(h))-450}
  else{if(waist-neck<=0)return null;bf=495/(1.0324-0.19077*Math.log10(waist-neck)+0.15456*Math.log10(h))-450}
- return isFinite(bf)&&bf>2&&bf<60?{pct:Math.round(bf),guess:!!b.assumed}:null}
+ return isFinite(bf)&&bf>2&&bf<60?{pct:Math.round(bf),guess:!!b.assumed,d:[lastD('waist'),lastD('neck')].sort()[1]}:null}
+/* The headline body fat. A photo estimate wins; with none, the tape (Navy) estimate stands in, with the same plus or minus 3 range. src says which. */
+function bodyFatNow(){const p=latestBF();if(p)return Object.assign({src:'photo'},p);const n=navyBF();return n?{src:'tape',pct:n.pct,low:Math.max(2,n.pct-3),high:n.pct+3,d:n.d,guess:n.guess}:null}
+/* What to do when there is no estimate at all: names the one missing thing and offers it. */
+function bfEmpty(){const b=(profile()||{}).body||{},m=measHistory(),noH=!(+b.heightCm>0),noT=!m.waist.length||!m.neck.length,noHip=b.sex==='female'&&!m.hips.length;
+ const need=noT?(b.sex==='female'?'waist, neck and hips':'waist and neck'):noHip?'hips':'';
+ return `<div class="s15 mut">${need?`Add your ${need} to see a body fat estimate.`:'A body fat estimate needs your height.'}${noH?' It also needs your height: redo the setup in Settings, Account.':''}</div>${need?`<button class="lnk l0" data-act="measureEdit">Add ${need}</button>`:''}`}
 function measCard(){
  const m=measHistory(),u=mU(),has=MEAS.some(([k])=>m[k].length);
  const rows=MEAS.map(([k,l])=>{const a=m[k];
@@ -2605,10 +2647,14 @@ function bodyCard(part){
  if(!bodyLoaded){bodyLoaded=true;const ds=[...new Set(ph.map(x=>x.d))];if(ds.length)loadDays(ds)}
  if(part==='bf'){
   const chart=h.length>=2?`<div class="ch">${bfChart(h)}</div>`:'';
-  if(!bf)return `<section class="vs"><div class="lbl">Body fat</div><div class="s15 mut">${isSimple()?'No photos yet. Add front, side and back photos below to see the change over time.':'No estimate yet. Add front, side and back photos below, then ask Claude for an estimate.'}</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
+  const bt=!bf&&!isSimple()?bodyFatNow():null;
+  if(bt){const lean=w*(1-bt.pct/100),fat=w-lean;
+   return `<section class="vs"><div class="lbl">Body fat</div><div class="g22">${gstat('~'+bt.pct+'<small>%</small>','','Body fat')}${gstat(bt.low+'-'+bt.high+'<small>%</small>','','Range')}${gstat(fw(lean),wU(),'Lean mass')}${gstat(fw(fat),wU(),'Fat mass')}</div>
+   <div class="s15 mut stl">From your tape on ${fmtShort(bt.d)}: waist and neck${(profile().body||{}).sex==='female'?' and hips':''}, US Navy formula.${bt.guess?' Your height is a guess.':''} Measure again in a week to see the change.</div><button class="lnk l0" data-act="measureEdit">Log measurements</button><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`}
+  if(!bf)return `<section class="vs"><div class="lbl">Body fat</div>${isSimple()?'<div class="s15 mut">No photos yet. Add front, side and back photos on the Photos tab to see the change over time.</div>':bfEmpty()}<button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
   const lean=w*(1-bf.pct/100),fat=w-lean,prev=h.length>1?h[h.length-2]:null;
   return `<section class="vs"><div class="lbl">Body fat</div>${chart}<div class="g22">${gstat('~'+bf.pct+'<small>%</small>','','Body fat')}${gstat(bf.low+'-'+bf.high+'<small>%</small>','','Range')}${gstat(fw(lean),wU(),'Lean mass')}${gstat(fw(fat),wU(),'Fat mass')}</div>
-  <div class="s15 mut stl">${esc(bf.note||('Estimated by Claude from your photos on '+fmtShort(bf.d)+(prev?', was '+prev.pct+'% on '+fmtShort(prev.d):'')+'.'))}</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
+  <div class="s15 mut stl">${esc(bf.note||('Estimated from your photos on '+fmtShort(bf.d)+(prev?', was '+prev.pct+'% on '+fmtShort(prev.d):'')+'.'))}</div><button class="lnk l0" data-act="bfHow">How this is estimated</button></section>`;
  }
  const last=ph.length?ph[ph.length-1]:null;
  const gal=last?timelineHTML(ph):'';
@@ -2618,10 +2664,10 @@ function bodyCard(part){
 }
 function bfHowSheet(){const nv=navyBF(),w=latestWeight();
  return `<h2>How body fat is estimated</h2>
- <p class="s15 mut cp">Claude looks at your front, side and back photos: abs and oblique definition, the lower belly, love handles, chest and shoulder separation. It gives one number and an honest range, about plus or minus 3 points. Photos flatter, so when unsure it leans to the higher end. Best photos: morning, same spot and light, relaxed.</p>
+ <p class="s15 mut cp">The number comes from your tape: waist and neck (and hips for women) with the US Navy formula, about plus or minus 3 points. If a photo estimate has been added, that one is shown instead. It looks at abs and oblique definition, the lower belly, love handles, and chest and shoulder separation. Photos flatter, so it leans to the higher end when unsure. Best photos: morning, same spot and light, relaxed.</p>
  <div class="srow2"><b>Lean mass</b><span>Your weight minus the fat in it. Protect it with protein and lifting.</span></div>
  <div class="srow2"><b>Fat mass</b><span>Weight times the body fat percent.</span></div>
- ${nv?`<div class="srow2"><b>Tape check</b><span>About ${nv.pct}% from waist and neck (Navy formula)${nv.guess?', with a guessed height':''}.</span></div>`:'<div class="srow2"><b>Tape check</b><span>Log waist and neck under Measurements for a second opinion.</span></div>'}
+ ${nv?`<div class="srow2"><b>Tape check</b><span>About ${nv.pct}% from waist and neck (Navy formula)${nv.guess?', with a guessed height':''}.</span></div>`:'<div class="srow2"><b>Tape check</b><span>Log waist and neck under Measurements, on the Body tab. Women also need hips. Your height comes from the setup.</span></div>'}
  <button class="btn full sbtn" data-act="closeSheet">Got it</button>`}
 const bfCard=()=>bodyCard('bf'),photosCard=()=>bodyCard('photos');
 
@@ -2746,23 +2792,23 @@ function latestWeight(){const T=today();for(let i=0;i<60;i++){const w=logOf(addD
 function bmrOf(w){const bf=latestBF();return FormaSmart.bmr(w,bf?bf.pct:null,profile().body);const b=profile().body||{};const h=b.heightCm||175,a=b.age||30,sx=b.sex==='female'?-161:5;return 10*w+6.25*h-5*a+sx}
 function maintFor(steps,liftMin){const bf=latestBF();return FormaSmart.maint(latestWeight(),bf?bf.pct:null,profile().body,steps,liftMin)}
 function woMinutes(d){const wo=logOf(d).workout;if(!wo||!wo.finishedAt)return 0;return Math.min(150,Math.max(0,(new Date(wo.finishedAt)-new Date(wo.startedAt))/60000))}
-function smartNow(){
+function smartNow(gr){
  const pr=profile(),T=today(),bf=latestBF(),days=[];
  for(let i=28;i>=1;i--){const d=addDays(T,-i),f=food(d).items;days.push({d,kcal:f.reduce((a,x)=>a+num(x.kcal),0),logged:f.length>0,weight:logOf(d).weight})}
  const liftDays=Object.values(program().weekdays).filter(x=>x!=='rest').length;
  const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays)+FormaSmart.extraKcal(pr.intake&&pr.intake.answers);
- return FormaSmart.smart({days,formula,targetKcal:TG(pr).kcal,goalRate:pr.goalRate||0.7});
+ return FormaSmart.smart({days,formula,targetKcal:TG(pr).kcal,goalRate:gr!=null?gr:(pr.goalRate||0.7)});
 }
 function maintCard(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7;
  const train=maintFor(sg,60),rest=maintFor(sg,0);
  const fmt=v=>rnd(v).toLocaleString('en-US'),pct=Math.round(sm.conf*100);
  const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--mut)">${sub}</div>`:''}</span><span>${v}</span></div>`;
- const ck=(view(P_CHK)||{checkins:[]}).checkins,lastCk=ck.length?ck[ck.length-1]:null;
+ const lastCk=ckLast();
  const stTxt={collecting:['var(--mut)','Collecting data. Log food and weigh in daily; the estimate starts learning after about 7 logged days and 10 days of weigh-ins.'],
   'on pace':['var(--ok)','On pace: losing about '+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week (goal '+fw(goal,2)+').'],
-  fast:['var(--warn)','Losing faster than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). Next check-in raises calories.'],
-  slow:['var(--warn)','Losing slower than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). Next check-in lowers calories.']}[sm.status];
+  fast:['var(--warn)','Losing faster than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). The weekly check-in can raise calories.'],
+  slow:['var(--warn)','Losing slower than planned ('+(sm.rate==null?'':fw(Math.abs(sm.rate),2))+' '+wU()+' a week). The weekly check-in can lower calories.']}[sm.status];
  const kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
  return `<div class="card"><div class="row"><div class="sp"><h3>Maintenance${tq('maintenance')}</h3><div class="mut sm">${sm.conf>0?'Learned from your logs, '+pct+'% confident':'Formula estimate until your logs take over'}</div></div><div style="text-align:right"><b style="font-size:20px">~${fmt(sm.tdee)}</b><div class="xs mut">kcal a day</div></div></div>
  <div class="sm" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--inset);border-left:3px solid ${stTxt[0]}">${stTxt[1]}</div>
@@ -2774,9 +2820,9 @@ function maintCard(){
  ${row('<b style="color:var(--txt)">Suggested target</b>','<b>'+fmt(sm.suggested)+'</b>','for '+fw(goal,2)+' '+wU()+' a week; current '+fmt(TG(pr).kcal))}
  ${lastCk?row('Last check-in',fmtShort(lastCk.date),lastCk.prevTarget===lastCk.target?'kept '+fmt(lastCk.target):fmt(lastCk.prevTarget)+' to '+fmt(lastCk.target)):''}
  </div>
- <div class="xs mut" style="margin-top:8px">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. Claude checks in every Sunday and moves the target at most 150 kcal toward the suggestion.</div>
+ <div class="xs mut" style="margin-top:8px">At ${fmt(TG(pr).kcal)} you should lose about ${fw(Math.abs(kgWk),2)} ${wU()} a week. The weekly check-in, on Sundays, moves the target at most 150 kcal toward the suggestion, only when you tap Apply.</div>
  <details class="xs mut" style="margin-top:8px"><summary>How the formula works</summary><div style="margin-top:6px">${row('Body at rest (BMR)',fmt(train.bmr),'at '+fwu(train.w)+(latestBF()?', from your body fat':''))}${row('Daily life and digestion','+'+fmt(train.life))}${row(sg.toLocaleString('en-US')+' steps','+'+fmt(train.walk))}${row('Lifting, about 60 min','+'+fmt(train.lift))}</div></details>
- ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Tell Claude your real height and age.</div>`:''}</div>`;
+ ${!latestBF()&&(b.assumed||!b.heightCm)?`<div class="xs" style="color:var(--warn);margin-top:8px">Assumes ${b.sex||'male'}, ${b.age||30} years, ${fh(b.heightCm||175)}. Set your real height and age by redoing the setup in Settings, Account.</div>`:''}</div>`;
 }
 /* Progress (the outcome): Overview tiles, Photos, Weight and body fat. Activity (the habit): steps, the consistency
    calendar and sport. Each Overview tile opens the section it summarises, so details are one tap away. */
@@ -2801,7 +2847,7 @@ function goalWeight(){
 }
 const sgn=v=>v>0?'+':v<0?'-':'';
 function progOverview(o){
- const pr=profile(),bf=latestBF(),wp=o.wp,ft=weightFit(wp),li=latestWeighIn(),gl=pr.goalRate||0,gab=Math.abs(gl);
+ const pr=profile(),bf=bodyFatNow(),wp=o.wp,ft=weightFit(wp),li=latestWeighIn(),gl=pr.goalRate||0,gab=Math.abs(gl);
  const rateTxt=ft.rate==null?'-':sgn(+fw(ft.rate,1))+fw(Math.abs(ft.rate),1);
  let chart;
  if(ft.recent<2){const m=2-ft.recent;chart=`<div class="s15 mut">${m} more weigh-in${m===1?'':'s'} to show a trend</div><div class="xs mut ovn">Log your weight from the round button.</div>`}
@@ -2822,7 +2868,7 @@ function progOverview(o){
   goal=`<section class="vs gl"><div class="gb"><div><b>${fw(pr.startWeight)}</b><div class="lbl">Start</div></div><div><b>${fw(li.w)}</b><div class="lbl">Now</div></div><div><b>${fw(gw.kg)}</b><div class="lbl">Goal</div></div></div><div class="gbar"><i style="width:${(p*100).toFixed(1)}%"></i></div>${wk?`<div class="s15 mut">${wk}</div>`:''}</section>`;
  }
  return `<section class="vs ch ovc"><div class="lbl">Weight, last 30 days</div>${chart}</section>
- <section class="vs"><div class="g22">${gstat(li?fw(li.w):'-',li?wU():'','Weight'+(li?', '+fmtShort(li.d):''))}${gstat(li?sgn(+fw(li.w-pr.startWeight))+fw(Math.abs(li.w-pr.startWeight)):'-',li?wU():'','Since start')}${gstat(bf?'~'+bf.pct+'<small>%</small>':'-','','Body fat'+(bf?', '+fmtShort(bf.d):''))}${gstat(rateTxt,ft.rate==null?'':wU(),'Weekly rate')}</div></section>
+ <section class="vs"><div class="g22">${gstat(li?fw(li.w):'-',li?wU():'','Weight'+(li?', '+fmtShort(li.d):''))}${gstat(li?sgn(+fw(li.w-pr.startWeight))+fw(Math.abs(li.w-pr.startWeight)):'-',li?wU():'','Since start')}${gstat(bf?'~'+bf.pct+'<small>%</small>':'-','','Body fat'+(bf?', '+fmtShort(bf.d)+(bf.src==='tape'?', tape':''):', add waist and neck'))}${gstat(rateTxt,ft.rate==null?'':wU(),'Weekly rate')}</div></section>
  ${goal}<button class="lnk l0" data-act="ovHow">How this is calculated</button>`;
 }
 function ovHowSheet(){return `<h2>How this is calculated</h2>
@@ -3107,7 +3153,7 @@ function settingsSheet(){
  const row=(act,label,sub,attr='')=>`<button class="srow" data-act="${act}"${attr}><span class="sp">${label}${sub?`<span class="xs">${sub}</span>`:''}</span><span class="mut">${ic('right',18)}</span></button>`;
  const ctl=(label,inner)=>`<div class="sctl"><span class="sp">${label}</span>${inner}</div>`;
  const sw=(label,act,on,attr='')=>`<div class="sctl"><span class="sp">${label}</span><button class="swt${on?' on':''}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="${act}"${attr}><i></i></button></div>`;
- const anc=[['account','Account'],['units','Units'],['reminders','Reminders'],['data','Data'],['app','App']];
+ const anc=[['account','Account'],['units','Units'],['reminders','Reminders'],['data','Data'],['app','App']].concat(personalMode()?[['personal','Personal mode']]:[]);
  const account=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
  ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}${row('learnOpen','Learn',lrnList().length?lrnCount()+' of '+lrnList().length+' lessons done':'')}${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
  <button class="srow bad" data-act="${SBS.user?'sbOut':'signout'}">Sign out</button>`;
@@ -3121,13 +3167,17 @@ function settingsSheet(){
  ${notifState()==='Blocked'?'<div class="snote">Blocked. Allow notifications for Pulzo in your phone settings (site settings in Chrome).</div>':''}
  <div class="snote">Phones can silence a web app in the background.</div>`;
  const data=`${row('exportGo','Export my data','A zip with every data file, plus food.csv and workouts.csv you can open in a spreadsheet')}
- ${SBS.user?'':`<div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>`}
- <button class="srow" data-act="force"><span class="sp">Force refresh<span class="xs">Reload everything from your account</span></span></button>
+  <button class="srow" data-act="force"><span class="sp">Force refresh<span class="xs">Reload everything from your account</span></span></button>
  ${pr?`${isSimple()||!(pr.targets&&TG(pr).kcal!=null)?'':`<div class="kv"><span class="mut">Calories</span><span>${TG(pr).kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${(pr.stepGoal||0).toLocaleString('en-US')}</span></div>
- <div class="snote">${SBS.user?'Targets are set when you set up your plan. To change them, redo the setup in Account.':'Targets are set by the weekly check-in. To change them yourself, redo the setup in Account.'}</div>`:''}
- ${SBS.user?'':`<details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
+ <div class="snote">${SBS.user?'Targets are set when you set up your plan. To change them, redo the setup in Account.':'The weekly check-in adjusts calories when you tap Apply. To set them yourself, redo the setup in Account.'}</div>`:''}
+`;
+
+ const personal=personalMode()?`<div class="snote" style="margin-top:0">Personal mode keeps your data in your own GitHub repo instead of an account.</div>
+ <div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>
+ ${aiServer()?'':aiSettings()}
+ <details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Forma Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
- <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Forma Steps</a></details>`}`;
+ <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Forma Steps</a></details>`:'';
  const app=`${MODS.map(([k,l])=>sw(l,'modTog',modOn(k),` data-m="${k}"`)).join('')}
  <div class="snote">Turn off what you do not use and its tab, rows and reminders go away.</div>
  ${sw('Sunday measurements row','measTog',modOn('measure'))}
@@ -3136,13 +3186,13 @@ function settingsSheet(){
  <div class="opts">${CAL_KINDS.map(([k,l])=>`<button data-act="calKind" data-k="${k}" class="${calKinds().includes(k)?'on':''}" aria-pressed="${calKinds().includes(k)}">${l}</button>`).join('')}</div>
  <div class="sctl cal"><span class="sp">Number in each day</span></div>
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
- ${aiSettings()}
+ ${aiServer()?aiSettings():''}
  ${row('tourShow','Show the tour')}
  <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.12.0${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
- ${sec('account','Account',account)}${sec('units','Units',units)}${sec('reminders','Reminders',rem)}${sec('data','Data',data)}${sec('app','App',app)}`;
+ ${sec('account','Account',account)}${sec('units','Units',units)}${sec('reminders','Reminders',rem)}${sec('data','Data',data)}${sec('app','App',app)}${personal?sec('personal','Personal mode',personal):''}`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -3173,7 +3223,7 @@ function exClosest(name,n=3){const db=exdb().exercises,q=new Set(exWords(name)),
  return Object.keys(db).map(id=>{const t=new Set(exWords(db[id].n));let i=0;q.forEach(w=>{if(t.has(w))i++});const un=q.size+t.size-i;return [id,db[id].n.toLowerCase()===low?2:(un?i/un:0)]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,n)}
 let PIMP=null,PSH=null;
 const impNameOf=id=>(PIMP.pl.ex[id]||{}).n||id.replace(/^custom_/,'').replace(/_/g,' ');
-function impPasteSheet(){return `<h2>Import a program</h2><div class="xs mut" style="margin:-6px 0 10px">Paste a code or a link someone shared with you. You see the days and exercises before anything changes.</div><div class="fld"><textarea id="imp_code" rows="4" placeholder="fp1z.H4sI..." style="width:100%;font-size:12px;font-family:ui-monospace,monospace;border-radius:12px;padding:10px;background:var(--inset);border:1px solid var(--line);color:var(--txt);resize:none" autocapitalize="off" autocomplete="off" spellcheck="false"></textarea></div><button class="btn full" data-act="impGo">Preview</button>`}
+function impPasteSheet(){return `<h2>Import a program</h2><div class="xs mut" style="margin:-6px 0 10px">Paste a code or a link someone shared with you. A code is a short line of text that holds a whole program. You see the days and exercises before anything changes.</div><div class="fld"><textarea id="imp_code" rows="4" placeholder="fp1z.H4sI..." style="width:100%;font-size:12px;font-family:ui-monospace,monospace;border-radius:12px;padding:10px;background:var(--inset);border:1px solid var(--line);color:var(--txt);resize:none" autocapitalize="off" autocomplete="off" spellcheck="false"></textarea></div><button class="btn full" data-act="impGo">Preview</button>`}
 async function importOpen(text){
  let pl;try{pl=await progDecode(text)}catch(e){toast(e&&e.message&&e.message!=='bad'&&!/JSON|atob|Unexpected|string/i.test(e.message)?e.message:'That code did not work. Copy it again, all of it.');return}
  const db=exdb().exercises,unk=[...new Set(pl.days.flatMap(d=>d.exercises.map(e=>e.ex)))].filter(id=>!db[id]);PIMP={pl,map:{}};
@@ -3202,7 +3252,7 @@ function importApply(mode){
  closeSheet();if(PED)pedDraw();render();toastSv(mode==='replace'?'Program replaced. The old one is kept as a backup.':'Added '+pl.days.length+' day'+(pl.days.length===1?'':'s')+' to your program.');
 }
 function shareSheet(){const can=!!navigator.share;
- return `<h2>Share this program</h2><div class="xs mut" style="margin:-6px 0 10px">Send the code or link to a friend. They paste it under Import a program, check it, and choose to replace theirs or add it.</div>
+ return `<h2>Share this program</h2><div class="xs mut" style="margin:-6px 0 10px">The code is your whole program written as one short line of text. Send it, or the link, to a friend. They paste it under Import a program, check it, and choose to replace theirs or add it.</div>
  <div class="fld"><label>Title</label><input id="sh_title" maxlength="50" value="${esc(PSH.title)}" autocomplete="off"></div>
  <div class="fld"><label>Code</label><textarea id="sh_code" readonly rows="4" style="width:100%;font-size:11px;font-family:ui-monospace,monospace;border-radius:12px;padding:10px;background:var(--inset);border:1px solid var(--line);color:var(--txt);resize:none">Making your code...</textarea></div>
  <div class="row"><button class="btn sp" data-act="shCopy">Copy code</button><button class="btn ghost sp" data-act="shLink">Copy link</button></div>${can?`<button class="btn ghost full" style="margin-top:8px" data-act="shShare">Share...</button>`:''}`}
@@ -3313,7 +3363,7 @@ const TOUR_STEPS={
   {id:'seg',simple:false,target:'.psub',title:'Log and Insights',text:'Log is today\'s food, Insights shows your calorie chart and your maintenance, and you can swipe between them.'},
   {id:'tot',simple:false,before:tourSub('food','log'),target:'#fmain',title:'Your totals',text:'The rings and bar show Left or Over against your range for the day.'},
   {id:'meals',simple:false,before:tourSub('food','log'),target:()=>document.querySelector('details.sec')||document.querySelector('#fmain'),title:'Meals',text:'Each meal is a group: tap a food to edit it, tap + to add to it, or Save meal to reuse it later.'},
-  {id:'add',full:1,simple:false,before:tourSub('food','log'),target:'.fab',title:'Add food fast',text:'The round button types a meal in, or snaps a photo. Saved meals are in the three-dot menu.'},
+  {id:'add',full:1,simple:false,before:tourSub('food','log'),target:'.fab',title:'Add food fast',text:'The round button takes a meal as one typed line, like 2 eggs, 1 cup rice. Saved meals are in the three-dot menu.'},
   {id:'eatv',full:1,simple:true,target:'[data-tour=verdict]',title:FormaCopy.simple.tour.eat[0],text:FormaCopy.simple.tour.eat[1]},
   {id:'habits',simple:true,target:'[data-tour=habits]',title:FormaCopy.simple.tour.habits[0],text:FormaCopy.simple.tour.habits[1]},
   {id:'numbers',simple:true,target:'[data-tour=numbers]',title:FormaCopy.simple.tour.numbers[0],text:FormaCopy.simple.tour.numbers[1]}],
@@ -3496,6 +3546,8 @@ function learnNudge(){
 function learnAfterTour(){if(!lrnNew()||LRNS().start)return;lrnSet('start','pending');setTimeout(()=>learnOpen({}),400)}
 /* ---------- Account (skeleton): shows which backend holds the data. Sign in is a placeholder until Supabase accounts exist (docs/specs/backend.md). ---------- */
 const acctKind=()=>B.kind||'demo';
+/* Personal mode: not signed in and using your own GitHub repo. Only here do the words Repository, Token, GitHub key and Claude key appear. */
+const personalMode=()=>!SBS.user&&acctKind()==='github';
 const acctName=()=>SBS.user?esc(SBS.user.email||'Pulzo account'):({github:'GitHub',supabase:'Pulzo account',demo:'Demo'})[acctKind()]||'GitHub';
 const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Pulzo account.':acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
 /* Sign in with email (a magic link). supabase-js is loaded from cdnjs by the adapter only when this is used. */
@@ -3600,7 +3652,7 @@ function actSheet(){const as=actsOf(UI.date);return `<h2>Sport or activity</h2><
  <button class="btn full" data-act="actSave">Add</button>
  ${as.length?`<div style="margin-top:14px">${as.map(a=>`<div class="kv" style="align-items:center"><span>${esc(actName(a.kind))} <span class="mut sm">${a.min} min, about ${a.kcal} kcal</span></span><button class="btn ghost sm" data-act="actDel" data-id="${esc(a.id)}">Remove</button></div>`).join('')}</div>`:''}`}
 const dayLine=d=>d===today()?'':`<div class="xs mut" style="margin:-6px 0 8px">${dayWord(d)}${d<addDays(today(),-1)?'':', '+fmtShort(d)}</div>`;
-function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2>${dayLine(UI.date)}<div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">Phones do not let web pages read the step counter, so type the number from your phone or ask Claude to log it from a screenshot.</div><button class="btn full" data-act="stepsSave">Save</button>`}
+function stepsSheet(){const s=logOf(UI.date).steps;return `<h2>Steps</h2>${dayLine(UI.date)}<div class="fld"><input id="v_steps" inputmode="numeric" value="${s==null?'':s}" placeholder="8500"></div><div class="xs mut" style="margin-bottom:12px">${personalMode()?'Type the number from your phone\'s step counter, or let Forma Steps on Android send it every hour (Settings, Personal mode).':'Type the number from your phone\'s step counter. A web page cannot read it for you.'}</div><button class="btn full" data-act="stepsSave">Save</button>`}
 function weightSheet(d){d=d||UI.date;const w=logOf(d).weight;return `<h2>Weight</h2>${dayLine(d)}<div class="fld"><label>${imperial()?'Pounds':'Kilograms'}</label><input id="v_weight" inputmode="decimal" value="${w==null?'':fw(w)}" placeholder="${imperial()?'185.0':'85.0'}"></div><button class="btn full" data-act="weightSave" data-d="${d}">Save</button>`}
 
 /* ---------- sheet ---------- */
@@ -3673,14 +3725,14 @@ const photoRow=(act,icn,l)=>`<button class="item ph2" data-act="${act}">${ic(icn
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
 function snapChoiceSheet(){
- if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button><button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button><div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
+ if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button>${personalMode()?`<button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button>`:''}<div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
  return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
- const chip=(act,icn,l,x='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}</span></button>`;
+ const chip=(act,icn,l,x='',sub='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}${sub}</span></button>`;
  const dc=UI.date,dcl=dc===today()?'Today':dc===addDays(today(),-1)?'Yesterday':fmtShort(dc),T0=today();
  const dopt=(k,l,on)=>`<button data-act="logDaySet" data-k="${k}" class="${on?'on':''}">${l}</button>`;
- return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs 1 cup rice, steps 8200, weight 84.9'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?'':chip('foodAdd','plate','Add meal',` data-m="${nm}"`))+chip('snapPick','camera','Snap a meal'):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}</div></div>`}
+ return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs 1 cup rice, steps 8200, weight 84.9'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?'':chip('foodAdd','plate','Add meal',` data-m="${nm}"`))+chip('snapPick','camera','Snap a meal',aiReady()?'':' class="noai"','<small>Needs AI</small>'):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}</div></div>`}
 function cmdRun(){
  const el=$('#cmd_in'),line=(el?el.value:cmdText).trim();if(!line)return;
  if(!window.FormaCmd){toast('The command reader did not load. Refresh the app.');return}
@@ -3737,21 +3789,21 @@ function cmdSheet(){
  });
  const unk=(CMD.res.issues||[]).map((u,k)=>`<div class="cunk"><div class="n">${esc(u.text)}</div><div class="xs">${cmdWhy(u.why)}</div><button class="btn ghost sm" style="margin-top:8px" data-act="cmdHand" data-k="${k}">Add by hand</button></div>`).join('');
  const n=CMD.acts.reduce((a,x)=>a+(x.k==='food'?x.items.length:1),0);
- const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking Claude</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">${aiReady()?'Ask AI':'Ask AI (needs key)'}</button>`):'';
+ const ask=(CMD.res.issues||[]).length?(CMD.busy?`<div class="row" style="gap:12px;margin:12px 0 2px"><span class="spin"></span><b>Asking AI</b></div>`:`<button class="btn full" style="margin-top:10px" data-act="cmdAI">Ask AI${aiReady()?'':' (needs AI)'}</button>`):'';
  const aiMsg=(CMD.aiErr?`<div class="cunk" style="margin-top:8px"><div class="n">${esc(CMD.aiErr)}</div></div>`:'')+(CMD.aiNotes.length?`<div class="xs mut" style="margin-top:8px">${CMD.aiNotes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:'');
  return `<h2>Check before saving</h2><div class="xs mut" style="margin:-6px 0 8px;word-break:break-word">${esc(CMD.line)}${CMD.date!==today()?`<br>For ${dayWord(CMD.date).toLowerCase()==='yesterday'?'yesterday':fmtLong(CMD.date)}`:''}</div>${rows.join('')||'<div class="empty">Nothing understood.</div>'}${unk}${ask}${aiMsg}
  <div class="row" style="margin-top:14px"><button class="btn ghost" data-act="cmdCancel">Cancel</button><button class="btn sp" data-act="cmdSave" ${n&&!cmdAnyErr()?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`}
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
  if(!CMD.res||CMD.busy)return;
- if(!aiReady()){CMD.seq++;closeSheet();openSheet(settingsSheet());return}
+ if(!aiReady()){CMD.aiErr=FormaCopy.add.cmdNoAi+(personalMode()?' '+FormaCopy.add.keyHint:'');openSheet(cmdSheet(),cmdSheet);return}
  const my=++CMD.seq,known=[];CMD.busy=true;CMD.aiErr='';CMD.aiNotes=[];openSheet(cmdSheet(),cmdSheet);
  CMD.acts.forEach(a=>{if(a.k==='food')a.items.forEach(i=>known.push({name:i.name,amount:i.amount||'',kcal:rnd(i.kcal)}))});
  try{
   const r=await aiMeal({text:CMD.line,known,today:CMD.date});
   if(my!==CMD.seq||!CMD.res)return;
   CMD.busy=false;CMD.aiNotes=r.assumptions;
-  if(!r.items.length)CMD.aiErr='Claude found no food in the part it could not read. Add it by hand.';
+  if(!r.items.length)CMD.aiErr='No food found in the part it could not read. Add it by hand.';
   else{
    let fa=CMD.acts.find(x=>x.k==='food');
    if(!fa){fa={k:'food',meal:window.FormaCmd?FormaCmd.mealNumber(CMD.ctx||{}):1,items:[]};CMD.acts.push(fa)}
@@ -3824,14 +3876,14 @@ function aiCounter(){
  return `<div class="xs ${full?'':'mut'}" id="ai_cnt" style="text-align:center;margin:10px 0 0;${full?'color:var(--warn)':''}">${u==null?L+' AI reads a day':u+' of '+L+' AI reads today'}</div>`}
 function aiSettings(){
  if(aiServer()){const u=aiLeft(),L=SBS.limit;
-  return `<div class="fld"><label>AI (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
+  return `<div class="fld"><label>AI meal reading</label><div class="card" style="margin:0;padding:12px 14px">
  <div class="sm">Snap a meal and Ask AI are included with your account. No key needed.</div>
  <div class="sm" style="margin-top:8px"><b>${u==null?L+' reads a day':u+' of '+L+' AI reads used today'}</b></div>
  <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div></div></div>`}
  const k=aiKey(),m=aiModel();
  const st=!k?['Not connected','var(--mut)']:AI.testing?['Testing...','var(--mut)']:AI.err?['Not working','var(--badtx)']:aiConnected()?['Connected','var(--ok)']:['Key saved, not tested yet','var(--mut)'];
- return `<div class="fld"><label>Personal mode key (Claude)</label><div class="card" style="margin:0;padding:12px 14px">
- <div class="xs mut" style="margin-bottom:8px">Only for personal mode, when you are not signed in. With a Pulzo account the AI is included and needs no key.</div>
+ return `<div class="fld"><label>Claude key</label><div class="card" style="margin:0;padding:12px 14px">
+ <div class="xs mut" style="margin-bottom:8px">This key lets Snap a meal and Ask AI work in personal mode. A Pulzo account includes the AI and needs no key.</div>
  <div class="sm">Status: <b id="ai_st" style="color:${st[1]}">${st[0]}</b></div>
  ${AI.err?`<div class="xs" style="color:var(--badtx);margin-top:4px;word-break:break-word">${esc(AI.err)}</div>`:AI.msg&&aiConnected()?`<div class="xs mut" style="margin-top:4px;word-break:break-word">${esc(AI.msg)}</div>`:''}
  <div class="fld" style="margin:10px 0 8px"><input id="ai_key" type="password" placeholder="${k?'Key saved (ends '+esc(k.slice(-4))+'). Paste to replace.':'Paste your Claude API key'}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
@@ -3873,12 +3925,12 @@ function snapRow(j,it){return `<div class="crow"><div class="sp"><div class="n">
 function snapSheet(){
  const S=SNAP,img=S.photo?`<img class="phbig" src="${esc(S.photo)}" alt="" data-act="phView">`:'';
  let body='';
- if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${FormaCopy.add.noAi}</div><div class="row"><button class="btn ghost sp" data-act="snapHand">Add by search</button><button class="btn sp" data-act="snapSettings">Open Settings</button></div>`;
- else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">Claude is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
+ if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${FormaCopy.add.noAi}</div><div class="row"><button class="btn ${personalMode()?'ghost ':''}sp" data-act="snapHand">Add by search</button>${personalMode()?'<button class="btn sp" data-act="snapSettings">Open Settings</button>':''}</div>`;
+ else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">The AI is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
  else if(S.status==='error')body=`<div class="cunk"><div class="n">${esc(S.err)}</div>${S.raw?`<div class="xs" style="margin-top:6px;word-break:break-word;max-height:120px;overflow:auto">${esc(S.raw.slice(0,800))}</div>`:''}</div><div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapAsk">Try again</button></div>`;
  else{
   const tot=S.items.reduce((a,i)=>{a.k+=rnd(i.kcal);a.p+=rnd(i.protein);a.c+=rnd(i.carbs);a.f+=rnd(i.fat);return a},{k:0,p:0,c:0,f:0}),n=S.items.length;
-  body=`<div class="cmeal">Meal ${S.meal}</div>${n?S.items.map((it,j)=>snapRow(j,it)).join(''):'<div class="empty" style="padding:10px 0">Claude did not find any food in that photo.</div>'}
+  body=`<div class="cmeal">Meal ${S.meal}</div>${n?S.items.map((it,j)=>snapRow(j,it)).join(''):'<div class="empty" style="padding:10px 0">No food found in that photo.</div>'}
   ${n?`<div class="xs mut" style="margin-top:6px">Total ${tot.k} kcal, P ${tot.p}g, C ${tot.c}g, F ${tot.f}g</div>`:''}
   ${S.notes.length?`<div class="xs mut" style="margin-top:8px">${S.notes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:''}
   <div class="fld" style="margin-top:12px"><label>Anything to add? (e.g. half rice, no sauce)</label><div class="row" style="gap:8px"><input id="snap_note" value="${esc(S.note)}" placeholder="half rice, no sauce" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">Ask again</button></div></div>
@@ -3986,6 +4038,8 @@ document.addEventListener('click',async e=>{
   case 'snapPick':openSheet(snapChoiceSheet());break;
   case 'snapCam':case 'snapGal':{LS.set('forma.snapPref',a==='snapCam'?'cam':'gal');const el=$(a==='snapCam'?'#snap_cam':'#snap_in');closeSheet();if(el)el.click();break}
   case 'calcOpen':openSheet(calcSheet());break;
+  case 'ckOpen':openSheet(ckSheet());break;
+  case 'ckApply':ckApply();break;
   case 'calHow':openSheet(calHowSheet());break;
   case 'bfHow':openSheet(bfHowSheet());break;
   case 'ovHow':openSheet(ovHowSheet());break;
@@ -4261,7 +4315,7 @@ document.addEventListener('change',async e=>{
  if((e.target.id==='pp_in'||e.target.id==='pp_cam')&&e.target.files&&e.target.files.length){
   const fl=[...e.target.files];e.target.value='';let n=0;
   for(const f of fl){try{const u=await shrinkImage(f);const p='data/progress/'+today()+'/'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;n++}catch(x){}}
-  persist();toast0(n+' photo'+(n===1?'':'s')+' saved. Ask Claude for a body fat estimate.');render();flushSoon(300);return;
+  persist();toast0(n+' photo'+(n===1?'':'s')+' saved. Add your waist and neck under Measurements for a body fat estimate.');render();flushSoon(300);return;
  }
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}

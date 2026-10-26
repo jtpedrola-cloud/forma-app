@@ -450,7 +450,9 @@
     snap: ['Snap a meal', ''],
     snapOn: 'Reads a photo for you',
     snapNo: 'Needs AI',
-    noAi: 'Photo estimates need AI. Connect it in Settings, or add the food by search.',
+    noAi: 'Photo estimates need AI, which is not switched on here. Add the food by search, or attach the photo to the meal anyway.',
+    cmdNoAi: 'AI is not switched on here. Tap Add by hand under each line, or search for the food. Your text is kept.',
+    keyHint: 'To switch it on, add a key in Settings, Personal mode.',
     attach: 'Attach photo to the meal anyway',
     bySearch: 'Add food by search',
   };
