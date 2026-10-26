@@ -151,6 +151,8 @@
    *   data/food/<d>.json -> food_items        data/log/<d>.json -> logs + workouts + sets + activities + body_fat
    *   data/profile.json -> profiles           data/program.json, program-backup.json -> programs (active row, backup row)
    *   data/meals.json -> saved_meals          data/checkins.json -> checkins (read only)
+   *   data/recipes.json -> recipes            data/myfoods.json -> my_foods
+   *   log.habits -> logs.habits               program.sports -> inside programs.body (the whole program is stored)
    *   data/exercises.json, foods.json, lessons.json -> the shared library plus the user's own exercises (programs.exercises)
    *   data/photos/<d>/<n>, data/progress/<d>/<n> -> bucket 'photos' at <user id>/<meal|progress>/<d>/<n> plus a photos row
    * The "sha" of a file is count:latest updated_at of its rows. put() refuses with HttpErr 409 when the sha is not the
@@ -167,6 +169,7 @@
   var FOOD_BY = { app: 1, claude: 1, ai: 1 };
   var PROF_KEYS = ['name', 'goal', 'units', 'hUnit', 'startWeight', 'startDate', 'stepGoal', 'weekStart', 'sessionMax',
     'goalRate', 'targets', 'body', 'intake', 'modules', 'exUnits'];
+  var RECIPE_KEYS = ['id', 'name', 'servings', 'totalG', 'items', 'by', 't'];
   var REST_WEEK = { 0: 'rest', 1: 'rest', 2: 'rest', 3: 'rest', 4: 'rest', 5: 'rest', 6: 'rest' };
 
   function num(v) { return v === null || v === undefined || v === '' || !isFinite(Number(v)) ? null : Number(v); }
@@ -193,7 +196,7 @@
     if ((m = new RegExp('^data/(photos|progress)/' + DAY + '/([^/]+)$').exec(p))) return { t: 'photo', kind: m[1] === 'photos' ? 'meal' : 'progress', day: m[2], name: m[3] };
     var names = { 'data/profile.json': 'profile', 'data/program.json': 'program', 'data/program-backup.json': 'backup',
       'data/exercises.json': 'exercises', 'data/foods.json': 'foods', 'data/lessons.json': 'lessons',
-      'data/checkins.json': 'checkins', 'data/meals.json': 'meals' };
+      'data/checkins.json': 'checkins', 'data/meals.json': 'meals', 'data/recipes.json': 'recipes', 'data/myfoods.json': 'myfoods' };
     return names[p] ? { t: names[p] } : null;
   }
 
@@ -317,6 +320,8 @@
         case 'exercises': return 'lib:' + (vOf(await activeProg(uid)) || '');
         case 'checkins': return vOf(await rows('checkins?select=updated_at'));
         case 'meals': return vOf(await rows('saved_meals?select=updated_at'));
+        case 'recipes': return vOf(await rows('recipes?select=updated_at'));
+        case 'myfoods': return vOf(await rows('my_foods?select=updated_at'));
         case 'photo': {
           var k = uid + '/' + r.kind + '/' + r.day + '/' + r.name;
           var p = await rows('photos?path=eq.' + encodeURIComponent(k) + '&select=id');
@@ -371,6 +376,7 @@
       }
       if (acts.length) d.activities = acts.map(function (a) { return { id: a.legacy_id || a.id, kind: a.kind, min: a.minutes, kcal: a.kcal, by: a.by || 'app' }; });
       if (lg && lg.measure && Object.keys(lg.measure).length) d.measure = lg.measure;
+      if (lg && lg.habits && Object.keys(lg.habits).length) d.habits = lg.habits;
       return d;
     }
     function profFromRow(r) {
@@ -429,6 +435,19 @@
         case 'meals': {
           var m = await rows('saved_meals?select=*&order=created_at.asc,id.asc');
           return m.length ? { meals: m.map(function (x) { return { id: x.legacy_id || x.id, name: x.name, items: Array.isArray(x.items) ? x.items : [], by: 'app', t: x.created_at }; }) } : null;
+        }
+        case 'recipes': {
+          var rc = await rows('recipes?select=*&order=created_at.asc,id.asc');
+          return rc.length ? { recipes: rc.map(function (x) {
+            var o = Object.assign({}, x.extra || {}, { id: x.legacy_id, name: x.name, servings: Number(x.servings), items: Array.isArray(x.items) ? x.items : [], by: x.by || 'app' });
+            if (x.total_g != null) o.totalG = Number(x.total_g);
+            if (x.t) o.t = x.t;
+            return o;
+          }) } : null;
+        }
+        case 'myfoods': {
+          var mf = await rows('my_foods?select=*&order=created_at.asc,id.asc');
+          return mf.length ? { foods: mf.map(function (x) { return Object.assign({}, x.data || {}, { id: x.legacy_id, name: x.name }); }) } : null;
         }
       }
       return null;
@@ -502,7 +521,8 @@
       // the logs row goes last: its updated_at is the version of the whole day
       await upsert('logs', 'user_id,day', {
         user_id: uid, day: day, steps: whole(doc.steps), weight_kg: num(doc.weight), note: doc.note ? String(doc.note) : '',
-        measure: doc.measure && Object.keys(doc.measure).length ? doc.measure : null
+        measure: doc.measure && Object.keys(doc.measure).length ? doc.measure : null,
+        habits: doc.habits && Object.keys(doc.habits).length ? doc.habits : null
       });
     }
     async function putProgram(doc, uid, backup) {
@@ -539,6 +559,36 @@
       if (add.length) await insert('saved_meals', add);
       if (del.length) await remove('saved_meals?id=in.' + encodeURIComponent('(' + del.join(',') + ')'));
     }
+    // recipes and my foods: one row per id; upsert what the document holds, delete what it no longer holds
+    async function syncById(table, list, toRow, uid) {
+      var seen = {}, body = [];
+      (Array.isArray(list) ? list : []).forEach(function (x, i) {
+        if (!x || !x.id || seen[x.id]) return;
+        seen[x.id] = 1;
+        body.push(Object.assign({ user_id: uid, legacy_id: String(x.id), created_at: orderStamp('1970-01-01', i) }, toRow(x)));
+      });
+      if (body.length) await upsert(table, 'user_id,legacy_id', body);
+      var kept = Object.keys(seen);
+      await remove(table + (kept.length ? '?legacy_id=not.in.' + encodeURIComponent(inList(kept)) : '?id=not.is.null'));
+    }
+    function putRecipes(doc, uid) {
+      return syncById('recipes', doc.recipes, function (r) {
+        var extra = {};
+        Object.keys(r).forEach(function (k) { if (RECIPE_KEYS.indexOf(k) < 0) extra[k] = r[k]; });
+        return {
+          name: String(r.name || 'Recipe'), servings: num(r.servings) > 0 ? num(r.servings) : 1, total_g: num(r.totalG),
+          items: Array.isArray(r.items) ? r.items : [], by: String(r.by || 'app'), t: iso(r.t),
+          extra: Object.keys(extra).length ? extra : null
+        };
+      }, uid);
+    }
+    function putMyFoods(doc, uid) {
+      return syncById('my_foods', doc.foods, function (f) {
+        var data = {};
+        Object.keys(f).forEach(function (k) { if (k !== 'id' && k !== 'name') data[k] = f[k]; });
+        return { name: String(f.name || 'Food'), data: data };
+      }, uid);
+    }
 
     /* ----- the contract ----- */
     var B = {
@@ -550,7 +600,8 @@
         var s = await need(), uid = s.user.id;
         var res = await Promise.all([
           rows('food_items?select=day,updated_at'), rows('logs?select=day,updated_at'), rows('photos?select=id,kind,day,path'),
-          rows('profiles?select=updated_at'), activeProg(uid), backupProg(uid), rows('checkins?select=updated_at'), rows('saved_meals?select=updated_at')
+          rows('profiles?select=updated_at'), activeProg(uid), backupProg(uid), rows('checkins?select=updated_at'), rows('saved_meals?select=updated_at'),
+          rows('recipes?select=updated_at'), rows('my_foods?select=updated_at')
         ]);
         var m = {};
         var group = function (a) { var g = {}; a.forEach(function (r) { (g[r.day] = g[r.day] || []).push(r); }); return g; };
@@ -566,6 +617,8 @@
         m['data/lessons.json'] = 'lib';
         if (res[6].length) m['data/checkins.json'] = vOf(res[6]);
         if (res[7].length) m['data/meals.json'] = vOf(res[7]);
+        if (res[8].length) m['data/recipes.json'] = vOf(res[8]);
+        if (res[9].length) m['data/myfoods.json'] = vOf(res[9]);
         return m;
       },
       async raw(p) {
@@ -594,6 +647,8 @@
         else if (r.t === 'backup') await putProgram(doc, uid, true);
         else if (r.t === 'exercises') await putExercises(doc, uid);
         else if (r.t === 'meals') await putMeals(doc, uid);
+        else if (r.t === 'recipes') await putRecipes(doc, uid);
+        else if (r.t === 'myfoods') await putMyFoods(doc, uid);
         return { sha: await version(r) };
       },
       async putBin(p, b64) {
