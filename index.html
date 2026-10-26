@@ -561,6 +561,8 @@ header.hv2 .sp0{flex:1}
 header.hv2 .ib{width:44px;height:44px;color:var(--mut)}
 header.hv2 summary.ib{position:relative}
 header.hv2 .sb{position:absolute;top:12px;right:12px;width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.ostrip{position:fixed;top:0;left:0;right:0;z-index:31;height:32px;display:flex;align-items:center;justify-content:center;padding:0 16px;background:var(--bg);color:var(--warn);border-bottom:1px solid var(--warnline);font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.offl{padding-top:32px}body.offl header{top:32px}body.offl .lbar{top:96px}body.offl .v1 .lbar{top:84px}
 .mpanel .syn{display:flex;align-items:center;gap:10px}.mpanel .syn .dot{width:6px;height:6px;flex:none}
 /* Food sub tabs are plain text tabs with a lime underline under the current one */
 .seg.t2{background:none;border-radius:0;padding:0;margin:0;gap:24px;justify-content:flex-start}
@@ -981,7 +983,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='493df9464a8ca4c2fa03911e9860a53ea428bc46';let verChecked=0;
+const BUILD='011f94d0bf6aef95f3bf169d0e7608c9997c0c5b';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1226,7 +1228,19 @@ if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
 
 /* ---------- sync engine ---------- */
 let flushT=null,flushing=false,again=false,lastErr='';
-function setSync(s,msg){UI.sync=s;UI.syncMsg=msg||'';const d=$('#sd');if(d){d.className='dot '+s;d.parentElement.title=s+(msg?': '+msg:'')}}
+function setSync(s,msg){UI.sync=s;UI.syncMsg=msg||'';const d=$('#sd');if(d){d.className='dot '+s;d.parentElement.title=s+(msg?': '+msg:'')}syncStrip()}
+/* The offline strip: a slim line at the top, outside the page render, that says how many changes are waiting on the phone. */
+const isOff=()=>UI.sync==='offline'||navigator.onLine===false;
+function syncStrip(){
+ if(!document.body)return;
+ let el=document.getElementById('ostrip');const n=pendCount(),off=isOff();
+ if(!off&&!(UI.sync==='error'&&n>0)){if(el)el.remove();document.body.classList.remove('offl');return}
+ const w=n+' change'+(n===1?'':'s')+' waiting.',t=off?(n?'Offline. '+w:'Offline. Changes stay on this phone.'):'Sync failed. '+w;
+ if(!el){el=document.createElement('div');el.id='ostrip';el.className='ostrip';el.setAttribute('role','status');document.body.appendChild(el)}
+ if(el.textContent!==t)el.textContent=t;document.body.classList.add('offl');
+}
+/* A save toast that tells the truth when the phone is offline. */
+const toastSv=m=>toast0(isOff()?'Saved on this phone, will sync.':m);
 const isNet=e=>!(e instanceof HttpErr)&&!(e&&e.status);
 const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length+delQ().length;
 function errText(e){
@@ -1332,8 +1346,7 @@ const MARK=z=>`<svg class="mk" width="${z}" height="${z}" viewBox="3 3.4 18 18" 
 function headerV1(title,items,sub=''){
  const mi=([act,label,attr])=>`<button class="mi" data-act="${act}"${attr||''}>${label}</button>`;
  const syn={synced:'Synced',syncing:'Syncing',offline:'Offline, tap to retry',error:'Sync failed, tap to retry'}[UI.sync]||'Sync status';
- const bad=UI.sync==='offline'||UI.sync==='error';
- return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}${bad?'<i class="sb"></i>':''}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
+ return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
 }
 const logFab=()=>`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
 document.addEventListener('click',e=>{document.querySelectorAll('details.more[open]').forEach(d=>{if(!d.contains(e.target)||e.target.closest('.mi'))d.open=false})});
@@ -1554,7 +1567,7 @@ async function journalSnap(file){
  let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
  const d=UI.date,item={id:uid(),meal:snapMealNo(d),name:SC().eat.noPhoto,amount:'',kcal:0,protein:0,carbs:0,fat:0,by:'app',t:new Date().toISOString(),journal:true};
  const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=photo.split(',')[1];item.photo=p;
- mutate(foodP(d),{k:'foodAdd',item},{quiet:true});render();toast0(SC().eat.toastSnap);
+ mutate(foodP(d),{k:'foodAdd',item},{quiet:true});render();toastSv(SC().eat.toastSnap);
 }
 /* ---------- Today (design v2: the date, the calories hero, today's plan) ---------- */
 function todayView(){
@@ -1839,7 +1852,7 @@ function adGo(){const its=AD.basket;if(!its.length)return;const d=AD.date||UI.da
  its.forEach(e=>{const m=adMac(e),item={id:uid(),meal:AD.meal,name:adName(e),amount:adAmount(e),kcal:rnd(m.kcal),protein:rnd(m.protein),carbs:rnd(m.carbs),fat:rnd(m.fat),by:'app',t};
   if(first&&AD.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=AD.photo.split(',')[1];item.photo=p}first=false;
   mutate(foodP(d),{k:'foodAdd',item},{quiet:true})});
- const n=its.length,mn=AD.meal;AD.basket=[];AD.photo='';AD.man=null;closeSheet();render();toast0('Added '+n+' food'+(n===1?'':'s')+' to Meal '+mn+'.')}
+ const n=its.length,mn=AD.meal;AD.basket=[];AD.photo='';AD.man=null;closeSheet();render();toastSv('Added '+n+' food'+(n===1?'':'s')+' to Meal '+mn+'.')}
 /* A meal's own photo, for people who keep a food diary. It goes on the first food of that meal. It does not read the photo. */
 let MP={m:0};
 async function mealPhotoSet(file){const d=UI.date,its=food(d).items.filter(i=>mealNo(i)===MP.m),it=its[0];if(!it)return;
@@ -2088,7 +2101,7 @@ function pedSave(){
   if(!d.focus||!same)d.focus=musclesOf(d).slice(0,5).join(', ')});
  doc.version=fmtLong(T);if(!doc.author&&(profile()||{}).name)doc.author=profile().name;
  if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
- mutate(P_PROG,{k:'replace',doc},{quiet:true});UI.wDay=null;flushSoon(300);pedClose();render();toast0('Program saved. The old one is kept as a backup.')}
+ mutate(P_PROG,{k:'replace',doc},{quiet:true});UI.wDay=null;flushSoon(300);pedClose();render();toastSv('Program saved. The old one is kept as a backup.')}
 function pedTemplatesSheet(){return `<h2>Templates</h2><div class="mut sm" style="margin-bottom:10px">Builds a whole program from the exercise library${gymHave()?', using the equipment you picked for your gym':''}. You see it before anything changes.</div>
  ${TEMPLATES.map(([k,n,d])=>`<button class="opt" data-act="pedTpl" data-k="${k}"><b>${n}</b><span>${d}</span></button>`).join('')}
  <button class="opt" data-act="pedTpl" data-k="setup"><b>Generate from my setup</b><span>Uses your questionnaire answers: training days, session length, focus and equipment</span></button>`}
@@ -2513,7 +2526,7 @@ function measureSave(date){const dm=logOf(date).measure||{},v={};let bad=false;
   const cm=+uCm(num(s)).toFixed(1);if(!(cm>=5&&cm<=250)){bad=true;toast(l+' looks off. Check the number.');return}v[k]=cm});
  if(bad)return;
  if(!Object.keys(v).length){closeSheet();toast0('Nothing changed.');return}
- mutate(logP(date),{k:'measure',v});closeSheet();toast0('Measurements saved.')}
+ mutate(logP(date),{k:'measure',v});closeSheet();toastSv('Measurements saved.')}
 let bodyLoaded=false;
 function bodyCard(part){
  const ph=progPhotos(),h=bfHistory(),bf=h.length?h[h.length-1]:null,w=latestWeight();
@@ -3114,7 +3127,7 @@ function importApply(mode){
  if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
  mutate(P_PROG,{k:'replace',doc},{quiet:true});UI.wDay=null;flushSoon(300);
  if(PED){PED.doc=clone(doc);PED.dirty=false;PED.pend=null}
- closeSheet();if(PED)pedDraw();render();toast0(mode==='replace'?'Program replaced. The old one is kept as a backup.':'Added '+pl.days.length+' day'+(pl.days.length===1?'':'s')+' to your program.');
+ closeSheet();if(PED)pedDraw();render();toastSv(mode==='replace'?'Program replaced. The old one is kept as a backup.':'Added '+pl.days.length+' day'+(pl.days.length===1?'':'s')+' to your program.');
 }
 function shareSheet(){const can=!!navigator.share;
  return `<h2>Share this program</h2><div class="xs mut" style="margin:-6px 0 10px">Send the code or link to a friend. They paste it under Import a program, check it, and choose to replace theirs or add it.</div>
@@ -3608,7 +3621,7 @@ function cmdRun(){
  if(isSimple()){const fa=res.actions.find(x=>x.k==='food'),iss=res.issues||[],other=res.actions.filter(x=>x.k!=='food');
   res.issues=[];res.actions=other;
   if(fa||iss.length){const txt=other.length?[].concat(fa?fa.items.map(i=>i.src||i.name):[],iss.map(u=>u.text)).join(', '):pline;
-   if(!other.length){journalText(d,txt);cmdText='';render();toast0(SC().eat.toastText);return}
+   if(!other.length){journalText(d,txt);cmdText='';render();toastSv(SC().eat.toastText);return}
    res.actions=other.concat([{k:'journal',text:txt}])}
   if(!res.actions.length){toast(SC().eat.cmdNone);return}}
  if(!res.actions.length&&!(res.issues||[]).length){toast('Nothing to log in that line.');return}
@@ -3700,7 +3713,7 @@ function cmdSave(){
   else if(a.k==='food'){a.items.forEach(it=>{mutate(foodP(d),{k:'foodAdd',item:{id:uid(),meal:a.meal,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t:new Date().toISOString()}},{quiet:true});n++})}
  });
  const h=LS.get('forma.cmdHist',[]).filter(x=>x!==CMD.line);h.unshift(CMD.line);LS.set('forma.cmdHist',h.slice(0,10));
- cmdText='';cmdHi=-1;CMD.res=null;CMD.seq++;CMD.busy=false;closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+(d!==today()?' for '+(d===addDays(today(),-1)?'yesterday':fmtShort(d)):'')+'.');
+ cmdText='';cmdHi=-1;CMD.res=null;CMD.seq++;CMD.busy=false;closeSheet();render();toastSv('Saved '+n+' item'+(n===1?'':'s')+(d!==today()?' for '+(d===addDays(today(),-1)?'yesterday':fmtShort(d)):'')+'.');
 }
 document.addEventListener('input',e=>{if(e.target.id==='cmd_in'){cmdText=e.target.value;cmdHi=-1}});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.cf!==undefined&&CMD.res){cmdEdit(t);openSheet(cmdSheet(),cmdSheet)}});
@@ -3809,7 +3822,7 @@ function snapSave(){
   if(j===0&&S.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=S.photo.split(',')[1];item.photo=p}
   mutate(foodP(d),{k:'foodAdd',item},{quiet:true});n++;
  });
- S.seq++;S.status='';S.photo='';closeSheet();render();toast0('Saved '+n+' item'+(n===1?'':'s')+' to Meal '+S.meal+'.');
+ S.seq++;S.status='';S.photo='';closeSheet();render();toastSv('Saved '+n+' item'+(n===1?'':'s')+' to Meal '+S.meal+'.');
 }
 document.addEventListener('input',e=>{if(e.target.id==='snap_note')SNAP.note=e.target.value});
 document.addEventListener('change',e=>{
@@ -3996,7 +4009,7 @@ document.addEventListener('click',async e=>{
    const a={id:uid(),kind:actK,min:m,kcal:actKcal(actK,m,latestWeight()),by:'app'};mutate(logP(UI.date),{k:'actAdd',a});openSheet(actSheet(),actSheet);break}
   case 'actDel':mutate(logP(UI.date),{k:'actDel',id:D.id});openSheet(actSheet(),actSheet);break;
   case 'spDone':{if(Date.now()-SPLP.at<900)break;if(D.d>today()){toast('That day has not happened yet.');break}const s=sportPlan(D.d)[+D.i];if(!s||s.act)break;
-   mutate(logP(D.d),{k:'actAdd',a:{id:uid(),kind:s.kind,min:s.min,kcal:actKcal(s.kind,s.min,latestWeight()),by:'app'}});toast0(actName(s.kind)+' logged, '+minLbl(s.min)+'.');break}
+   mutate(logP(D.d),{k:'actAdd',a:{id:uid(),kind:s.kind,min:s.min,kcal:actKcal(s.kind,s.min,latestWeight()),by:'app'}});toastSv(actName(s.kind)+' logged, '+minLbl(s.min)+'.');break}
   case 'spEdit':openSheet(spSheet(D.d,+D.i));break;
   case 'spSave':{const m=Math.round(num($('#sp_min').value));if(!m||m<5||m>600){ferr('sp_min','Enter 5 to 600 minutes.');break}
    const s=sportPlan(D.d)[+D.i];if(!s)break;const kcal=actKcal(s.kind,m,latestWeight());
@@ -4072,7 +4085,7 @@ document.addEventListener('click',async e=>{
   case 'discardYes':mutate(logP(woDate()),{k:'wClear'},{delay:300});UI.rest=null;closeSheet();break;
   case 'discardNo':closeSheet();break;
   case 'wReopen':mutate(logP(T),{k:'wReopen'},{delay:300});closeSheet();break;
-  case 'wMark':if(D.d>today()){toast('That day has not happened yet.');break}mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toast0('Marked as done.');break;
+  case 'wMark':if(D.d>today()){toast('That day has not happened yet.');break}mutate(logP(D.d),{k:'wMark',dayId:D.id,t:D.d+'T18:00:00+08:00'});toastSv('Marked as done.');break;
   case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
   case 'wCancel':openSheet(discardSheet());break;
   case 'cues':openSheet(notesSheet(D.ex));break;
