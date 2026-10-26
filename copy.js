@@ -428,7 +428,34 @@
 
   intake.track = simple.q; /* the screen after the goal: counting or simple */
 
+  /* The Add food sheet. It must work for people with no AI, so search, portions and typing numbers come first and Snap a meal is last. */
+  const add = {
+    title: 'Add food',
+    searchPh: 'Search rice, adobo, Chickenjoy...',
+    recent: 'Recent',
+    saved: 'Saved meals',
+    hint: 'Type a food, for example rice or adobo.',
+    none: 'Nothing found for "{q}".',
+    quickFor: 'Enter "{q}" with calories',
+    quickMore: 'Not here? Enter "{q}" with calories',
+    yourMeal: 'Your meal',
+    intoMeal: 'Put it in meal',
+    go1: 'Add 1 food',
+    goN: 'Add {n} foods',
+    more: 'More ways',
+    cook: ['Cook a meal', 'Add ingredients in grams and get the total'],
+    mine: ['Add my own food', 'Calories per 100 g or per piece'],
+    manage: ['My foods and recipes', 'See or delete what you saved'],
+    man: ['Enter numbers myself', 'Name and calories. Macros are optional.'],
+    snap: ['Snap a meal', ''],
+    snapOn: 'Reads a photo for you',
+    snapNo: 'Needs AI',
+    noAi: 'Photo estimates need AI. Connect it in Settings, or add the food by search.',
+    attach: 'Attach photo to the meal anyway',
+    bySearch: 'Add food by search',
+  };
+
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? v[k] : m));
-  root.FormaCopy = { intake, bfScale, simple, fill };
+  root.FormaCopy = { intake, bfScale, simple, add, fill };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.FormaCopy;
 })(typeof window !== 'undefined' ? window : globalThis);

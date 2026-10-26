@@ -913,6 +913,32 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible,[role=button]:focus-visible{outline:2px solid var(--acl,var(--acc));outline-offset:2px}
 #sheet:focus,#ped:focus,#lib:focus,#gym:focus,#hist:focus,#learn:focus,#cam:focus,#intake:focus{outline:none}
 .sec:has(>.add){position:relative}.sec>.add{position:absolute;right:0;top:6px}.v1 .sec:has(>.add)>summary{padding-right:44px}.v1 .sec>.add+.item{border-top:0}
+/* Add food (0.12.0): search first, portions as chips, a basket, one lime button */
+#sheet .adhd{display:flex;align-items:center;gap:4px;margin:-8px 0 8px -12px}#sheet .adhd h2{margin:0}
+#sheet #ad_q{width:100%;min-height:52px;font-size:17px;padding:0 16px;-webkit-appearance:none;appearance:none}
+.adl{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:500;color:var(--mut);margin:24px 0 4px}.adl.first{margin-top:4px}
+.adr{border-top:1px solid var(--line);padding:4px 0 8px}.adr:first-child{border-top:0}
+.adh{display:flex;align-items:center;gap:8px}
+.adn{flex:1;min-width:0;text-align:left;min-height:52px;display:flex;flex-direction:column;justify-content:center;gap:2px}.adn .n{font-weight:500;overflow-wrap:anywhere;font-size:17px}
+.adp{width:44px;height:44px;border-radius:50%;background:var(--card2);color:var(--txt);display:grid;place-items:center;flex:none}
+.adc{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 2px}
+.adchip{min-height:40px;padding:0 14px;border-radius:20px;background:var(--card2);color:var(--txt);font-size:15px}
+.adtag{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:9px;background:var(--card2);color:var(--mut);font-size:10px;font-weight:600;vertical-align:middle;margin-left:8px}
+.adb{padding:8px 0 10px;border-top:1px solid var(--line)}.adb:first-of-type{border-top:0}
+.adt{display:flex;align-items:center;gap:8px}.adt .n{font-weight:500;overflow-wrap:anywhere}
+.adk{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}
+.ads{display:flex;align-items:center;gap:4px;margin-top:2px}.ads .ib.s{width:44px;height:44px}
+.ads .adqty{width:76px;min-height:44px;text-align:center}
+.adu{min-height:44px;padding:0 16px;border-radius:12px;background:var(--card2);color:var(--txt);font-size:15px;margin-left:4px}
+.adus,.ads .adsv{margin-left:4px}.adsv{min-width:40px;text-align:center;font-size:17px}
+.adtot{display:flex;align-items:baseline;gap:12px;padding:10px 0 0;border-top:1px solid var(--line);margin-top:4px}.adtot:empty{display:none}
+.adtot .adtl{font-weight:600}.adtot .adtm{flex:1;color:var(--mut);font-size:13px;text-align:right}
+.adph{display:flex;align-items:center;gap:12px;margin-top:12px}.adph img{width:56px;height:56px;border-radius:10px;object-fit:cover;box-shadow:inset 0 0 0 1px var(--line)}
+.adform{padding:8px 0 4px;border-top:1px solid var(--line)}.adform .adft{font-weight:600;margin:8px 0 8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+#sheet #ad_cta{position:sticky;bottom:0;background:var(--card);box-shadow:0 12px 0 12px var(--card);margin-top:16px}#sheet #ad_cta:empty{display:none}
+#sheet .item.mut .n{color:var(--mut)}
+.mact{display:flex;gap:20px}.v1 .sec .mact .svm{width:auto}
 </style>
 </head>
 <body>
@@ -949,7 +975,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='bdd618ff56d512781a687ba97a55823870e0d56d';let verChecked=0;
+const BUILD='cb643a8ca1e9e8027424b37f0a612c56f0da8c1f';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1036,7 +1062,7 @@ const exU=ex=>{const p=profile(),m=p&&p.exUnits;return (m&&m[ex])||wU()};
 const kgTo=(kg,u)=>u==='lb'?kg/KG:kg,toKgU=(v,u)=>(typeof v==='number'&&u==='lb')?+(v*KG).toFixed(2):v;
 const fwU=(kg,u,dp=1)=>kg==null||kg===''?'':String(+kgTo(+kg,u).toFixed(dp));
 const foodP=d=>'data/food/'+d+'.json',logP=d=>'data/log/'+d+'.json';
-const blank=p=>{if(p==='data/meals.json')return {meals:[]};const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
+const blank=p=>{if(p==='data/meals.json')return {meals:[]};if(p==='data/recipes.json')return {recipes:[]};if(p==='data/myfoods.json')return {foods:[]};const m=p.match(/(\d{4}-\d{2}-\d{2})\.json$/);const date=m?m[1]:'';return p.includes('/food/')?{date,items:[]}:{date,steps:null,weight:null,note:'',workout:null}};
 
 /* ---------- ops: every change is a small op re-applied on top of the latest server copy ---------- */
 function applyOp(d,o){
@@ -1068,6 +1094,10 @@ function applyOp(d,o){
   case 'wMark':if(!d.workout)d.workout={dayId:o.dayId,startedAt:o.t,finishedAt:o.t,sets:{},swaps:{},marked:true};break;
   case 'mealAdd':d.meals=d.meals||[];if(!d.meals.some(m=>m.id===o.meal.id))d.meals.push(clone(o.meal));break;
   case 'mealDel':d.meals=(d.meals||[]).filter(m=>m.id!==o.id);break;
+  case 'recAdd':d.recipes=d.recipes||[];if(!d.recipes.some(r=>r.id===o.rec.id))d.recipes.push(clone(o.rec));break;
+  case 'recDel':d.recipes=(d.recipes||[]).filter(r=>r.id!==o.id);break;
+  case 'myfAdd':d.foods=d.foods||[];if(!d.foods.some(f=>f.id===o.food.id))d.foods.push(clone(o.food));break;
+  case 'myfDel':d.foods=(d.foods||[]).filter(f=>f.id!==o.id);break;
   case 'measure':{d.measure=Object.assign(d.measure||{},o.v);Object.keys(d.measure).forEach(k=>{if(d.measure[k]==null)delete d.measure[k]});if(!Object.keys(d.measure).length)delete d.measure;break}
   case 'habit':{d.habits=d.habits||{};if(o.v)d.habits[o.id]=true;else delete d.habits[o.id];if(!Object.keys(d.habits).length)delete d.habits;break}
   case 'actAdd':d.activities=d.activities||[];if(!d.activities.some(a=>a.id===o.a.id))d.activities.push(o.a);break;
@@ -1219,7 +1249,7 @@ async function doFlush(){
  }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
  finally{flushing=false;flushP=null;if(again){again=false;flushSoon(300)}}
 }
-function commitMsg(p,ops){if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
+function commitMsg(p,ops){if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p==='data/recipes.json')return 'app: recipes';if(p==='data/myfoods.json')return 'app: my foods';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
 async function writePath(p){
  for(let attempt=0;attempt<4;attempt++){
   const ops=DB.pend[p].slice();if(!ops.length)return;
@@ -1249,7 +1279,7 @@ async function refresh(force){
   if(pendCount())await flush();
   const nt=await B.tree(),trunc=!!B.treeTruncated;
   DB.tree=trunc?Object.assign({},DB.tree,nt):nt;
-  const T=today(),want=[P_PROFILE,P_PROG,P_EX,P_FOODS,P_CHK,P_MEALS];
+  const T=today(),want=[P_PROFILE,P_PROG,P_EX,P_FOODS,P_CHK,P_MEALS,'data/recipes.json','data/myfoods.json'];
   for(let i=0;i<=30;i++){const d=addDays(T,-i);want.push(foodP(d),logP(d))}
   const d0=UI.date;want.push(foodP(d0),logP(d0));
   await Promise.all([...new Set(want)].filter(p=>DB.tree[p]).map(p=>fetchFile(p,force)));
@@ -1331,7 +1361,7 @@ function render(){
  }
  {const wo=profile()&&logOf(woDate()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt));
   if(UI.tab==='workout'&&wo&&!wo.finishedAt&&!HIST.warm){HIST.warm=true;loadAllLogs().then(()=>softRender())}}
- root.innerHTML=h+tabbar()+'<input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
+ root.innerHTML=h+tabbar()+'<input type="file" id="mp_in" accept="image/*" hidden><input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
  {const nv=document.querySelector('nav.tabs');if(nv)document.documentElement.style.setProperty('--tabh',nv.offsetHeight+'px')}
  renderSheet();updateRest();foodSticky();a11yFix();
  if(sc)window.scrollTo(0,sc);
@@ -1610,7 +1640,7 @@ function foodView(){
  const secs=ml.filter(k=>items.some(i=>mealNo(i)===k)).map(k=>{
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="mk2">${fmtN(mt.kcal)} kcal</span></summary><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button>
-  ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`${pimg(i.photo,`class="ph"  alt=""`)}`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button></details>`}).join('');
+  ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`${pimg(i.photo,`class="ph"  alt=""`)}`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<div class="mact"><button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button><button class="lnk mut l0 svm" data-act="mealPhoto" data-m="${k}">${its.some(i=>i.photo)?'Change photo':'Add photo'}</button></div></details>`}).join('');
  const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v),skv=kcalVerdict(t.kcal,T.kcal),sIn=k=>rangeState(k,t[k],T).in,sChip=(c,l,k,g)=>`<span class="chip ${c}">${l} ${mv(t[k],g)}</span>`;
  const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${fmtN(big)}</b>${skv.in?'<span>In range</span>':`<span class="mut">${isCons?skv.l+' '+skv.v:rem<0?'Over':'cal left'}</span>`}${sChip('p','P','protein',T.protein)}${sChip('c','C','carbs',T.carbs)}${sChip('f','F','fat',T.fat)}</div></button>`;
  return fh+strip+`<div class="v1"><div class="dnav2"><span class="dd">${d===today()?'Today, ':''}${fmtShort(d)}</span><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day"${d===today()?' disabled':''}>${ic('right',20)}</button></div>
@@ -1638,40 +1668,196 @@ document.addEventListener('touchstart',smLongStart,{passive:true});document.addE
 ['touchend','touchmove','touchcancel','mouseup','mouseleave','scroll'].forEach(n=>document.addEventListener(n,smLongStop,{passive:true,capture:true}));
 document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.smr'))e.preventDefault()});
 function mealItemsAdd(d,no,its,ids){const t=new Date().toISOString();its.forEach(it=>mutate(foodP(d),{k:'foodAdd',item:{id:(()=>{const x=uid();if(ids)ids.push(x);return x})(),meal:no,name:it.name,amount:it.amount||'',kcal:rnd(num(it.kcal)),protein:rnd(num(it.protein)),carbs:rnd(num(it.carbs)),fat:rnd(num(it.fat)),by:'app',t}},{quiet:true}))}
-/* Recent foods and database search at the top of the add-meal sheet. Tapping fills the fields below. */
-let FS={f:null,q:0},RECENT=[];
+/* ---------- Add food (0.12.0): a basket of foods from search, recent, saved meals, recipes and my own foods. Works without AI. ----------
+   data/recipes.json { recipes:[{ id, name, servings, totalG?, items:[{ foodId?, name, qty, unit, kcal, protein, carbs, fat }], by, t }] }
+   data/myfoods.json { foods:[ same shape as data/foods.json, by:"app" ] } */
+const P_REC='data/recipes.json',P_MYF='data/myfoods.json';
+const AC=()=>FormaCopy.add;
+const recipesDb=()=>((cur(P_REC)||{}).recipes||[]);
+const myFoodsDb=()=>((cur(P_MYF)||{}).foods||[]);
+const baseFoods=()=>{const b=foodsdb();return Array.isArray(b)?b:((b&&b.foods)||[])};
+const foodById=id=>myFoodsDb().find(x=>x.id===id)||baseFoods().find(x=>x.id===id);
+const icMinus=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>`;
+let AD={v:'main',meal:1,q:'',basket:[],photo:'',man:null,my:{b:'g'},date:''},RC={name:'',items:[],servings:2,totalG:''};
+/* Recent foods: the last foods he logged, newest first, one per name. */
+let RECENT=[];
 function recentFoods(){const seen=new Set(),out=[],ps=new Set([...Object.keys(DB.files),...Object.keys(DB.pend)].filter(p=>p.startsWith('data/food/')));
  for(const p of [...ps].sort().reverse()){const its=((view(p)||{}).items||[]).slice().sort((a,b)=>String(b.t||'').localeCompare(String(a.t||'')));
   for(const i of its){const k=String(i.name||'').trim().toLowerCase();if(!k||seen.has(k))continue;seen.add(k);out.push(i);if(out.length>=20)return out}}
  return out}
-function foodFinder(){FS={f:null,q:0};RECENT=recentFoods();
- return `${RECENT.length?`<div class="fld"><label>Recent</label><div class="chips rec">${RECENT.map((i,k)=>`<button class="chip" data-act="recentPick" data-i="${k}">${esc(i.name)}</button>`).join('')}</div></div>`:''}
- <div class="fld"><label>Search foods</label><input id="f_search" placeholder="Search rice, adobo, Chickenjoy..." autocomplete="off" autocapitalize="off"><div id="f_res"></div>
- <div class="row" id="fs_q" hidden style="margin-top:8px"><button class="ib" data-act="fsStep" data-d="-1" aria-label="Less">${ic('left',18)}</button><input id="fs_qty" inputmode="decimal" style="text-align:center;width:90px"><span class="mut sm" id="fs_u"></span><button class="ib" data-act="fsStep" data-d="1" aria-label="More">${ic('right',18)}</button><span class="xs mut sp" id="fs_n" style="text-align:right"></span></div></div>`}
-const fsPiece=f=>f.unit==='piece'||f.unit==='serving';
-function fsDefault(f){const po=f.portions||{};return fsPiece(f)?1:(po.serving||po.cup||po.piece||100)}
-function fsApply(){const f=FS.f;if(!f)return;const q=FS.q,k=q/(f.per||1),set=(id,v)=>{const el=$('#'+id);if(el)el.value=v};
- set('f_name',f.name);set('f_amount',fsPiece(f)?q+' '+(f.unit==='piece'?'pc':'serving'):q+' '+f.unit);
- set('f_kcal',rnd(f.kcal*k));set('f_protein',rnd(f.protein*k));set('f_carbs',rnd(f.carbs*k));set('f_fat',rnd(f.fat*k));
- set('fs_qty',q);const u=$('#fs_u');if(u)u.textContent=fsPiece(f)?(f.unit==='piece'?'pc':'serving'):f.unit;const n=$('#fs_n');if(n)n.textContent=f.name.slice(0,26)}
-function fsResults(){const q=($('#f_search')||{}).value||'',el=$('#f_res');if(!el)return;
- const r=q.trim()&&window.FormaCmd?FormaCmd.searchFoods(q,foodsdb()||[],8):[];
- el.innerHTML=r.map(f=>{const d=fsDefault(f),k=d/(f.per||1);return `<button class="item" data-act="fsPick" data-id="${esc(f.id)}"><div class="sp"><div class="n">${esc(f.name)}</div><div class="xs mut">${fsPiece(f)?'1 '+(f.unit==='piece'?'piece':'serving'):d+' '+f.unit}</div></div><div class="r mut sm">${rnd(f.kcal*k)} kcal</div></button>`}).join('')||(q.trim()?'<div class="xs mut" style="padding:8px 0">Nothing found. Type the food in by hand below.</div>':'')}
-document.addEventListener('input',e=>{if(e.target.id==='f_search')fsResults();else if(e.target.id==='fs_qty'&&FS.f){const v=num(e.target.value);if(v>0){FS.q=v;const keep=e.target.value;fsApply();e.target.value=keep}}});
-function foodSheet(item,meal,pre){
- const e=!!item,i=item||Object.assign({name:'',amount:'',kcal:'',protein:'',carbs:'',fat:''},pre||{});
- const cur=e?mealNo(item):meal,ms=mealList(UI.date);if(!ms.includes(cur))ms.push(cur);
- const phPre=!e&&foodPhoto&&foodPhoto!=='remove'?foodPhoto:'',src=e&&item.photo?photoURL(item.photo):phPre;
- return `<h2 class="hh">${e?'Edit food':'Add food'}${hqBtn('addfood')}</h2>
+const fq=n=>String(+(+n).toFixed(2));
+const plural=(q,u)=>q===1||u==='g'||u==='ml'||u==='tbsp'||u==='tsp'?u:u+'s';
+const adList=()=>AD.v==='cook'?RC.items:AD.basket;
+/* Units a food can be counted in: its own (g, ml, piece, serving) and every portion it lists (cup, bowl, tbsp, ...). b = how many of the food's own unit one of them is. */
+function adUnits(f){const po=f.portions||{},rank=k=>{const i=['cup','bowl','piece','serving','tbsp','tsp'].indexOf(k);return i<0?9:i};
+ if(f.unit==='g'||f.unit==='ml'){const out=[{u:f.unit,b:1}];Object.keys(po).filter(k=>po[k]>0&&k!==f.unit).sort((a,b)=>rank(a)-rank(b)).forEach(k=>out.push({u:k,b:po[k]}));return out}
+ const out=[{u:f.unit,b:1}];if(f.unit==='piece'&&po.piece>0)out.push({u:'g',b:1/po.piece});return out}
+function adDefault(f,cook){const po=f.portions||{};
+ if(f.unit==='g'||f.unit==='ml'){if(cook)return {q:100,u:f.unit};const k=po.serving?(po.cup===po.serving?'cup':'serving'):po.cup?'cup':po.piece?'piece':po.bowl?'bowl':'';return k?{q:1,u:k}:{q:100,u:f.unit}}
+ return {q:1,u:f.unit}}
+const adBase=(f,u)=>{const x=adUnits(f).find(z=>z.u===u);return x?x.b:1};
+/* The other portions shown as chips under a result: 1 cup, 1 piece, 100 g. */
+function adChips(f,cook){const d=adDefault(f,cook),seen=new Set([+(d.q*adBase(f,d.u)).toFixed(3)]),out=[];
+ const push=(q,u)=>{const k=+(q*adBase(f,u)).toFixed(3);if(seen.has(k))return;seen.add(k);out.push({q,u})};
+ if(f.unit==='g'||f.unit==='ml'){adUnits(f).slice(1).filter(z=>z.u!=='tbsp'&&z.u!=='tsp').slice(0,2).forEach(z=>push(1,z.u));push(100,f.unit)}
+ else{push(2,f.unit);if(f.unit==='piece')push(100,'g')}
+ return out.slice(0,3)}
+const chipLbl=(q,u)=>fq(q)+' '+plural(q,u);
+function recTot(r){return (r.items||[]).reduce((a,i)=>({kcal:a.kcal+num(i.kcal),protein:a.protein+num(i.protein),carbs:a.carbs+num(i.carbs),fat:a.fat+num(i.fat)}),{kcal:0,protein:0,carbs:0,fat:0})}
+const scaleM=(m,k)=>({kcal:m.kcal*k,protein:m.protein*k,carbs:m.carbs*k,fat:m.fat*k});
+function adMac(e){
+ if(e.k==='food'){const f=e.f;return scaleM({kcal:f.kcal,protein:f.protein,carbs:f.carbs,fat:f.fat},e.q*adBase(f,e.u)/(f.per||1))}
+ if(e.k==='recipe'){const r=e.r;return scaleM(recTot(r),e.u==='g'&&r.totalG?e.q/r.totalG:e.q/(r.servings||1))}
+ return scaleM({kcal:e.kcal,protein:e.protein,carbs:e.carbs,fat:e.fat},e.q)}
+const adName=e=>e.k==='food'?e.f.name:e.k==='recipe'?e.r.name:e.name;
+function adAmount(e){
+ if(e.k==='food'){const f=e.f;let s=fq(e.q)+' '+plural(e.q,e.u);if((f.unit==='g'||f.unit==='ml')&&e.u!==f.unit)s+=' ('+rnd(e.q*adBase(f,e.u))+' '+f.unit+')';return s}
+ if(e.k==='recipe')return e.u==='g'?fq(e.q)+' g':fq(e.q)+' '+plural(e.q,'serving');
+ return e.q===1?(e.amount||''):fq(e.q)+' x '+(e.amount||'item')}
+const adSum=list=>list.reduce((a,e)=>{const m=adMac(e);return {kcal:a.kcal+m.kcal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}},{kcal:0,protein:0,carbs:0,fat:0});
+const pcf=m=>'P '+rnd(m.protein)+'  C '+rnd(m.carbs)+'  F '+rnd(m.fat);
+const adUn=e=>e.k==='fixed'?'portion':e.u;
+function adUnitsOf(e){return e.k==='food'?adUnits(e.f).map(x=>x.u):e.k==='recipe'?(e.r.totalG?['serving','g']:['serving']):['portion']}
+function adPush(f,q,u){const L=adList(),x=L.find(e=>e.k==='food'&&e.f.id===f.id&&e.u===u);if(x)x.q=+(x.q+q).toFixed(2);else L.push({k:'food',f,q,u});AD.q='';const el=$('#ad_q');if(el)el.value='';adDraw()}
+function adPushFixed(it){const L=AD.basket;L.push({k:'fixed',name:it.name,amount:it.amount||'',kcal:num(it.kcal),protein:num(it.protein),carbs:num(it.carbs),fat:num(it.fat),q:1})}
+function adSearch(q,cook){
+ const words=q.toLowerCase().split(/\s+/).filter(Boolean),has=n=>words.every(w=>String(n).toLowerCase().includes(w)),S=(l)=>window.FormaCmd?FormaCmd.searchFoods(q,l,12):l.filter(f=>has(f.name+' '+(f.aliases||[]).join(' ')));
+ const mine=S(myFoodsDb()).slice(0,4).map(f=>({t:'mine',f})),rec=cook?[]:recipesDb().filter(r=>has(r.name)).slice(0,3).map(r=>({t:'recipe',r})),
+  sv=cook?[]:savedMeals().filter(m=>has(m.name)).slice(0,2).map(m=>({t:'saved',m})),db=S(baseFoods()).map(f=>({t:'food',f}));
+ return [...mine,...rec,...sv,...db].slice(0,8)}
+function adResRow(r,cook){
+ const add=(act,id,sub,name,tag)=>`<div class="adh"><button class="adn" data-act="${act}" data-id="${esc(id)}"><span class="n">${esc(name)}${tag?`<span class="adtag">${tag}</span>`:''}</span><span class="xs mut">${sub}</span></button><button class="adp" data-act="${act}" data-id="${esc(id)}" aria-label="Add ${esc(name)}">${ic('plus',20)}</button></div>`;
+ if(r.t==='recipe'){const t=recTot(r.r);return `<div class="adr">${add('adAddRec',r.r.id,'1 serving, '+rnd(t.kcal/(r.r.servings||1))+' kcal',r.r.name,'Recipe')}</div>`}
+ if(r.t==='saved'){const t=sumItems(r.m.items||[]),n=(r.m.items||[]).length;return `<div class="adr">${add('adSaved',r.m.id,n+' food'+(n===1?'':'s')+', '+rnd(t.kcal)+' kcal',r.m.name,'Saved meal')}</div>`}
+ const f=r.f,d=adDefault(f,cook),m=adMac({k:'food',f,q:d.q,u:d.u});
+ return `<div class="adr">${add('adAdd',f.id,esc(chipLbl(d.q,d.u))+', '+rnd(m.kcal)+' kcal',f.name,r.t==='mine'?'Mine':'')}<div class="adc">${adChips(f,cook).map(c=>`<button class="adchip" data-act="adChip" data-id="${esc(f.id)}" data-q="${c.q}" data-u="${esc(c.u)}">${esc(chipLbl(c.q,c.u))}</button>`).join('')}</div></div>`}
+function adDrawList(){const el=$('#ad_list');if(!el)return;const q=AD.q.trim(),cook=AD.v==='cook';const mo=$('#ad_more');if(mo)mo.hidden=!!q&&!AD.man;
+ if(q){const r=adSearch(q,cook);
+  el.innerHTML=r.map(x=>adResRow(x,cook)).join('')||`<div class="xs mut" style="padding:10px 0">${esc(cf(AC().none,{q}))}</div>`;
+  if(!cook){const have=r.length;el.insertAdjacentHTML('beforeend',`<button class="item ph2" data-act="adMan" data-q="${esc(q)}"><div class="sp"><div class="n">${esc(cf(have?AC().quickMore:AC().quickFor,{q}))}</div></div>${ic('right',18)}</button>`)}
+  return}
+ if(cook){el.innerHTML='';return}
+ RECENT=recentFoods().slice(0,AD.basket.length?3:5);const sm=savedMeals().slice(0,3);
+ el.innerHTML=(RECENT.length?`<div class="adl first">${AC().recent}</div>`+RECENT.map((i,k)=>`<button class="item" data-act="adRecent" data-i="${k}"><div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc(i.amount||'')}</div></div><div class="r mut sm">${rnd(num(i.kcal))} kcal</div></button>`).join(''):'')
+  +(sm.length?`<div class="adl${RECENT.length?'':' first'}">${AC().saved}</div>`+sm.map(m=>{const t=sumItems(m.items||[]);return `<button class="item" data-act="adSaved" data-id="${esc(m.id)}"><div class="sp"><div class="n">${esc(m.name)}</div><div class="xs mut nm">${esc((m.items||[]).map(i=>i.name).join(', '))}</div></div><div class="r mut sm">${rnd(t.kcal)} kcal</div></button>`}).join(''):'')
+  ||`<div class="xs mut" style="padding:10px 0">${AC().hint}</div>`}
+function adRow(e,i){const m=adMac(e),us=adUnitsOf(e),multi=us.length>1;
+ return `<div class="adb"><div class="adt"><div class="sp"><div class="n">${esc(adName(e))}</div><div class="xs mut" id="adm-${i}">${pcf(m)}</div></div><div class="adk" id="adk-${i}">${rnd(m.kcal)}</div><button class="ib" data-act="adDel" data-i="${i}" aria-label="Remove ${esc(adName(e))}">${ic('x',18)}</button></div>
+ <div class="ads"><button class="ib s" data-act="adStep" data-i="${i}" data-d="-1" aria-label="Less">${icMinus}</button><input class="adqty" data-i="${i}" inputmode="decimal" value="${fq(e.q)}" aria-label="Amount of ${esc(adName(e))}"><button class="ib s" data-act="adStep" data-i="${i}" data-d="1" aria-label="More">${ic('plus',18)}</button>${multi?`<button class="adu" data-act="adUnit" data-i="${i}" aria-label="Change unit">${esc(plural(e.q,adUn(e)))}</button>`:`<span class="mut sm adus">${esc(plural(e.q,adUn(e)))}</span>`}</div></div>`}
+function adTotHtml(L,label){const m=adSum(L);return `<span class="adtl">${label}</span><span class="adtm">${pcf(m)}</span><span class="adk"><b>${rnd(m.kcal)}</b></span>`}
+function adSync(){const L=adList();L.forEach((e,i)=>{const m=adMac(e),k=$('#adk-'+i),p=$('#adm-'+i);if(k)k.textContent=rnd(m.kcal);if(p)p.textContent=pcf(m)});adDrawTot()}
+function adDrawTot(){const L=adList(),n=L.length,t=$('#ad_tot'),c=$('#ad_cta');
+ if(AD.v==='cook'){if(t)t.innerHTML=n?adTotHtml(L,'Whole pot'):'';rcSummary();
+  if(c)c.innerHTML=n?`<button class="btn full" data-act="rcSave">Save recipe</button>`:'';return}
+ if(t)t.innerHTML=n?adTotHtml(L,'Total'):'';
+ if(c)c.innerHTML=n?`<button class="btn full" data-act="adGo">${esc(cf(n===1?AC().go1:AC().goN,{n}))}</button>`:''}
+function adDrawMeal(){const el=$('#ad_meal');if(!el)return;const ms=mealList(AD.date);if(!ms.includes(AD.meal))ms.push(AD.meal);ms.sort((a,b)=>a-b);
+ el.innerHTML=AD.basket.length?`<div class="adl">${AC().intoMeal}</div><div class="seg" style="margin:0">${ms.map(k=>`<button data-act="adMeal" data-m="${k}" class="${AD.meal===k?'on':''}">${k}</button>`).join('')}</div>`:'';
+ const s=$('#ad_sub');if(s)s.textContent='Meal '+AD.meal+(AD.date===today()?', today':', '+fmtShort(AD.date))}
+function adDrawMore(){const el=$('#ad_more');if(!el)return;const A=AC(),m=AD.man,row=(act,ic2,t,s,cls)=>`<button class="item ph2 ${cls||''}" data-act="${act}">${ic(ic2,20)}<div class="sp"><div class="n">${t}</div><div class="xs mut">${s}</div></div>${ic('right',18)}</button>`;
+ const hasMine=myFoodsDb().length+recipesDb().length>0,ai=aiReady();
+ el.innerHTML=`<div class="adl">${A.more}</div>`+row('adCook','plate',A.cook[0],A.cook[1])+row('adMine','plus',A.mine[0],A.mine[1])+(hasMine?row('adManage','book',A.manage[0],A.manage[1]):'')
+  +(m?`<div class="adform"><div class="n adft">${A.man[0]}</div>
+   <div class="fld"><label for="am_name">Name</label><input id="am_name" value="${esc(m.name||'')}" placeholder="Chicken adobo" autocomplete="off"></div>
+   <div class="g2"><div class="fld"><label for="am_kcal">Calories</label><input id="am_kcal" inputmode="decimal"></div><div class="fld"><label for="am_amt">Amount (optional)</label><input id="am_amt" placeholder="1 plate"></div></div>
+   <div class="g3"><div class="fld"><label for="am_p">Protein g</label><input id="am_p" inputmode="decimal" placeholder="0"></div><div class="fld"><label for="am_c">Carbs g</label><input id="am_c" inputmode="decimal" placeholder="0"></div><div class="fld"><label for="am_f">Fat g</label><input id="am_f" inputmode="decimal" placeholder="0"></div></div>
+   <button class="btn ghost full" data-act="adManAdd">Add to list</button></div>`:row('adMan','grid',A.man[0],A.man[1]))
+  +row('snapPick','camera',A.snap[0],ai?A.snapOn:A.snapNo,'mut');
+ if(m){const n=$('#am_name');if(n&&!m.name)n.focus()}}
+function adDraw(){if(AD.v==='cook'){adDrawList();$('#ad_bk').innerHTML=RC.items.map(adRow).join('');rcDrawSrv();adDrawTot();return}
+ adDrawList();$('#ad_bk').innerHTML=(AD.basket.length?`<div class="adl">${AC().yourMeal}</div>`:'')+AD.basket.map(adRow).join('')+(AD.photo?`<div class="adph"><img src="${esc(AD.photo)}" alt=""><span class="sm sp">Photo goes with this meal</span><button class="lnk" data-act="adPhotoOff">Remove</button></div>`:'');
+ adDrawMeal();adDrawMore();adDrawTot()}
+function adShell(){
+ if(AD.v==='cook')return `<div class="adhd"><button class="ib" data-act="adBack" aria-label="Back">${ic('left')}</button><h2>${AC().cook[0]}</h2></div>
+  <div class="fld"><label for="rc_name">Name</label><input id="rc_name" data-af value="${esc(RC.name)}" placeholder="Chicken curry" autocomplete="off"></div>
+  <div class="fld"><label for="ad_q">Add ingredients</label><input id="ad_q" placeholder="Search chicken, rice, oil..." autocomplete="off" autocapitalize="off"></div><div id="ad_list"></div><div id="ad_bk"></div><div class="adtot" id="ad_tot"></div><div id="rc_srv"></div><div id="ad_cta"></div>`;
+ if(AD.v==='mine')return adMineShell();
+ if(AD.v==='manage')return adManageShell();
+ return `<h2 class="hh">${AC().title}${hqBtn('addfood')}</h2><div class="xs mut" id="ad_sub" style="margin:-8px 0 12px"></div>
+  <div class="fld"><label for="ad_q" class="sro">Search foods</label><input id="ad_q" data-af type="search" enterkeyhint="search" placeholder="${esc(AC().searchPh)}" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(AD.q)}"></div>
+  <div id="ad_list"></div><div id="ad_bk"></div><div class="adtot" id="ad_tot"></div><div id="ad_meal"></div><div id="ad_more"></div><div id="ad_cta"></div>`}
+function adView(v){AD.v=v;openSheet(adShell());if(v==='main'||v==='cook')adDraw();if(v==='cook')rcDrawSrv()}
+function addOpen(meal,o={}){
+ const d=UI.date;
+ if(o.keep&&AD.basket.length&&AD.date===d){AD.v='main';AD.meal=AD.meal||meal;AD.q='';if(o.photo)AD.photo=o.photo;adView('main');return}
+ AD={v:'main',meal,q:'',basket:[],photo:o.photo||'',man:o.name!=null?{name:o.name}:null,my:{b:'g'},date:d};RC={name:'',items:[],servings:2,totalG:''};foodMeal=meal;adView('main');
+ if(o.name!=null)setTimeout(()=>{const n=$('#am_name');if(n){n.scrollIntoView({block:'center'});n.focus()}},60)}
+/* Cook a meal: ingredients from the same search, with grams or ml, then servings. */
+function rcPer(){const t=adSum(RC.items),n=Math.max(1,RC.servings);return scaleM(t,1/n)}
+function rcSummary(){const el=$('#rc_per');if(!el)return;const p=rcPer();el.textContent=RC.items.length?'Per serving '+rnd(p.kcal)+' kcal, '+pcf(p):''}
+function rcDrawSrv(){const el=$('#rc_srv');if(!el)return;
+ el.innerHTML=RC.items.length?`<div class="adl">Servings</div><div class="ads"><button class="ib s" data-act="rcSrv" data-d="-1" aria-label="Fewer servings">${icMinus}</button><span class="adsv" id="rc_n">${RC.servings}</span><button class="ib s" data-act="rcSrv" data-d="1" aria-label="More servings">${ic('plus',18)}</button><span class="mut sm">servings</span></div>
+  <div class="fld" style="margin-top:10px"><label for="rc_g">Cooked weight in g (optional)</label><input id="rc_g" inputmode="decimal" value="${esc(RC.totalG)}" placeholder="Weigh the pot if you want to log by grams"></div><div class="xs mut" id="rc_per"></div>`:'';rcSummary()}
+function rcSave(){
+ document.querySelectorAll('#sheet .ferr').forEach(x=>x.remove());
+ const nm=($('#rc_name')||{}).value.trim();if(!nm){ferr('rc_name','Give the recipe a name first.');return}
+ if(!RC.items.length)return;
+ const tg=Math.round(num(RC.totalG)),r={id:'r'+uid().slice(1),name:nm.slice(0,60),servings:Math.max(1,RC.servings),items:RC.items.map(e=>{const m=adMac(e);return Object.assign(e.f.id?{foodId:e.f.id}:{},{name:e.f.name,qty:+fq(e.q),unit:e.u,kcal:rnd(m.kcal),protein:rnd(m.protein),carbs:rnd(m.carbs),fat:rnd(m.fat)})}),by:'app',t:new Date().toISOString()};
+ if(tg>0)r.totalG=tg;
+ mutate(P_REC,{k:'recAdd',rec:r},{quiet:true});
+ RC={name:'',items:[],servings:2,totalG:''};AD.basket.push({k:'recipe',r,q:1,u:'serving'});adView('main');toast0('Saved '+r.name+'. Log it with the servings you ate.')}
+/* Add my own food (data/myfoods.json). */
+function adMyStore(){const g=id=>{const el=$('#'+id);return el?el.value:''};const m=AD.my;if(!$('#my_name'))return;Object.assign(m,{name:g('my_name'),kcal:g('my_kcal'),protein:g('my_p'),carbs:g('my_c'),fat:g('my_f'),cup:g('my_cup'),serving:g('my_srv'),piece:g('my_pc')})}
+function adMineShell(){const m=AD.my,b=m.b||'g',per=b==='piece'?'per piece':'per 100 '+b,v=k=>esc(m[k]||'');
+ return `<div class="adhd"><button class="ib" data-act="adBack" aria-label="Back">${ic('left')}</button><h2>${AC().mine[0]}</h2></div>
+ <div class="fld"><label for="my_name">Name</label><input id="my_name" data-af value="${v('name')}" placeholder="Tuyo, 1 pack" autocomplete="off"></div>
+ <div class="fld"><label>Numbers are</label><div class="seg" style="margin:0">${[['g','Per 100 g'],['ml','Per 100 ml'],['piece','Per piece']].map(([k,l])=>`<button data-act="myBasis" data-b="${k}" class="${b===k?'on':''}">${l}</button>`).join('')}</div></div>
+ <div class="g2"><div class="fld"><label for="my_kcal">Calories ${per}</label><input id="my_kcal" inputmode="decimal" value="${v('kcal')}"></div><div class="fld"><label for="my_p">Protein g</label><input id="my_p" inputmode="decimal" value="${v('protein')}" placeholder="0"></div>
+ <div class="fld"><label for="my_c">Carbs g</label><input id="my_c" inputmode="decimal" value="${v('carbs')}" placeholder="0"></div><div class="fld"><label for="my_f">Fat g</label><input id="my_f" inputmode="decimal" value="${v('fat')}" placeholder="0"></div></div>
+ <div class="adl">Portions (optional)</div>
+ ${b==='piece'?`<div class="fld"><label for="my_pc">One piece weighs (g)</label><input id="my_pc" inputmode="decimal" value="${v('piece')}"></div>`
+  :`<div class="g2"><div class="fld"><label for="my_cup">1 cup is (${b})</label><input id="my_cup" inputmode="decimal" value="${v('cup')}"></div><div class="fld"><label for="my_srv">1 serving is (${b})</label><input id="my_srv" inputmode="decimal" value="${v('serving')}"></div></div>`}
+ <button class="btn full" data-act="mySave">Save food</button>`}
+function mySave(){
+ document.querySelectorAll('#sheet .ferr').forEach(x=>x.remove());adMyStore();const m=AD.my,b=m.b||'g',name=String(m.name||'').trim();
+ if(!name){ferr('my_name','Give the food a name first.');return}
+ if(String(m.kcal||'').trim()===''){ferr('my_kcal','Enter the calories.');return}
+ const big=b!=='piece',lim={kcal:big?900:5000,protein:big?100:500,carbs:big?100:500,fat:big?100:500},ids={kcal:'my_kcal',protein:'my_p',carbs:'my_c',fat:'my_f'},lab={kcal:'Calories',protein:'Protein',carbs:'Carbs',fat:'Fat'};
+ for(const k of ['kcal','protein','carbs','fat']){const x=num(m[k]);if(x<0){ferr(ids[k],lab[k]+' cannot be below 0.');return}if(x>lim[k]){ferr(ids[k],lab[k]+' is at most '+fmtN(lim[k])+(k==='kcal'?'':' g')+(big?' per 100 '+b+'.':' per piece.'));return}}
+ const po={};if(b==='piece'){if(num(m.piece)>0)po.piece=rnd(num(m.piece))}else{if(num(m.cup)>0)po.cup=rnd(num(m.cup));if(num(m.serving)>0)po.serving=rnd(num(m.serving))}
+ const f={id:'my'+uid().slice(1),name:name.slice(0,60),aliases:[],unit:b,per:big?100:1,kcal:rnd(num(m.kcal)),protein:rnd(num(m.protein)),carbs:rnd(num(m.carbs)),fat:rnd(num(m.fat)),portions:po,by:'app'};
+ mutate(P_MYF,{k:'myfAdd',food:f},{quiet:true});AD.my={b};const d=adDefault(f);AD.basket.push({k:'food',f,q:d.q,u:d.u});adView('main');toast0('Saved '+f.name+' to My foods.')}
+function adManageShell(){const rs=recipesDb(),fs=myFoodsDb(),row=(act,id,n,s)=>`<div class="item"><div class="sp"><div class="n">${esc(n)}</div><div class="xs mut">${esc(s)}</div></div><button class="btn ghost sm" data-act="${act}" data-id="${esc(id)}">Delete</button></div>`;
+ return `<div class="adhd"><button class="ib" data-act="adBack" aria-label="Back">${ic('left')}</button><h2>${AC().manage[0]}</h2></div>`
+  +(rs.length?`<div class="adl first">Recipes</div>`+rs.map(r=>row('recDel',r.id,r.name,(r.items||[]).length+' ingredients, '+r.servings+' servings')).join(''):'')
+  +(fs.length?`<div class="adl${rs.length?'':' first'}">My foods</div>`+fs.map(f=>row('myfDel',f.id,f.name,rnd(f.kcal)+' kcal '+(f.unit==='piece'?'per piece':'per 100 '+f.unit))).join(''):'')
+  +(!rs.length&&!fs.length?`<div class="empty">Nothing here yet.</div>`:'')}
+function adManAdd(){
+ document.querySelectorAll('#sheet .ferr').forEach(x=>x.remove());const g=id=>($('#'+id)||{value:''}).value;
+ const name=g('am_name').trim();if(!name){ferr('am_name','Give the food a name first.');return}
+ if(g('am_kcal').trim()===''){ferr('am_kcal','Enter the calories.');return}
+ const v={kcal:num(g('am_kcal')),protein:num(g('am_p')),carbs:num(g('am_c')),fat:num(g('am_f'))},ids={kcal:'am_kcal',protein:'am_p',carbs:'am_c',fat:'am_f'},lab={kcal:'Calories',protein:'Protein',carbs:'Carbs',fat:'Fat'};
+ for(const k of ['kcal','protein','carbs','fat']){const x=v[k],mx=k==='kcal'?5000:500;if(x<0){ferr(ids[k],lab[k]+' cannot be below 0.');return}if(x>mx){ferr(ids[k],lab[k]+' is at most '+fmtN(mx)+(k==='kcal'?' per item.':' g per item.'));return}}
+ adPushFixed({name,amount:g('am_amt').trim(),kcal:v.kcal,protein:v.protein,carbs:v.carbs,fat:v.fat});AD.man=null;AD.q='';const q=$('#ad_q');if(q)q.value='';adDraw();const b=$('#ad_bk');if(b)b.scrollIntoView({block:'nearest'})}
+function adGo(){const its=AD.basket;if(!its.length)return;const d=AD.date||UI.date,t=new Date().toISOString();let first=true;
+ its.forEach(e=>{const m=adMac(e),item={id:uid(),meal:AD.meal,name:adName(e),amount:adAmount(e),kcal:rnd(m.kcal),protein:rnd(m.protein),carbs:rnd(m.carbs),fat:rnd(m.fat),by:'app',t};
+  if(first&&AD.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=AD.photo.split(',')[1];item.photo=p}first=false;
+  mutate(foodP(d),{k:'foodAdd',item},{quiet:true})});
+ const n=its.length,mn=AD.meal;AD.basket=[];AD.photo='';AD.man=null;closeSheet();render();toast0('Added '+n+' food'+(n===1?'':'s')+' to Meal '+mn+'.')}
+/* A meal's own photo, for people who keep a food diary. It goes on the first food of that meal. It does not read the photo. */
+let MP={m:0};
+async function mealPhotoSet(file){const d=UI.date,its=food(d).items.filter(i=>mealNo(i)===MP.m),it=its[0];if(!it)return;
+ let u;try{u=await shrinkImage(file)}catch(x){toast('Could not read that photo.');return}
+ const p='data/photos/'+d+'/'+it.id+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;mutate(foodP(d),{k:'foodUpd',item:Object.assign({},it,{photo:p})});toast0('Photo added to Meal '+MP.m+'.')}
+function foodSheet(item){
+ const i=item,cur=mealNo(i),ms=mealList(UI.date);if(!ms.includes(cur))ms.push(cur);
+ return `<h2 class="hh">Edit food${hqBtn('addfood')}</h2>
  <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${ms.map(k=>`<button data-act="pickMeal" data-m="${k}" class="${cur===k?'on':''}">${k}</button>`).join('')}</div></div>
- ${e?'':foodFinder()}
- <div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${e?esc(item.photo||''):''}" src="${esc(src)}" style="${src?'':'display:none'}" alt="" data-act="phView"><input type="file" id="f_photo" accept="image/*" hidden><input type="file" id="f_photo_cam" accept="image/*" capture="environment" hidden><span id="f_phpick" hidden></span>${photoRows(photoRow('phCam','camera','Take a photo'),photoRow('phGal','image','Choose from gallery'))}<div class="row"><button class="btn ghost sm" id="f_phrm" data-act="phRemove" style="${(e&&item.photo)||phPre?'':'display:none'}">Remove</button></div></div>
- <div class="fld"><label>Name</label><input id="f_name" value="${esc(i.name)}" placeholder="Chicken adobo"></div>
- <div class="fld"><label>Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice"></div>
- <div class="g2"><div class="fld"><label>Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label>Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
- <div class="fld"><label>Carbs (g)</label><input id="f_carbs" inputmode="decimal" value="${esc(i.carbs)}"></div><div class="fld"><label>Fat (g)</label><input id="f_fat" inputmode="decimal" value="${esc(i.fat)}"></div></div>
- <div class="row" style="margin-top:6px">${e?`<button class="btn red" data-act="foodDel" data-id="${esc(item.id)}">Delete</button>`:''}<button class="btn sp" data-act="foodSave" data-id="${e?esc(item.id):''}">Save</button></div>`;
-}
+ ${i.photo?`<div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${esc(i.photo)}" src="${esc(photoURL(i.photo))}" alt="" data-act="phView"><div class="row"><button class="btn ghost sm" id="f_phrm" data-act="phRemove">Remove photo</button></div></div>`:''}
+ <div class="fld"><label for="f_name">Name</label><input id="f_name" value="${esc(i.name)}" placeholder="Chicken adobo"></div>
+ <div class="fld"><label for="f_amount">Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice"></div>
+ <div class="g2"><div class="fld"><label for="f_kcal">Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label for="f_protein">Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
+ <div class="fld"><label for="f_carbs">Carbs (g)</label><input id="f_carbs" inputmode="decimal" value="${esc(i.carbs)}"></div><div class="fld"><label for="f_fat">Fat (g)</label><input id="f_fat" inputmode="decimal" value="${esc(i.fat)}"></div></div>
+ <div class="row" style="margin-top:6px"><button class="btn red" data-act="foodDel" data-id="${esc(i.id)}">Delete</button><button class="btn sp" data-act="foodSave" data-id="${esc(i.id)}">Save</button></div>`}
+
+document.addEventListener('input',e=>{const t=e.target;
+ {const er=t.closest&&t.closest('#sheet .fld');if(er)er.querySelectorAll('.ferr').forEach(x=>x.remove())}
+ if(t.id==='ad_q'){AD.q=t.value;adDrawList()}
+ else if(t.classList&&t.classList.contains('adqty')){const x=adList()[+t.dataset.i],v=num(t.value);if(x&&v>0){x.q=v;const ub=document.querySelector('.adu[data-i="'+t.dataset.i+'"]');if(ub)ub.textContent=plural(v,adUn(x));adSync()}}
+ else if(t.id==='rc_g'){RC.totalG=t.value}
+ else if(t.id==='rc_name'){RC.name=t.value}});
+document.addEventListener('change',e=>{const t=e.target;if(t.classList&&t.classList.contains('adqty')){const x=adList()[+t.dataset.i];if(x)t.value=fq(x.q)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ad_q'){e.preventDefault();const b=document.querySelector('#ad_list .adn');if(b)b.click()}});
 
 /* ---------- Workout ---------- */
 function prevFor(ex){
@@ -2821,7 +3007,7 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${aiSettings()}
  ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.11.21${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.12.0${DEMO?' (demo mode)':''}</div>`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
@@ -3054,7 +3240,7 @@ function tourMaybe(){if(!window.FormaTour||FormaTour.active||TOUR.on)return;if(L
  if(UI.sheet||['intake','cam','lib','ped','hist','gym'].some(i=>document.getElementById(i)))return;if(!profile()||!program()||!exdb())return;
  LS.del('forma.tourPending');setTimeout(tourFull,500)}
 /* One-card help for sheets (add food, swap, program editor): two sentences, no spotlight. */
-const HQ={addfood:['Adding a food','Search a food or type it in, then check the numbers. Tap Save and it lands in the meal you picked.'],
+const HQ={addfood:['Adding a food','Search for a food and tap a portion to add it, as many as you like. Tap Add to put them all in the meal you picked. Nothing matches? Enter the calories yourself, or cook a meal from ingredients.'],
  swap:['Swap or add an exercise','Swapping is for today only, so your program does not change. Recommended picks come first, then anything that trains the same muscle.'],
  ped:['Editing your program','Change days, sets, reps and rest, then tap Save program, and your old program is kept as a backup. Share sends it to a friend as a code.']};
 const hqBtn=k=>`<button class="ib s hq" data-act="hq" data-k="${k}" aria-label="Help">${ic('help',18)}</button>`;
@@ -3355,7 +3541,9 @@ const snapPref=()=>LS.get('forma.snapPref','cam');
 const photoRow=(act,icn,l)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div></div>${ic('right',18)}</button>`;
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
-function snapChoiceSheet(){return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
+function snapChoiceSheet(){
+ if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button><button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button><div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
+ return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
  const chip=(act,icn,l,x='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}</span></button>`;
@@ -3540,7 +3728,7 @@ async function snapStart(file){
  let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
  Object.assign(SNAP,{photo,note:'',items:[],notes:[],raw:'',err:'',status:'',date:UI.date,seq:SNAP.seq+1});
  SNAP.meal=snapMealNo(SNAP.date);
- if(!aiReady()){SNAP.status='nokey';openSheet(snapSheet(),snapSheet);return}
+ if(!aiReady()){closeSheet();addOpen(SNAP.meal,{photo,keep:true});toast0('Photo attached. Add the food by search.');return}
  SNAP.status='reading';openSheet(snapSheet(),snapSheet);snapAsk();
 }
 async function snapAsk(){
@@ -3554,7 +3742,7 @@ function snapRow(j,it){return `<div class="crow"><div class="sp"><div class="n">
 function snapSheet(){
  const S=SNAP,img=S.photo?`<img class="phbig" src="${esc(S.photo)}" alt="" data-act="phView">`:'';
  let body='';
- if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">Add your Claude API key in Settings to read meals from photos.</div><div class="row"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapSettings">Open Settings</button></div>`;
+ if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${FormaCopy.add.noAi}</div><div class="row"><button class="btn ghost sp" data-act="snapHand">Add by search</button><button class="btn sp" data-act="snapSettings">Open Settings</button></div>`;
  else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">Claude is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
  else if(S.status==='error')body=`<div class="cunk"><div class="n">${esc(S.err)}</div>${S.raw?`<div class="xs" style="margin-top:6px;word-break:break-word;max-height:120px;overflow:auto">${esc(S.raw.slice(0,800))}</div>`:''}</div><div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapAsk">Try again</button></div>`;
  else{
@@ -3580,6 +3768,7 @@ function snapSave(){
 document.addEventListener('input',e=>{if(e.target.id==='snap_note')SNAP.note=e.target.value});
 document.addEventListener('change',e=>{
  const t=e.target;
+ if(t.id==='mp_in'){const f=t.files&&t.files[0];t.value='';if(f)mealPhotoSet(f);return}
  if(t.id==='snap_in'||t.id==='snap_cam'){const f=t.files&&t.files[0];t.value='';if(f)isSimple()?journalSnap(f):snapStart(f);return}
  if(t.dataset&&t.dataset.hid!==undefined){const L=habitList().map(h=>h.id===t.dataset.hid?{id:h.id,label:t.value.trim()||h.label}:h);habSave(L);return}
  if(t.dataset&&t.dataset.sj!==undefined&&SNAP.status==='done'){
@@ -3595,7 +3784,7 @@ document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-act]');if(!t)return;
  const a=t.dataset.act,D=t.dataset;
  if(a==='mealSave')e.preventDefault();
- if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=+D.m;foodPhoto=null;openSheet(foodSheet(null,+D.m));return}
+ if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=+D.m;foodPhoto=null;addOpen(+D.m);return}
  const T=today();
  switch(a){
   case 'tab':navTab(D.t);window.scrollTo(0,0);render();break;
@@ -3611,10 +3800,31 @@ document.addEventListener('click',async e=>{
    openSheet(settingsSheet());
    if(notifState()!=='Allowed'){toast(notifState()==='Blocked'?'Notifications are blocked for Pulzo.':'Notifications are not available here.');break}
    swPost({k:'rest',end:Date.now()+5000,name:'Test',test:true});toast0('Lock your phone now. A test arrives in 5 seconds.');break}
-  case 'recentPick':{const i=RECENT[+D.i];if(!i)break;FS.f=null;FS.q=0;const q=$('#fs_q');if(q)q.hidden=true;const qi=$('#fs_qty');if(qi)qi.value='';
-   [['f_name','name'],['f_amount','amount'],['f_kcal','kcal'],['f_protein','protein'],['f_carbs','carbs'],['f_fat','fat']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.value=i[k]==null?'':i[k]});break}
-  case 'fsPick':{const f=((foodsdb()||{}).foods||foodsdb()||[]).find(x=>x.id===D.id);if(!f)break;FS.f=f;FS.q=fsDefault(f);$('#fs_q').hidden=false;fsApply();$('#f_res').innerHTML='';$('#f_search').value='';break}
-  case 'fsStep':{if(!FS.f)break;const st=fsPiece(FS.f)?.5:(FS.q>=200?25:10);FS.q=Math.max(st,+(FS.q+(+D.d)*st).toFixed(1));fsApply();break}
+  case 'adAdd':{const f=foodById(D.id);if(!f)break;const df=adDefault(f,AD.v==='cook');adPush(f,df.q,df.u);break}
+  case 'adChip':{const f=foodById(D.id);if(!f)break;adPush(f,+D.q,D.u);break}
+  case 'adAddRec':{const r=recipesDb().find(x=>x.id===D.id);if(!r)break;const x=AD.basket.find(e=>e.k==='recipe'&&e.r.id===r.id&&e.u==='serving');if(x)x.q=+(x.q+1).toFixed(2);else AD.basket.push({k:'recipe',r,q:1,u:'serving'});AD.q='';{const el=$('#ad_q');if(el)el.value=''}adDraw();break}
+  case 'adSaved':{const m=savedMeals().find(x=>x.id===D.id);if(!m)break;(m.items||[]).forEach(adPushFixed);AD.q='';{const el=$('#ad_q');if(el)el.value=''}adDraw();{const b=$('#ad_bk');if(b)b.scrollIntoView({block:'nearest'})}break}
+  case 'adRecent':{const i=RECENT[+D.i];if(!i)break;adPushFixed(i);adDraw();break}
+  case 'adDel':{adList().splice(+D.i,1);adDraw();break}
+  case 'adStep':{const i=+D.i,e=adList()[i];if(!e)break;const g=(e.k==='food'||e.k==='recipe')&&(e.u==='g'||e.u==='ml'),st=g?(e.q>=200?25:10):.5;e.q=Math.max(st,+(e.q+(+D.d)*st).toFixed(2));const inp=document.querySelector('.adqty[data-i="'+i+'"]');if(inp)inp.value=fq(e.q);const ub=document.querySelector('.adu[data-i="'+i+'"]');if(ub)ub.textContent=plural(e.q,adUn(e));adSync();break}
+  case 'adUnit':{const i=+D.i,e=adList()[i];if(!e)break;const us=adUnitsOf(e);e.u=us[(us.indexOf(e.u)+1)%us.length];e.q=e.k==='recipe'?(e.u==='g'?Math.max(1,rnd((e.r.totalG||0)/(e.r.servings||1))):1):(e.u==='g'||e.u==='ml'?100:1);adDraw();break}
+  case 'adMeal':AD.meal=+D.m;foodMeal=AD.meal;adDrawMeal();break;
+  case 'adMan':{AD.man={name:D.q||''};adDrawMore();{const n=$(D.q?'#am_kcal':'#am_name');if(n){n.scrollIntoView({block:'center'});n.focus()}}break}
+  case 'adManAdd':adManAdd();break;
+  case 'adCook':adView('cook');break;
+  case 'adMine':AD.my={b:(AD.my&&AD.my.b)||'g'};adView('mine');break;
+  case 'adManage':adView('manage');break;
+  case 'adBack':adMyStore();adView('main');break;
+  case 'adGo':adGo();break;
+  case 'adPhotoOff':AD.photo='';adDraw();break;
+  case 'rcSrv':RC.servings=Math.max(1,RC.servings+(+D.d));{const n=$('#rc_n');if(n)n.textContent=RC.servings;rcSummary()}break;
+  case 'rcSave':rcSave();break;
+  case 'myBasis':adMyStore();AD.my.b=D.b;adView('mine');break;
+  case 'mySave':mySave();break;
+  case 'recDel':case 'myfDel':if(!t.dataset.sure){t.dataset.sure='1';t.textContent='Tap again';break}
+   mutate(a==='recDel'?P_REC:P_MYF,{k:a,id:D.id},{quiet:true});adView('manage');break;
+  case 'mealPhoto':{MP.m=+D.m;const el=$('#mp_in');if(el)el.click();break}
+  case 'snapSearch':closeSheet();addOpen(snapMealNo(UI.date),{keep:true});break;
   case 'cmdGo':cmdRun();break;
   case 'logOpen':cmdHOpen=false;logDayOpen=false;UI.logAway=false;if(UI.tab!=='today'&&UI.tab!=='food')UI.date=today();openSheet(logSheet(),logSheet);break;
   case 'logDay':logDayOpen=!logDayOpen;{const el=$('#cmd_in');if(el)cmdText=el.value}openSheet(logSheet(),logSheet);break;
@@ -3629,7 +3839,7 @@ document.addEventListener('click',async e=>{
   case 'cmdDrop':{const a=CMD.acts[+D.ci];if(!a)break;CMD.bad={};if(a.k==='food'&&+D.cj>=0){a.items.splice(+D.cj,1);if(!a.items.length)CMD.acts.splice(+D.ci,1)}else CMD.acts.splice(+D.ci,1);openSheet(cmdSheet(),cmdSheet);break}
   case 'cmdWorkout':CMD.seq++;CMD.busy=false;closeSheet();cmdText='';{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render()}break;
   case 'cmdHand':{const u=(CMD.res.issues||[])[+D.k];const fa=CMD.acts.find(x=>x.k==='food');const m=fa?fa.meal:Math.max(0,...food(CMD.date).items.map(mealNo))+1;
-   closeSheet();foodMeal=m;foodPhoto=null;openSheet(foodSheet(null,m,{name:u?u.text:''}));break}
+   closeSheet();foodPhoto=null;addOpen(m,{name:u?u.text:''});break}
   case 'roverClose':{const r=$('#rover');if(r)r.remove();break}
   case 'theme':applyTheme(D.t);LS.set('forma.theme',D.t);openSheet(settingsSheet());render();break;
   case 'setupSave':setupSave();break;
@@ -3656,7 +3866,7 @@ document.addEventListener('click',async e=>{
   case 'snapDrop':SNAP.items.splice(+D.j,1);snapDraw();break;
   case 'snapSave':snapSave();break;
   case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());break;
-  case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodMeal=m;foodPhoto=ph||null;openSheet(foodSheet(null,m));break}
+  case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodPhoto=null;addOpen(m,{photo:ph||''});break}
   case 'force':closeSheet();refresh(true);break;
   case 'signout':if(pendCount()&&!confirm('Some changes have not synced yet and will be lost. Sign out anyway?'))break;LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render();break;
   case 'gotoWorkout':{const sd=UI.tab==='today'&&UI.date<=T?UI.date:T;navTab('workout');UI.wSel=sd;UI.wWk=0;while(!weekDates(addDays(T,7*UI.wWk)).includes(sd)&&UI.wWk>-60)UI.wWk--;loadDays(weekDates(addDays(T,7*UI.wWk)));{const pd=progDay(sd);if(pd)UI.wDay=pd.id}render();break}
@@ -3779,7 +3989,7 @@ document.addEventListener('click',async e=>{
   case 'cmpClear':UI.cmpSel=[];openSheet(bodyCmpSheet(),bodyCmpSheet);break;
   case 'phDel':if(!t.classList.contains('sure')){document.querySelectorAll('.pgdel.sure').forEach(b=>{b.classList.remove('sure');b.innerHTML=ic('trash',18)});t.classList.add('sure');t.textContent='Delete';break}
    {const p=D.p;if(DB.photos[p])delete DB.photos[p];else if(!delQ().includes(p))delQ().push(p);delete DB.tree[p];delete PHOTOS[p];UI.tlIdx=null;persist();flushSoon(300);openSheet(bodyAllSheet(),bodyAllSheet);render();toast0('Photo deleted.')}break;
-  case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg');im.style.display='none';im.src='';$('#f_phrm').style.display='none';$('#f_phpick').textContent='Add photo'}break;
+  case 'phRemove':foodPhoto='remove';{const im=$('#f_phimg'),rb=$('#f_phrm');if(im){im.style.display='none';im.src=''}if(rb)rb.style.display='none'}break;
   case 'phView':{const src=t.getAttribute('src');if(!src||$('#phv'))break;const full=document.createElement('div');full.id='phv';full.innerHTML='<img src="'+esc(src)+'" alt="">';full.addEventListener('click',()=>phvClose());document.body.appendChild(full);navPush({l:'photo'});break}
   case 'foodSave':{
    document.querySelectorAll('#sheet .ferr').forEach(e=>e.remove());
@@ -3790,7 +4000,6 @@ document.addEventListener('click',async e=>{
    const id=D.id||uid();
    const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
    if(foodPhoto==='remove')delete item.photo;
-   else if(foodPhoto){const p='data/photos/'+UI.date+'/'+id+'.jpg';DB.photos[p]=foodPhoto.split(',')[1];item.photo=p}
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':mutate(foodP(UI.date),{k:'foodDel',id:D.id});closeSheet();break;
   case 'wday':UI.wDay=D.id;UI.wPick=true;UI.wSel=T;render();break;
@@ -3922,10 +4131,6 @@ document.addEventListener('change',async e=>{
   for(const f of fl){try{const u=await shrinkImage(f);const p='data/progress/'+today()+'/'+uid()+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;n++}catch(x){}}
   persist();toast0(n+' photo'+(n===1?'':'s')+' saved. Ask Claude for a body fat estimate.');render();flushSoon(300);return;
  }
- if((e.target.id!=='f_photo'&&e.target.id!=='f_photo_cam')||!e.target.files||!e.target.files[0])return;
- try{foodPhoto=await shrinkImage(e.target.files[0]);const im=$('#f_phimg');im.src=foodPhoto;im.style.display='';$('#f_phrm').style.display='';$('#f_phpick').textContent='Change photo'}
- catch(x){toast('Could not read that photo.')}
- e.target.value='';
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
 document.addEventListener('change',e=>{if(e.target.id==='s_rest'){let v=Math.round(num(e.target.value));if(!(v>=15))v=0;v=Math.min(600,v);e.target.value=v||'';mutate(P_PROFILE,{k:'merge',data:{restDefault:v}},{delay:300});return}
