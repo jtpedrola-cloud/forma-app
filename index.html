@@ -25,7 +25,9 @@
  --ok:#4d6a00;--okbg:#e8f5b4;--oktx:#3d5300;--okin:#f4f8e0;--okline:#b8d65a;--warn:#b45309;--warnline:#fcd34d;--bad:#dc2626;--badbg:#fee2e2;--badtx:#b91c1c;--badline:#fca5a5}
 :root[data-theme="ember"] .card,:root[data-theme="ember"] .sec{box-shadow:none}
 :root[data-theme="daylight"] .card,:root[data-theme="daylight"] .sec{box-shadow:0 1px 2px rgba(15,23,42,.05)}
-.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pgi{position:relative}.pgdel{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}.pgdel.sure{width:auto;padding:0 10px;background:var(--bad,#e11d48)}.pg img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:10px;background:var(--inset);display:block}.pgi img.pick{outline:3px solid var(--acc);outline-offset:-3px}.pgn{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:13px;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;pointer-events:none}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pgi{position:relative}.pgdel{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:17px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}.pgdel.sure{width:auto;padding:0 10px;background:var(--bad,#e11d48)}.phsk{background:linear-gradient(100deg,var(--inset) 30%,var(--card2) 50%,var(--inset) 70%);background-size:200% 100%;animation:phsk 1.3s linear infinite;border-radius:12px;display:block}@keyframes phsk{to{background-position:-200% 0}}
+.pg .phsk,.cmp .phsk{width:100%;aspect-ratio:3/4;border-radius:10px}.phsk.ph{width:44px;height:44px;border-radius:10px;flex:none}.phsk.phbig{width:100%;height:180px;margin-bottom:8px}.phsk.tlimg{width:100%;aspect-ratio:3/4}.ovph .phsk{position:absolute;inset:0;border-radius:0}
+.pg img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:10px;background:var(--inset);display:block}.pgi img.pick{outline:3px solid var(--acc);outline-offset:-3px}.pgn{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:13px;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;pointer-events:none}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmp.tlgrid{grid-template-columns:repeat(3,1fr);gap:6px}.cmp img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:12px;background:var(--inset);display:block}.cmp .xs{text-align:center;margin-top:4px}
 .bfbar{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),var(--warn) 60%,var(--bad));margin:14px 0 18px;opacity:.85}
 .bfbar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--txt);transform:translateX(-50%)}
@@ -947,7 +949,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='aad76e73c91b11b5bd3e21361894aadca86815cc';let verChecked=0;
+const BUILD='13947bea24039a67febb7a6831e9eec626ca17d1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1115,6 +1117,11 @@ function shrinkImage(file){
    c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.8))};
   img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('bad image'))};img.src=u});
 }
+/* Photo or placeholder: while a photo is still downloading, show a shimmering box in its place instead of the browser's
+   broken-image icon. photoURL() re-renders when the file arrives, which swaps the box for the real image. */
+function pimg(p,attrs){attrs=attrs||'';const u=photoURL(p);if(u)return `<img src="${esc(u)}" ${attrs}>`;
+ const cls=(attrs.match(/class="([^"]*)"/)||[])[1]||'';const rest=attrs.replace(/class="[^"]*"/,'').replace(/data-act="[^"]*"/,'').replace(/loading="[^"]*"/,'');
+ return `<div class="phsk ${cls}" ${rest}></div>`}
 function photoURL(p){
  if(!p)return '';
  if(PHOTOS[p])return PHOTOS[p];
@@ -1498,14 +1505,14 @@ function eatView(){
  <div class="mnav wn dnav" style="margin-top:24px"><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',18)}</button><div class="wnt"><b>${d===today()?'Today, ':''}${fmtShort(d)}</b></div><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day">${ic('right',18)}</button></div>
  ${habitsBlock(d)}
  <section class="vs"><button class="wte" data-act="guideOpen"><span class="sp"><b style="font-weight:600">${E.learn}</b><span class="s15 mut">${E.learnSub}</span></span>${ic('right',18)}</button></section>
- <section class="vs" id="addblk"><div class="rw"><div class="lbl sp">${E.journal}</div><button class="lnk" data-act="snapPick">${E.snap}</button></div>${jr.length?`<div class="jg">${jr.map(({d:dd,i})=>`<button data-act="jView" data-d="${dd}" data-id="${esc(i.id)}" aria-label="Meal photo, ${fmtShort(dd)}">${i.photo?`<img src="${esc(photoURL(i.photo))}" alt="" loading="lazy">`:`<em class="jt">${esc(i.name)}</em>`}<span>${fmtShort(dd)}</span></button>`).join('')}</div>`:`<div class="s15 mut">${E.journalEmpty}</div>`}</section></div>`+logFab();
+ <section class="vs" id="addblk"><div class="rw"><div class="lbl sp">${E.journal}</div><button class="lnk" data-act="snapPick">${E.snap}</button></div>${jr.length?`<div class="jg">${jr.map(({d:dd,i})=>`<button data-act="jView" data-d="${dd}" data-id="${esc(i.id)}" aria-label="Meal photo, ${fmtShort(dd)}">${i.photo?`${pimg(i.photo,`alt="" loading="lazy"`)}`:`<em class="jt">${esc(i.name)}</em>`}<span>${fmtShort(dd)}</span></button>`).join('')}</div>`:`<div class="s15 mut">${E.journalEmpty}</div>`}</section></div>`+logFab();
 }
 function guideSheet(){
  const G=SC().guide,k=guideKey(),sec=o=>`<div class="gh">${o.title}</div>${o.items.map(i=>`<div class="gi2"><b>${i.n}</b><span>${i.s}</span></div>`).join('')}`;
  return `<div class="gl"><h2>${SC().eat.learn}</h2><div class="s15" style="color:var(--soft)">${G.intro[k]}</div><div class="gh">${G.plateTitle}</div>${G.plate.map(i=>`<div class="gi2"><b>${i.h}</b><span>${i.p}</span></div>`).join('')}<div class="gp2" style="margin-top:12px">${G.goal[k]}</div>${sec(G.protein)}${sec(G.veg)}${sec(G.carbs)}${sec(G.cheap)}${sec(G.out)}${sec(G.limit)}</div>`}
 function habSave(list){mutate(P_PROFILE,{k:'merge',data:{habits:list}},{delay:300});softRender()}
 function journalSheet(dd,id){const it=((view(foodP(dd))||{}).items||[]).find(x=>x.id===id);if(!it)return '';
- return `<h2>${SC().eat.journalOne}</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(dd)}</div>${it.photo?`<img class="phbig" src="${esc(photoURL(it.photo))}" alt="" data-act="phView">`:`<div class="s15" style="margin:8px 0">${esc(it.name)}</div>`}<button class="btn red full" style="margin-top:14px" data-act="jDel" data-d="${dd}" data-id="${esc(id)}">${SC().eat.journalDel}</button>`}
+ return `<h2>${SC().eat.journalOne}</h2><div class="xs mut" style="margin:-6px 0 10px">${fmtLong(dd)}</div>${it.photo?`${pimg(it.photo,`class="phbig"  alt="" data-act="phView"`)}`:`<div class="s15" style="margin:8px 0">${esc(it.name)}</div>`}<button class="btn red full" style="margin-top:14px" data-act="jDel" data-d="${dd}" data-id="${esc(id)}">${SC().eat.journalDel}</button>`}
 /* Snap a meal in simple mode: the photo is kept as a journal entry with no numbers. The AI is never called. */
 async function journalSnap(file){
  let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
@@ -1603,7 +1610,7 @@ function foodView(){
  const secs=ml.filter(k=>items.some(i=>mealNo(i)===k)).map(k=>{
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   return `<details class="sec" data-m="${k}" ${open?'open':''}><summary><span class="t">${l}</span><span class="mk2">${fmtN(mt.kcal)} kcal</span></summary><button class="add" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button>
-  ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`<img class="ph" src="${esc(photoURL(i.photo))}" alt="">`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button></details>`}).join('');
+  ${its.map(i=>`<button class="item" data-act="foodEdit" data-id="${esc(i.id)}">${i.photo?`${pimg(i.photo,`class="ph"  alt=""`)}`:''}<div class="sp"><div class="n">${esc(i.name)}</div><div class="xs mut">${esc([i.amount,rnd(num(i.protein))+' g protein'].filter(Boolean).join(', '))}</div></div><div class="r">${fmtN(num(i.kcal))}</div></button>`).join('')}<button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button></details>`}).join('');
  const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v),skv=kcalVerdict(t.kcal,T.kcal),sIn=k=>rangeState(k,t[k],T).in,sChip=(c,l,k,g)=>`<span class="chip ${c}">${l} ${mv(t[k],g)}</span>`;
  const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${fmtN(big)}</b>${skv.in?'<span>In range</span>':`<span class="mut">${isCons?skv.l+' '+skv.v:rem<0?'Over':'cal left'}</span>`}${sChip('p','P','protein',T.protein)}${sChip('c','C','carbs',T.carbs)}${sChip('f','F','fat',T.fat)}</div></button>`;
  return fh+strip+`<div class="v1"><div class="dnav2"><span class="dd">${d===today()?'Today, ':''}${fmtShort(d)}</span><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day"${d===today()?' disabled':''}>${ic('right',20)}</button></div>
@@ -2343,7 +2350,7 @@ const bfCard=()=>bodyCard('bf'),photosCard=()=>bodyCard('photos');
 
 const poseOf=p=>{const m=p.match(/\/(front|side|back)-[^/]*$/);return m?m[1]:'other'};
 function tlEntries(ph,pose){const out=[];ph.forEach(x=>{if(pose==='all'){const all=dayLatest(x.ps);if(all.length)out.push({d:x.d,p:all[0],all});return}const ps=x.ps.filter(p=>poseOf(p)===pose);if(ps.length)out.push({d:x.d,p:ps[ps.length-1]})});return out}
-const tlGrid=e=>e.all.map(p=>`<div><img src="${esc(photoURL(p))}" alt="" data-act="phView"><div class="xs mut">${poseOf(p)}</div></div>`).join('');
+const tlGrid=e=>e.all.map(p=>`<div>${pimg(p,`alt="" data-act="phView"`)}<div class="xs mut">${poseOf(p)}</div></div>`).join('');
 function timelineHTML(ph){
  const have=['front','side','back'].filter(z=>ph.some(x=>x.ps.some(p=>poseOf(p)===z)));
  if(!UI.tlPose||(UI.tlPose!=='all'&&!have.includes(UI.tlPose)))UI.tlPose='all';
@@ -2352,7 +2359,7 @@ function timelineHTML(ph){
  es.forEach(e=>(e.all||[e.p]).forEach(photoURL));
  const e=es[UI.tlIdx];
  return `${have.length>1?`<div class="seg t2 tlt">${['all'].concat(have).map(z=>`<button data-act="tlPose" data-p="${z}" class="${UI.tlPose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>`:''}
- ${e.all&&e.all.length>1?`<div class="cmp tlgrid" id="tl_grid">${tlGrid(e)}</div>`:`<img id="tl_img" class="tlimg" src="${esc(photoURL(e.p))}" alt="" data-act="phView">`}
+ ${e.all&&e.all.length>1?`<div class="cmp tlgrid" id="tl_grid">${tlGrid(e)}</div>`:`${pimg(e.p,`id="tl_img" class="tlimg"  alt="" data-act="phView"`)}`}
  <div class="rw tlr"><div class="sp"><div class="t17" id="tl_d">${tlLabel(e)}</div><div class="xs mut" id="tl_m">${tlMeta(e)}</div></div></div>
  ${es.length>1?`<input type="range" id="tl_rng" min="0" max="${es.length-1}" value="${UI.tlIdx}" aria-label="Scroll through photos by date"><div class="row xs mut"><span class="sp">${fmtShort(es[0].d)}</span><span>${fmtShort(es[es.length-1].d)}</span></div>`:''}`;
 }
@@ -2436,7 +2443,7 @@ function cmpDefault(){const ph=progPhotos();if(ph.length<2)return [];const f=x=>
 function bodyCmpSheet(){
  const ph=progPhotos().slice().reverse(),h=bfHistory(),sel=(UI.cmpSel||[]).slice().sort((a,b)=>a<b?-1:a>b?1:0);
  const dOf=p=>(p.match(/^data\/progress\/(\d{4}-\d{2}-\d{2})\//)||[])[1]||'',bfOf=d=>h.find(x=>x.d===d);
- const side=p=>{const d=dOf(p),w=logOf(d).weight,b=bfOf(d);return `<div><img src="${esc(photoURL(p))}" alt="" data-act="phView"><div class="xs" style="margin-top:6px"><b>${fmtShort(d)}</b>${d===today()?' (today)':''}</div><div class="xs mut">${[w!=null?fwu(w):'',b?'~'+b.pct+'% body fat':''].filter(Boolean).join(', ')||'no weight or estimate'}</div></div>`};
+ const side=p=>{const d=dOf(p),w=logOf(d).weight,b=bfOf(d);return `<div>${pimg(p,`alt="" data-act="phView"`)}<div class="xs" style="margin-top:6px"><b>${fmtShort(d)}</b>${d===today()?' (today)':''}</div><div class="xs mut">${[w!=null?fwu(w):'',b?'~'+b.pct+'% body fat':''].filter(Boolean).join(', ')||'no weight or estimate'}</div></div>`};
  let top='';
  if(sel.length===2){
   const [a,b]=sel,da=dOf(a),db=dOf(b),days=Math.round((parseD(db)-parseD(da))/864e5),wa=logOf(da).weight,wb=logOf(db).weight,ba=bfOf(da),bb=bfOf(db);
@@ -2444,12 +2451,12 @@ function bodyCmpSheet(){
   top=`<div class="cmp">${side(a)}${side(b)}</div><div class="row" style="margin:8px 0 14px"><span class="sm mut sp">${diff}</span><button class="btn ghost sm" data-act="cmpClear">Clear</button></div>`;
  }else top=`<div class="sm mut" style="margin:6px 0 14px">${sel.length?'Pick one more photo.':'Tap two photos to see them side by side.'}</div>`;
  const n=p=>sel.indexOf(p);
- return `<h2>Compare photos</h2>${top}${ph.map(x=>{const b=bfOf(x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<div class="pgi"><img src="${esc(photoURL(p))}" class="${n(p)>=0?'pick':''}" alt="" data-act="cmpPick" data-p="${esc(p)}">${n(p)>=0?`<span class="pgn">${n(p)+1}</span>`:''}</div>`).join('')}</div>`}).join('')}
+ return `<h2>Compare photos</h2>${top}${ph.map(x=>{const b=bfOf(x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<div class="pgi">${pimg(p,`class="${n(p)>=0?'pick':''}" alt="" data-act="cmpPick" data-p="${esc(p)}"`)}${n(p)>=0?`<span class="pgn">${n(p)+1}</span>`:''}</div>`).join('')}</div>`}).join('')}
  ${ph.length?'<div class="xs mut" style="margin-top:12px">Tap a picked photo to unpick it. Picking a third replaces the older pick. Tap a big photo to see it full screen.</div>':'<div class="sm mut">No progress photos.</div>'}`;
 }
 function bodyAllSheet(){
  const ph=progPhotos().slice().reverse(),h=bfHistory();
- return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<div class="pgi"><img src="${esc(photoURL(p))}" alt="" data-act="phView"><button class="pgdel" data-act="phDel" data-p="${esc(p)}" aria-label="Delete photo">${ic('trash',18)}</button></div>`).join('')}</div>`}).join('')}
+ return `<h2>Progress photos</h2>${ph.map(x=>{const b=h.find(y=>y.d===x.d);return `<div class="row" style="margin:12px 0 6px"><b class="sm sp">${fmtLong(x.d)}</b>${b?`<span class="chip">~${b.pct}%</span>`:''}</div><div class="pg">${x.ps.map(p=>`<div class="pgi">${pimg(p,`alt="" data-act="phView"`)}<button class="pgdel" data-act="phDel" data-p="${esc(p)}" aria-label="Delete photo">${ic('trash',18)}</button></div>`).join('')}</div>`}).join('')}
  ${ph.length?'':'<div class="sm mut">No progress photos.</div>'}<div class="xs mut" style="margin-top:12px">Tap the bin on a photo, then tap again to delete it.</div>`;
 }
 
