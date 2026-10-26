@@ -1059,7 +1059,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3ee974c30d13329fbbe2afed32dca67f1c8e735c';let verChecked=0;
+const BUILD='0d36088ef4b7e30b3a499a2fa80aaf5037d10506';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1701,7 +1701,7 @@ function barChart2(vals,labels,target,what,hit){
  if(target){const y=top+ch-target/mx*ch;g+=`<line x1="0" x2="${W-rt+6}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--faint)" stroke-width="1"/><text x="${W}" y="${(y+4).toFixed(1)}" font-size="12" text-anchor="end" style="fill:var(--mut)">${fmtN(target)}</text>`}
  return g+'</svg>'}
 function insightsView(){
- const pr=profile(),T=today(),sm=smartNow(),cv=[],cl=[],goal=pr.goalRate||0.7;let logged=0;
+ const pr=profile(),T=today(),sm=smartNow(),cv=[],cl=[],goal=pr.goalRate!=null?pr.goalRate:0.7;let logged=0;
  for(let i=6;i>=0;i--){const d=addDays(T,-i),k=totals(d).kcal;cv.push(k);cl.push('SMTWTFS'[parseD(d).getDay()]);if(k>0)logged++}
  const stat=gstat;
  const rate=sm.rate==null?'':fw(Math.abs(sm.rate),2)+' '+wU();
@@ -1710,7 +1710,7 @@ function insightsView(){
  <section class="vs"><div class="g22">${stat(sm.eatDays||sm.weighIns?fmtN(sm.tdee):'-','kcal','Maintenance')}${stat(sm.trendNow?fw(sm.trendNow):'-',wU(),'Weight trend')}${stat(sm.avgIn?fmtN(sm.avgIn):'-','kcal','Average intake')}${stat(sm.status==='collecting'?'-':fmtN(sm.suggested),'kcal','Suggested target')}</div>
  <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="ckOpen">Weekly check-in</button><button class="lnk l0" data-act="calcOpen">How this is calculated</button></section>`}
 function calcSheet(){
- const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
+ const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate!=null?pr.goalRate:0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
  let logged=0,defSum=0;for(let i=6;i>=0;i--){const d=addDays(T,-i),k=totals(d).kcal;if(k>0){logged++;defSum+=dayBurn(d)-k}}
  const lastCk=ckLast(),kgWk=(sm.tdee-TG(pr).kcal)*7/7700;
  const row=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`;
@@ -1735,7 +1735,7 @@ function calcSheet(){
 function ckNow(){
  const pr=profile(),T=today(),tg=TG(pr),cur=tg.kcal,goalRate=pr.goalRate!=null?pr.goalRate:0.7,sm=smartNow(goalRate);
  const next=sm.status==='collecting'?cur:FormaSmart.nextTarget(cur,sm.suggested);
- const tgt={kcal:next,protein:tg.protein,carbs:Math.max(80,Math.round((next-tg.protein*4-tg.fat*9)/4)),fat:tg.fat};
+ const tgt={kcal:next,protein:tg.protein,carbs:next===cur?tg.carbs:Math.max(80,tg.carbs+Math.round((next-cur)/4)),fat:tg.fat};/* the typed targets are the base: carbs take only the change, so a hand-edited carb number survives a Keep */
  const rec={date:T,weight:latestWeight(),trendKg:sm.trendNow&&+sm.trendNow.toFixed(2),rateKgWk:sm.rate==null?null:+sm.rate.toFixed(2),goalRate,avgIntake:sm.avgIn&&Math.round(sm.avgIn),loggedDays:sm.eatDays,weighIns:sm.weighIns,measured:sm.measured&&Math.round(sm.measured),confidence:+sm.conf.toFixed(2),formula:Math.round(sm.formula),tdee:Math.round(sm.tdee),suggested:sm.suggested,status:sm.status,prevTarget:cur,target:next};
  return {sm,rec,tgt,cur,next,goalRate};
 }
@@ -2845,10 +2845,10 @@ function smartNow(gr){
  for(let i=28;i>=1;i--){const d=addDays(T,-i),f=food(d).items;days.push({d,kcal:f.reduce((a,x)=>a+num(x.kcal),0),logged:f.length>0,weight:logOf(d).weight})}
  const liftDays=Object.values(program().weekdays).filter(x=>x!=='rest').length;
  const formula=FormaSmart.weekFormula(latestWeight(),bf?bf.pct:null,pr.body,pr.stepGoal,liftDays)+FormaSmart.extraKcal(pr.intake&&pr.intake.answers);
- return FormaSmart.smart({days,formula,targetKcal:TG(pr).kcal,goalRate:gr!=null?gr:(pr.goalRate||0.7)});
+ return FormaSmart.smart({days,formula,targetKcal:TG(pr).kcal,goalRate:gr!=null?gr:(pr.goalRate!=null?pr.goalRate:0.7)});
 }
 function maintCard(){
- const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate||0.7;
+ const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate!=null?pr.goalRate:0.7;
  const train=maintFor(sg,60),rest=maintFor(sg,0);
  const fmt=v=>rnd(v).toLocaleString('en-US'),pct=Math.round(sm.conf*100);
  const row=(l,v,sub)=>`<div class="kv"><span class="mut">${l}${sub?`<div class="xs" style="color:var(--mut)">${sub}</div>`:''}</span><span>${v}</span></div>`;
@@ -3026,6 +3026,7 @@ const OC=()=>FormaCopy.intake,cf=(s,v)=>FormaCopy.fill(s,v);
 const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 /* One idea per screen. Some screens are skipped: pace (only when losing or gaining) and the photo (when redoing the questions). */
 function inScreens(){const a=INT.a,o=['hello','you','size','bf'];
+ if(INT.known)return ['hello','known'];
  if(!INT.redo)o.push('photo');
  o.push('goal','track');if(a.goal==='lose'||a.goal==='build')o.push('pace');
  o.push('work','steps','level','days','focus','equipment','meals','avoid','summary');return o}
@@ -3038,7 +3039,7 @@ function intakeDefaults(){
   experience:'under1',trainDays:trainDays.length?trainDays:[1,3,5],minutes:60,focus:[],injuries:'',equipPreset:'gym',equipment:FormaPlan.PRESETS.gym.slice(),gym:(gymTiles()||GT_ALL).slice(),
   meals:3,habits:[],avoid:'',track:'',replaceProgram:!(P.days&&P.days.length)},ik.answers||{},{date:today()},pr.track?{track:pr.track}:{});
 }
-function intakeOpen(){INT.step=0;INT.gymQ='';INT.photo=null;INT.redo=!!profile().intake;INT.a=intakeDefaults();INT.a.equipment=gymEquip(INT.a.gym);let el=$('#intake');if(!el){el=document.createElement('div');el.id='intake';document.body.appendChild(el)}document.body.style.overflow='hidden';navPush({l:'intake'});intakeUI()}
+function intakeOpen(){INT.step=0;INT.known=false;INT.kOpen=false;INT.gymQ='';INT.photo=null;INT.redo=!!profile().intake;INT.a=intakeDefaults();INT.a.equipment=gymEquip(INT.a.gym);let el=$('#intake');if(!el){el=document.createElement('div');el.id='intake';document.body.appendChild(el)}document.body.style.overflow='hidden';navPush({l:'intake'});intakeUI()}
 function intakeClose(fromPop){const el=$('#intake');if(!el)return;el.remove();document.body.style.overflow='';if(fromPop!==true)navPop();render()}
 function intakeBF(){const a=INT.a;if(a.bfMode==='photo'&&latestBF())return latestBF().pct;if(a.bfMode==='unsure')return FormaPlan.bfFromBMI(a.sex,+a.age||30,+a.heightCm||170,+a.weight);return a.bf}
 function intakeCalc(){const a=INT.a;const x=Object.assign({},a,{age:+a.age,heightCm:+a.heightCm,weight:+a.weight,bf:intakeBF()});return {t:FormaPlan.targets(x),p:FormaPlan.program(x,exdb()),x}}
@@ -3065,7 +3066,17 @@ function inFirstWorkout(plan){const S=OC().summary,f=nextPlanDay(plan);
  return f&&{id:f.id,name:f.name,when:f.n===0?S.today:f.n===1?S.tomorrow:S.weekdays[parseD(f.d).getDay()]}}
 function intakeStep(){
  const a=INT.a,st=inCur(),C=OC();
- if(st==='hello')return `<div class="hello"><h2>${INT.redo?C.hello.titleAgain:C.hello.title}</h2><div class="lead">${INT.redo?C.hello.leadAgain:C.hello.lead}</div></div>`;
+ if(st==='hello')return `<div class="hello"><h2>${INT.redo?C.hello.titleAgain:C.hello.title}</h2><div class="lead">${INT.redo?C.hello.leadAgain:C.hello.lead}</div>${INT.redo?'':`<button class="btn ghost full" style="margin-top:32px" data-act="inKnown">${C.hello.known}</button>`}</div>`;
+ if(st==='known'){const K=C.known,lb=a.units==='lb',ft=a.hUnit==='ft',un=lb?'lb':'kg',pc=knownPace(),ti=ft&&a.heightCm!==''&&a.heightCm!=null?Math.round(+a.heightCm/2.54):null,fld=(id,l,v,ph)=>`<div class="fld"><label for="in_${id}">${l}</label><input id="in_${id}" inputmode="numeric" value="${v==null?'':esc(String(v))}" placeholder="e.g. ${ph}"></div>`;
+  return inHead('known')+`<div class="qlabel">${K.goal}</div><div class="pills">${K.goals.map(([v,l])=>pill('goal',v,l,a.goal===v)).join('')}</div>
+  ${a.goal==='maintain'?'':`<div class="qlabel">${K.pace}</div><div class="pills">${(lb?[0.5,1,1.5,2]:[0.25,0.5,0.75,1]).map(v=>{const kg=+(lb?v*KG:v).toFixed(4);return pill('kgWk',kg,v+' '+un,Math.abs(Math.abs(pc)-kg)<0.002)}).join('')}</div>`}
+  <div class="g2" style="margin-top:14px"><div><div class="qlabel">${C.size.weightIn}</div><div class="pills">${pill('units','kg','kg',!lb)}${pill('units','lb','lb',lb)}</div></div></div>
+  <div class="fld"><label for="${lb?'in_weightLb':'in_weight'}">${cf(K.weight,{unit:un})}</label><input id="${lb?'in_weightLb':'in_weight'}" inputmode="decimal" value="${lb?(a.weight!==''&&a.weight!=null?+(+a.weight/KG).toFixed(1):''):esc(a.weight)}" placeholder="${lb?'e.g. 175':'e.g. 80'}"></div>
+  ${fld('kcal',K.kcal,a.kcal,'2,000')}${fld('protein',K.protein,a.protein,150)}${fld('carbs',K.carbs,a.carbs,200)}${fld('fat',K.fat,a.fat,65)}${fld('stepGoal',K.steps,a.stepGoal,'10,000')}
+  <details class="inmore" id="in_more" style="margin-top:12px"${INT.kOpen?' open':''}><summary>${K.more}</summary><div class="qlabel">${K.sex}</div><div class="pills">${pill('sex','male',C.you.male,a.sex==='male')}${pill('sex','female',C.you.female,a.sex==='female')}</div>
+  <div class="fld" style="margin-top:14px"><label for="in_age">${K.age}</label><input id="in_age" inputmode="numeric" value="${esc(a.age)}" placeholder="e.g. ${C.you.agePh}"></div>
+  <div class="pills" style="margin-top:8px">${pill('hUnit','cm','cm',!ft)}${pill('hUnit','ft','ft',ft)}</div>
+  ${ft?`<div class="fld"><label>${K.heightFt}</label><div class="row" style="gap:6px"><input id="in_hft" inputmode="numeric" value="${ti!=null?Math.floor(ti/12):''}" placeholder="e.g. 5" aria-label="${C.size.feet}" style="flex:1;min-width:0"><span class="mut sm">ft</span><input id="in_hin" inputmode="numeric" value="${ti!=null?ti%12:''}" placeholder="e.g. 9" aria-label="${C.size.inches}" style="flex:1;min-width:0"><span class="mut sm">in</span></div></div>`:`<div class="fld"><label for="in_heightCm">${K.height}</label><input id="in_heightCm" inputmode="decimal" value="${esc(a.heightCm)}" placeholder="e.g. 170"></div>`}</details>`}
  if(st==='you')return inHead('you')+`<div class="qlabel">${C.you.sex}</div><div class="pills">${pill('sex','male',C.you.male,a.sex==='male')}${pill('sex','female',C.you.female,a.sex==='female')}</div>
   <div class="fld" style="margin-top:14px"><label>${C.you.age}</label><input id="in_age" inputmode="numeric" value="${esc(a.age)}" placeholder="e.g. ${C.you.agePh}"></div>`;
  if(st==='size'){const lb=a.units==='lb',ft=a.hUnit==='ft',ti=ft&&a.heightCm!==''&&a.heightCm!=null?Math.round(+a.heightCm/2.54):null,hft=ti!=null?Math.floor(ti/12):'',hin=ti!=null?ti%12:'',S=C.size;
@@ -3121,7 +3132,7 @@ function intakeStep(){
 }
 function intakeUI(){
  const el=$('#intake');if(!el)return;const sc=inScreens(),n=sc.length,st=sc[INT.step],last=INT.step===n-1,C=OC();
- const nextLbl=last?(LS.get('forma.tourSeen',0)?C.summary.finish:C.summary.finishTour):C[sc[INT.step+1]].to;
+ const nextLbl=INT.known&&last?C.known.save:last?(LS.get('forma.tourSeen',0)?C.summary.finish:C.summary.finishTour):C[sc[INT.step+1]].to||'';
  el.innerHTML=`<div class="ih"><div class="row"><button class="ib" data-act="inClose" aria-label="${C.nav.close}">${ic('x',22)}</button><div class="sp"></div><span style="width:44px"></span></div><div class="prog" role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${INT.step+1}"><i style="width:${(INT.step+1)/n*100}%"></i></div></div>
  <div class="ib2" id="in_body">${intakeStep()}</div>
  <div class="if">${INT.step?`<button class="btn ghost" data-act="inBack">${C.nav.back}</button>`:''}${st==='equipment'?`<span class="xs mut sp" style="text-align:center" id="gym_n">${cf(C.equipment.count,{n:INT.a.gym.length,total:GT_ALL.length})}</span><button class="btn" data-act="inNext">${nextLbl}</button>`:st==='photo'&&!INT.photo?`<button class="btn ghost sp" data-act="inSkipPhoto">${C.photo.skip}</button>`:`<button class="btn sp" data-act="${last?'inSave':'inNext'}">${nextLbl}</button>`}</div>`;
@@ -3130,8 +3141,20 @@ function intakeUI(){
 function intakeRead(){intakeRead0();const ft=$('#in_hft'),inn=$('#in_hin'),lb=$('#in_weightLb');
  if(ft)INT.a.heightCm=(ft.value.trim()===''&&(!inn||inn.value.trim()===''))?'':Math.round((+ft.value||0)*30.48+(inn?+inn.value||0:0)*2.54);
  if(lb)INT.a.weight=lb.value.trim()===''?'':+(num(lb.value)*KG).toFixed(1)}
-function intakeRead0(){['age','heightCm','weight','injuries','avoid'].forEach(k=>{const i=$('#in_'+k);if(i)INT.a[k]=i.value.trim()})}
+/* "I know my numbers": the planned change a week in kg (positive loses, negative gains), with a default per goal. */
+function knownPace(){const a=INT.a;if(a.goal==='maintain')return 0;const m=a.kgWk!=null&&a.kgWk!==''?Math.abs(+a.kgWk):a.goal==='build'?0.25:0.5;return a.goal==='build'?-m:m}
+function knownCheck(){const a=INT.a,E=OC().known.err,s=k=>String(a[k]==null?'':a[k]).trim(),n=k=>{const v=parseInt(s(k).replace(/[^\d]/g,''),10);return isNaN(v)?-1:v};
+ const bad=(k,m)=>{INT.errKey=k;return m};
+ if(!(n('kcal')>=800&&n('kcal')<=6000))return bad('kcal',E.kcal);
+ if(!(n('protein')>=1&&n('protein')<=400))return bad('protein',E.protein);
+ if(!(n('carbs')>=0&&n('carbs')<=800))return bad('carbs',E.carbs);
+ if(!(n('fat')>=0&&n('fat')<=300))return bad('fat',E.fat);
+ if(!(n('stepGoal')>=1&&n('stepGoal')<=50000))return bad('stepGoal',E.steps);
+ if(!(+a.weight>=30&&+a.weight<=300))return bad(a.units==='lb'?'weightLb':'weight',a.units==='lb'?OC().errors.weightLb:OC().errors.weightKg);
+ return ''}
+function intakeRead0(){['age','heightCm','weight','injuries','avoid','kcal','protein','carbs','fat','stepGoal'].forEach(k=>{const i=$('#in_'+k);if(i)INT.a[k]=i.value.trim()})}
 function intakeValid(){const a=INT.a,st=inCur(),E=OC().errors;
+ if(st==='known')return knownCheck();
  if(st==='you'&&!(+a.age>=13&&+a.age<=90))return E.age;
  if(st==='size'){if(!(+a.heightCm>=120&&+a.heightCm<=230))return E.height;if(!(+a.weight>=30&&+a.weight<=300))return a.units==='lb'?E.weightLb:E.weightKg}
  if(st==='bf'&&!a.bfMode)return OC().bf.err;
@@ -3141,7 +3164,7 @@ function intakeValid(){const a=INT.a,st=inCur(),E=OC().errors;
 const intakeFirst=()=>{const pr=profile(),P=program();return !(P.days&&P.days.length)&&!((pr.targets||{}).kcal)};
 /* Show why Next did nothing: one line under the field that needs fixing, and focus it. */
 function intakeErr(msg){const a=INT.a,st=inCur();document.querySelectorAll('#in_body .ierr').forEach(x=>x.remove());
- let f=null;if(st==='you')f=$('#in_age');
+ let f=null;if(st==='you')f=$('#in_age');else if(st==='known')f=$('#in_'+INT.errKey);
  else if(st==='size'){const h=!(+a.heightCm>=120&&+a.heightCm<=230);f=h?($('#in_heightCm')||$('#in_hft')):($('#in_weight')||$('#in_weightLb'))}
  const box=f?(f.closest('.fld')||f.parentNode):$('#bf_meta')||$('#in_body');
  const d=document.createElement('div');d.className='ierr';d.setAttribute('role','alert');d.textContent=msg;box.appendChild(d);
@@ -3158,6 +3181,19 @@ function intakeSave(){
   p.version=fmtLong(T);mutate(P_PROG,{k:'replace',doc:p},{quiet:true});UI.wDay=null}
  if(+a.weight)mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
  LS.set('forma.intakeSeen',1);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);flushSoon(300);intakeClose();toast0(OC().summary.saved);setTimeout(tourMaybe,900);if(SBS.firstRun){SBS.firstRun=false;setTimeout(learnAfterTour,1300)}
+}
+
+/* "I know my numbers": the typed targets are saved as they are. No plan maths, no program, no questionnaire answers
+   (so Set up my plan stays open for later). The check-in treats them as the base it moves from. */
+function intakeSaveKnown(){
+ const a=INT.a,T=today(),pr=profile(),n=k=>parseInt(String(a[k]).replace(/[^\d]/g,''),10),kg=knownPace(),shown=a.units==='lb'?Math.abs(kg)/KG:Math.abs(kg);
+ const data={track:'count',units:a.units==='lb'?'lb':'kg',hUnit:a.hUnit==='ft'?'ft':'cm',targets:{kcal:n('kcal'),protein:n('protein'),carbs:n('carbs'),fat:n('fat')},stepGoal:n('stepGoal'),goalRate:+kg.toFixed(3),
+  goal:a.goal==='maintain'?'Maintain':(a.goal==='build'?'Build muscle':'Lose fat')+', about '+(+shown.toFixed(2))+' '+(a.units==='lb'?'lb':'kg')+' a week'};
+ if(+a.age>=13&&+a.age<=90&&+a.heightCm>=120&&+a.heightCm<=230)data.body={sex:a.sex,age:+a.age,heightCm:+a.heightCm};
+ if(!pr.startWeight)data.startWeight=+a.weight;
+ mutate(P_PROFILE,{k:'merge',data},{quiet:true});
+ mutate(logP(T),{k:'weight',v:+(+a.weight).toFixed(1)},{quiet:true});
+ LS.set('forma.intakeSeen',1);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);flushSoon(300);intakeClose();toast0(OC().known.saved);setTimeout(tourMaybe,900);if(SBS.firstRun){SBS.firstRun=false;setTimeout(learnAfterTour,1300)}
 }
 
 /* ---------- Setup + settings ---------- */
@@ -3195,6 +3231,28 @@ async function setupSave(){
  LS.set('forma.cfg',cfg);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);render();refresh(true).then(()=>setTimeout(tourMaybe,300));
 }
 function notifState(){try{if(!window.Notification)return 'Not supported';const p=Notification.permission;return p==='granted'?'Allowed':p==='denied'?'Blocked':'Not asked'}catch(e){return 'Not supported'}}
+/* Daily targets in Settings, Data. Typed numbers are saved to profile.targets / stepGoal as they are; the weekly check-in
+   starts from them. The range under each label is the band the app already counts as on target (ranges()). */
+const TGT_LIM={kcal:[800,6000],protein:[1,400],carbs:[0,800],fat:[0,300],steps:[1,50000]};
+function tgtSub(k,T){const r=ranges(T)[k],TC=OC().targets;return cf(TC.range,{lo:fmtN(r.lo),hi:fmtN(r.hi),unit:k==='kcal'?'':' g'})}
+function tgtSum(T){const TC=OC().targets,n=Math.round(T.protein*4+T.carbs*4+T.fat*9),d=Math.abs(n-T.kcal);return d>=60?cf(TC.sums,{n:fmtN(n),diff:fmtN(d)+' kcal '+(n>T.kcal?'over':'under')+' your calories'}):''}
+function tgtBlock(pr){
+ const TC=OC().targets,T=TG(pr),has=!isSimple()&&pr.targets&&T.kcal!=null;
+ const row=(id,l,v,sub)=>`<div class="sctl"><span class="sp"><label for="t_${id}">${l}</label>${sub!=null?`<span class="xs mut" id="t_r_${id}" style="display:block">${sub}</span>`:''}</span><input id="t_${id}" inputmode="numeric" value="${fmtN(v)}"></div>`;
+ return `<div class="lbl" style="margin-top:20px">${TC.label}</div>
+ ${has?['kcal','protein','carbs','fat'].map(k=>row(k,TC[k],T[k],tgtSub(k,T))).join('')+`<div class="snote" id="t_sum">${tgtSum(T)}</div>`:''}
+ ${row('steps',TC.steps,pr.stepGoal||0,null)}
+ <div class="snote">${TC.note}</div>`}
+function tgtSave(el){
+ const id=el.id.slice(2),pr=profile();if(!pr)return;const TC=OC().targets,lim=TGT_LIM[id];if(!lim)return;
+ const raw=String(el.value).replace(/[^\d]/g,''),v=raw===''?NaN:parseInt(raw,10),old=id==='steps'?pr.stepGoal||0:TG(pr)[id];
+ if(!(v>=lim[0]&&v<=lim[1])){setErr(el,OC().known.err[id==='steps'?'steps':id]);return}
+ setErr(el,'');el.value=fmtN(v);
+ if(v===old)return;
+ if(id==='steps')mutate(P_PROFILE,{k:'merge',data:{stepGoal:v}},{delay:300});
+ else{const tg=Object.assign({},TG(pr),{[id]:v});mutate(P_PROFILE,{k:'merge',data:{targets:tg}},{delay:300});
+  ['kcal','protein','carbs','fat'].forEach(k=>{const e=$('#t_r_'+k);if(e)e.textContent=tgtSub(k,tg)});const sm=$('#t_sum');if(sm)sm.textContent=tgtSum(tg)}
+ render();toast0(TC.saved)}
 function settingsSheet(){
  const pr=profile(),cur=document.documentElement.dataset.theme;
  const sec=(id,title,body)=>`<section class="ss" id="set_${id}"><div class="lbl">${title}</div>${body}</section>`;
@@ -3216,8 +3274,7 @@ function settingsSheet(){
  <div class="snote">Phones can silence a web app in the background.</div>`;
  const data=`${row('exportGo','Export my data','A zip with every data file, plus food.csv and workouts.csv you can open in a spreadsheet')}
   <button class="srow" data-act="force"><span class="sp">Force refresh<span class="xs">Reload everything from your account</span></span></button>
- ${pr?`${isSimple()||!(pr.targets&&TG(pr).kcal!=null)?'':`<div class="kv"><span class="mut">Calories</span><span>${TG(pr).kcal}</span></div><div class="kv"><span class="mut">Protein / carbs / fat</span><span>${pr.targets.protein} / ${pr.targets.carbs} / ${pr.targets.fat} g</span></div>`}<div class="kv"><span class="mut">Step goal</span><span>${(pr.stepGoal||0).toLocaleString('en-US')}</span></div>
- <div class="snote">${SBS.user?'Targets are set when you set up your plan. To change them, redo the setup in Account.':'The weekly check-in adjusts calories when you tap Apply. To set them yourself, redo the setup in Account.'}</div>`:''}
+ ${pr?tgtBlock(pr):''}
 `;
 
  const personal=personalMode()?`<div class="snote" style="margin-top:0">Personal mode keeps your data in your own GitHub repo instead of an account.</div>
@@ -3729,7 +3786,7 @@ window.addEventListener('popstate',e=>{
  if($('#phv')){phvClose(true);return}
  if(UI.sheet){closeSheet(true);return}
  if($('#cam')){camClose(true);return}
- if($('#intake')){if(INT.step>0){INT.step--;navPush({l:'intake'});intakeUI()}else intakeClose(true);return}
+ if($('#intake')){if(INT.step>0){INT.step--;if(!INT.step)INT.known=false;navPush({l:'intake'});intakeUI()}else intakeClose(true);return}
  if($('#hist')){histClose(true);return}
  if(UI.sheet){closeSheet(true);return}
  if($('#learn')){if(LRN.view!=='home'){LRN.view='home';navPush({l:'learn'});learnDraw();return}learnClose(true);return}
@@ -4162,7 +4219,7 @@ document.addEventListener('click',async e=>{
   case 'inClose':intakeClose();break;
   case 'inDismiss':LS.set('forma.intakeSeen',1);render();break;
   case 'inSet':{intakeRead();const a=INT.a,k=D.k,raw=D.v,v=/^-?[\d.]+$/.test(raw)?+raw:raw;
-   a[k]=v;if(k==='goal')a.rateShare=null;if(k==='sex'&&a.bfMode==='pick'){a.bfMode='';a.bf=null;delete a.bfRange}
+   a[k]=v;if(k==='goal'){a.rateShare=null;a.kgWk=null}if(k==='sex'&&a.bfMode==='pick'){a.bfMode='';a.bf=null;delete a.bfRange}
    const y=$('#in_body').scrollTop;intakeUI();$('#in_body').scrollTop=y;break}
   case 'bfPick':bfPick(+D.i);break;
   case 'inCam':intakeRead();CAM.pose='front';CAM.grid=true;CAM.onb=true;camOpen().then(()=>{if(!$('#cam'))CAM.onb=false});break;
@@ -4175,7 +4232,8 @@ document.addEventListener('click',async e=>{
    const y=$('#in_body').scrollTop;intakeUI();$('#in_body').scrollTop=y;break}
   case 'inNext':{intakeRead();const er=intakeValid();if(er){intakeErr(er);break}INT.step++;navPush({l:'intake'});intakeUI();$('#in_body').scrollTop=0;break}
   case 'inBack':history.back();break;
-  case 'inSave':intakeRead();intakeSave();break;
+  case 'inSave':{intakeRead();if(INT.known){const er=intakeValid();if(er){intakeErr(er);break}intakeSaveKnown();break}intakeSave();break}
+  case 'inKnown':{const a=INT.a;INT.known=true;INT.step=1;a.goal=a.goal||'lose';a.kgWk=null;navPush({l:'intake'});intakeUI();$('#in_body').scrollTop=0;break}
   case 'camClose':camClose(false);break;
   case 'camPose':CAM.pose=D.p;camUI();break;
   case 'camGrid':CAM.grid=!CAM.grid;camUI();break;
@@ -4384,9 +4442,9 @@ document.addEventListener('change',async e=>{
  }
 });
 function toast0(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.style.cssText+=';background:var(--okbg);border-color:var(--okline);color:var(--oktx)';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3500)}
-document.addEventListener('change',e=>{if(e.target.id==='s_rest'){let v=Math.round(num(e.target.value));if(!(v>=15))v=0;v=Math.min(600,v);e.target.value=v||'';mutate(P_PROFILE,{k:'merge',data:{restDefault:v}},{delay:300});return}
+document.addEventListener('change',e=>{if(/^t_(kcal|protein|carbs|fat|steps)$/.test(e.target.id)){tgtSave(e.target);return}if(e.target.id==='s_rest'){let v=Math.round(num(e.target.value));if(!(v>=15))v=0;v=Math.min(600,v);e.target.value=v||'';mutate(P_PROFILE,{k:'merge',data:{restDefault:v}},{delay:300});return}
  if(e.target.id==='s_smax'){let v=parseInt(e.target.value,10);if(!(v>0))v=90;v=Math.max(20,Math.min(240,v));e.target.value=v;mutate(P_PROFILE,{k:'merge',data:{sessionMax:v}},{delay:300})}});
-document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.m)UI.open[d.dataset.m]=d.open;if(d.id==='in_more')INT.kOpen=d.open},true);
 function setErr(t,m){const row=t.parentNode;let e=row.nextElementSibling;if(e&&!e.classList.contains('ferr'))e=null;if(!m){if(e)e.remove();t.removeAttribute('aria-invalid');return}t.setAttribute('aria-invalid','true');if(!e){e=document.createElement('div');e.className='ferr';e.setAttribute('role','alert');row.after(e)}e.textContent=m}
 document.addEventListener('input',e=>{
  const t=e.target;if(!t.dataset||!t.dataset.f)return;
