@@ -434,7 +434,7 @@
     searchPh: 'Search rice, adobo, Chickenjoy...',
     recent: 'Recent',
     saved: 'Saved meals',
-    hint: 'Type a food, for example rice or adobo.',
+    hint: 'Type a food, for example rice or adobo. Amounts work too, like 2 cups rice or 150 g chicken.',
     none: 'Nothing found for "{q}".',
     quickFor: 'Enter "{q}" with calories',
     quickMore: 'Not here? Enter "{q}" with calories',

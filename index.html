@@ -196,6 +196,7 @@ svg{display:block}
 @keyframes slL{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}@keyframes slR{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
 #root.sl-l>*:not(header):not(nav):not(.fst),#root.sl-l .psub .seg{animation:slL .22s ease-out}#root.sl-r>*:not(header):not(nav):not(.fst),#root.sl-r .psub .seg{animation:slR .22s ease-out}
 @media (prefers-reduced-motion:reduce){#root.sl-l>*,#root.sl-r>*,#root .psub .seg{animation:none!important}}
+.cfn{margin:0 0 6px}.item .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--faint);display:grid;place-items:center;flex:none;color:transparent}.item.on .ck{background:var(--acct);border-color:var(--acct);color:var(--bg)}
 .cfl{display:flex;gap:2px;margin:0 0 10px}.cfl button{flex:1;min-height:42px;border-radius:12px;background:none;color:var(--mut);display:grid;place-items:center;border:0}.cfl button.on{color:var(--acct)}
 .cal.ic{gap:4px}.cal.ic .c{aspect-ratio:auto;min-height:56px;padding:6px 0 5px;gap:0;justify-content:space-between;font-size:10px;line-height:1.1;color:var(--mut);position:relative;border-width:1px}.cal.ic .c.today{border-width:2px;color:var(--txt);font-weight:600}.cal.ic .c.sel{border-width:1px}.cal.ic .c.today.sel{border-width:2px}
 .cal.ic .gi{width:18px;height:18px;display:grid;place-items:center;color:var(--mut)}.cal.ic .gi svg{stroke-width:1.5}.cal.ic .gi.on{color:var(--txt)}.cal.ic .gi.on svg{stroke-width:2.2;fill:currentColor;fill-opacity:.22}.cal.ic .gp{height:18px}
@@ -1058,7 +1059,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='446285f584fd285702c6b4c4621e6b815ee11df1';let verChecked=0;
+const BUILD='3ee974c30d13329fbbe2afed32dca67f1c8e735c';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1851,17 +1852,30 @@ const adUn=e=>e.k==='fixed'?'portion':e.u;
 function adUnitsOf(e){return e.k==='food'?adUnits(e.f).map(x=>x.u):e.k==='recipe'?(e.r.totalG?['serving','g']:['serving']):['portion']}
 function adPush(f,q,u){const L=adList(),x=L.find(e=>e.k==='food'&&e.f.id===f.id&&e.u===u);if(x)x.q=+(x.q+q).toFixed(2);else L.push({k:'food',f,q,u});AD.q='';const el=$('#ad_q');if(el)el.value='';adDraw()}
 function adPushFixed(it){const L=AD.basket;L.push({k:'fixed',name:it.name,amount:it.amount||'',kcal:num(it.kcal),protein:num(it.protein),carbs:num(it.carbs),fat:num(it.fat),q:1})}
+/* "2 cups adobo", "adobo 2 cups", "200 g rice": the amount is peeled off the search, the food is found by its name and added at that amount. */
+const AD_UNIT={g:'g',gm:'g',gram:'g',grams:'g',kg:'kg',ml:'ml',cup:'cup',cups:'cup',bowl:'bowl',bowls:'bowl',piece:'piece',pieces:'piece',pc:'piece',pcs:'piece',slice:'piece',slices:'piece',serving:'serving',servings:'serving',tbsp:'tbsp',tsp:'tsp'};
+function adQtySplit(q){const NU='(\\d+(?:[.,]\\d+)?|\\d+/\\d+)',UN='(g|gm|grams?|kg|ml|cups?|bowls?|pieces?|pcs?|servings?|tbsp|tsp|slices?)?',t=String(q||'').trim();
+ let m=t.match(new RegExp('^'+NU+'\\s*'+UN+'\\s+(?:of\\s+)?(.+)$','i')),n,u,rest;
+ if(m){n=m[1];u=m[2];rest=m[3]}else{m=t.match(new RegExp('^(.+?)\\s+'+NU+'\\s*'+UN+'$','i'));if(!m)return {rest:t};rest=m[1];n=m[2];u=m[3]}
+ n=/\//.test(n)?n.split('/')[0]/n.split('/')[1]:parseFloat(n.replace(',','.'));if(!(n>0)||n>5000||!rest.trim()||/^in\s+\d/i.test(rest.trim()))return {rest:t};
+ return {n,u:u?AD_UNIT[u.toLowerCase()]:'',rest:rest.trim()}}
+function adQtyFor(f,sp,cook){if(!sp||!sp.n)return null;let u=sp.u,n=sp.n;if(u==='kg'){u='g';n*=1000}
+ const us=adUnits(f).map(x=>x.u);
+ if(!u)u=f.unit==='piece'?'piece':n>=10&&us.includes(f.unit)?f.unit:adDefault(f,cook).u;
+ return us.includes(u)?{q:n,u}:null}
 function adSearch(q,cook){
- const words=q.toLowerCase().split(/\s+/).filter(Boolean),has=n=>words.every(w=>String(n).toLowerCase().includes(w)),S=(l)=>window.FormaCmd?FormaCmd.searchFoods(q,l,12):l.filter(f=>has(f.name+' '+(f.aliases||[]).join(' ')));
- const mine=S(myFoodsDb()).slice(0,4).map(f=>({t:'mine',f})),rec=cook?[]:recipesDb().filter(r=>has(r.name)).slice(0,3).map(r=>({t:'recipe',r})),
-  sv=cook?[]:savedMeals().filter(m=>has(m.name)).slice(0,2).map(m=>({t:'saved',m})),db=S(baseFoods()).map(f=>({t:'food',f}));
- return [...mine,...rec,...sv,...db].slice(0,8)}
+ let sp=adQtySplit(q),qq=sp.n?sp.rest:q;
+ const run=qs=>{const words=qs.toLowerCase().split(/\s+/).filter(Boolean),has=n=>words.every(w=>String(n).toLowerCase().includes(w)),S=(l)=>window.FormaCmd?FormaCmd.searchFoods(qs,l,12):l.filter(f=>has(f.name+' '+(f.aliases||[]).join(' ')));
+  const mine=S(myFoodsDb()).slice(0,4).map(f=>({t:'mine',f,qty:adQtyFor(f,sp,cook)})),rec=cook?[]:recipesDb().filter(r=>has(r.name)).slice(0,3).map(r=>({t:'recipe',r})),
+   sv=cook?[]:savedMeals().filter(m=>has(m.name)).slice(0,2).map(m=>({t:'saved',m})),db=S(baseFoods()).map(f=>({t:'food',f,qty:adQtyFor(f,sp,cook)}));
+  return [...mine,...rec,...sv,...db].slice(0,8)};
+ const r=run(qq);if(!r.length&&sp.n){sp={rest:q};return run(q)}return r}
 function adResRow(r,cook){
- const add=(act,id,sub,name,tag)=>`<div class="adh"><button class="adn" data-act="${act}" data-id="${esc(id)}"><span class="n">${esc(name)}${tag?`<span class="adtag">${tag}</span>`:''}</span><span class="xs mut">${sub}</span></button><button class="adp" data-act="${act}" data-id="${esc(id)}" aria-label="Add ${esc(name)}">${ic('plus',20)}</button></div>`;
+ const add=(act,id,sub,name,tag,ex)=>`<div class="adh"><button class="adn" data-act="${act}" data-id="${esc(id)}"${ex||''}><span class="n">${esc(name)}${tag?`<span class="adtag">${tag}</span>`:''}</span><span class="xs mut">${sub}</span></button><button class="adp" data-act="${act}" data-id="${esc(id)}"${ex||''} aria-label="Add ${esc(name)}">${ic('plus',20)}</button></div>`;
  if(r.t==='recipe'){const t=recTot(r.r);return `<div class="adr">${add('adAddRec',r.r.id,'1 serving, '+rnd(t.kcal/(r.r.servings||1))+' kcal',r.r.name,'Recipe')}</div>`}
  if(r.t==='saved'){const t=sumItems(r.m.items||[]),n=(r.m.items||[]).length;return `<div class="adr">${add('adSaved',r.m.id,n+' food'+(n===1?'':'s')+', '+rnd(t.kcal)+' kcal',r.m.name,'Saved meal')}</div>`}
- const f=r.f,d=adDefault(f,cook),m=adMac({k:'food',f,q:d.q,u:d.u});
- return `<div class="adr">${add('adAdd',f.id,esc(chipLbl(d.q,d.u))+', '+rnd(m.kcal)+' kcal',f.name,r.t==='mine'?'Mine':'')}<div class="adc">${adChips(f,cook).map(c=>`<button class="adchip" data-act="adChip" data-id="${esc(f.id)}" data-q="${c.q}" data-u="${esc(c.u)}">${esc(chipLbl(c.q,c.u))}</button>`).join('')}</div></div>`}
+ const f=r.f,d=r.qty||adDefault(f,cook),m=adMac({k:'food',f,q:d.q,u:d.u});
+ return `<div class="adr">${add('adAdd',f.id,esc(chipLbl(d.q,d.u))+', '+rnd(m.kcal)+' kcal',f.name,r.t==='mine'?'Mine':'',r.qty?` data-q="${+(+d.q).toFixed(2)}" data-u="${esc(d.u)}"`:'')}<div class="adc">${adChips(f,cook).map(c=>`<button class="adchip" data-act="adChip" data-id="${esc(f.id)}" data-q="${c.q}" data-u="${esc(c.u)}">${esc(chipLbl(c.q,c.u))}</button>`).join('')}</div></div>`}
 function adDrawList(){const el=$('#ad_list');if(!el)return;const q=AD.q.trim(),cook=AD.v==='cook';const mo=$('#ad_more');if(mo)mo.hidden=!!q&&!AD.man;
  if(q){const r=adSearch(q,cook);
   el.innerHTML=r.map(x=>adResRow(x,cook)).join('')||`<div class="xs mut" style="padding:10px 0">${esc(cf(AC().none,{q}))}</div>`;
@@ -2024,9 +2038,15 @@ const EQ_GROUPS=['Barbell','Dumbbell','Cable','Machine','Bodyweight','Other'];
 const EQ_RX={Barbell:/barbell|ez bar|landmine|rack/i,Dumbbell:/dumbbell/i,Cable:/cable/i,Machine:/machine|leg press|ghd|hyperextension/i,Bodyweight:/^(none|mat\b|bar\b|dip bars|box|step\b|bench or chair|sliders|captain)/i};
 function eqGroup(eq){const s=String(eq||'None');let best='Other',bi=1e9;EQ_GROUPS.slice(0,5).forEach(g=>{const m=s.match(EQ_RX[g]);if(m&&m.index<bi){bi=m.index;best=g}});return best}
 let LIB={q:'',mu:'',eq:'',n:60};
-function libIds(){const db=exdb().exercises,mu=exdb().muscles||{},q=LIB.q.toLowerCase().split(/\s+/).filter(Boolean);
+/* Exercise search: everyday words for muscles ("pecs", "quads", "abs") and for movements ("pull down"), filler words dropped, plural and hyphen tolerant. */
+const EX_SYN={chest:'pecs pec pectorals boobs',abs:'core stomach abdominals six pack belly',obliques:'sides love handles',quads:'quadriceps thighs front thigh legs',hamstrings:'hams hammies back of thigh legs',glutes:'butt booty bum hips',calves:'calf lower leg',biceps:'bis arms',triceps:'tris arms',forearms:'grip wrist',delts_front:'shoulders delts front delt',delts_side:'shoulders delts side delt lateral',delts_rear:'shoulders delts rear delt',traps:'trapezius neck',upper_back:'back rhomboids',lats:'back lat wings',lower_back:'back spine erectors lumbar',hip_flexors:'hip psoas',adductors:'inner thigh groin'};
+const EX_STOP=new Set('a an the that this those where which what you i me my to for with of on in at it is are do does how thing things one exercise exercises workout move'.split(' '));
+const exTerms=raw=>{const w=String(raw||'').toLowerCase().replace(/[-_]/g,' ').split(/\s+/).filter(Boolean),k=w.filter(x=>!EX_STOP.has(x));return k.length?k:w};
+function exHay(e,mu,sec){const ms=sec?[...(e.p||[]),...(e.s||[])]:(e.p||[]);return (e.n+' '+(e.eq||'')+' '+ms.map(m=>(mu[m]||{name:m}).name+' '+m.replace(/_/g,' ')+' '+(EX_SYN[m]||'')).join(' ')).toLowerCase().replace(/[-_]/g,' ')}
+function exHit(h,terms){const sq=h.replace(/ /g,'');return terms.every(w=>h.includes(w)||sq.includes(w)||(w.length>3&&w.endsWith('s')&&(h.includes(w.slice(0,-1))||sq.includes(w.slice(0,-1)))))}
+function libIds(){const db=exdb().exercises,mu=exdb().muscles||{},q=exTerms(LIB.q);
  return Object.keys(db).filter(id=>{const e=db[id];if(LIB.mu&&!(e.p||[]).includes(LIB.mu))return false;if(LIB.eq&&eqGroup(e.eq)!==LIB.eq)return false;
-  if(!q.length)return true;const h=(e.n+' '+(e.eq||'')+' '+(e.p||[]).map(m=>(mu[m]||{name:m}).name).join(' ')).toLowerCase();return q.every(w=>h.includes(w))}).sort((a,b)=>exName(a).localeCompare(exName(b)))}
+  if(!q.length)return true;return exHit(exHay(e,mu,false),q)}).sort((a,b)=>exName(a).localeCompare(exName(b)))}
 function libRow(id){const e=exdb().exercises[id]||{},mu=exdb().muscles||{};
  return `<div class="lrw"><button class="item" data-act="cues" data-ex="${esc(id)}">${thumb(id,56)}<div class="sp"><div class="n">${esc(exName(id))}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(e.eq||'None')}</div><div class="xs mut">${esc((e.p||[]).map(k=>(mu[k]||{name:k}).name).join(', '))}</div></div></button><button class="ib hb" data-act="hist" data-ex="${esc(id)}" aria-label="History for ${esc(exName(id))}">${ic('hist',20)}</button></div>`}
 function libDraw(){
@@ -2225,9 +2245,17 @@ function pedPickSheet(){
  day.exercises.forEach(e=>{((db[e.ex]||{}).a||[]).forEach(a=>{if(db[a]&&!used.has(a)&&!rec.includes(a))rec.push(a)});((db[e.ex]||{}).p||[]).forEach(m=>prim.add(m))});
  const recSet=new Set(rec),same=Object.keys(db).filter(id=>!used.has(id)&&!recSet.has(id)&&(db[id].p||[]).some(m=>prim.has(m))).sort((a,b)=>exName(a).localeCompare(exName(b)));
  const row=x=>exRow(x,'','edPickEx'),okSet=gymOk([...rec,...same]),recY=rec.filter(x=>okSet.has(x)),sameY=same.filter(x=>okSet.has(x)),noGym=[...rec,...same].filter(x=>!okSet.has(x));
- return `<h2>Add to ${esc(day.name)}</h2><div class="mut sm" style="margin-bottom:10px">About ${dayMinutes(day)} min now. Adds 3 sets, change them in the editor.</div>
+ return `<h2>Add to ${esc(day.name)}</h2><div class="mut sm" style="margin-bottom:10px">Tick as many as you like, then tap Add. About ${dayMinutes(day)} min now. Each gets 3 sets, change them in the editor.</div>
  <div class="sstk"><input id="ex_q" placeholder="Search all exercises" autocomplete="off" autocapitalize="off" aria-label="Search all exercises"></div><div id="ex_res"></div><div id="ex_groups"><div class="xs mut" style="font-weight:600;margin:6px 0 0">Recommended</div>${recY.length?recY.map(row).join(''):'<div class="xs mut" style="padding:8px 0">No recommendations listed.</div>'}
- <div class="xs mut" style="font-weight:600;margin:12px 0 0">Same muscle</div>${sameY.length?sameY.map(row).join(''):'<div class="xs mut" style="padding:8px 0">Nothing else for that muscle.</div>'}${gymNoHTML(noGym,row)}</div>`}
+ <div class="xs mut" style="font-weight:600;margin:12px 0 0">Same muscle</div>${sameY.length?sameY.map(row).join(''):'<div class="xs mut" style="padding:8px 0">Nothing else for that muscle.</div>'}${gymNoHTML(noGym,row)}</div>
+ <div class="row"><button class="btn sp" id="ped_go" data-act="edPickGo"${(PICK.sel||[]).length?'':' disabled'}>${pedGoLabel()}</button></div>`}
+const pedGoLabel=()=>{const n=(PICK.sel||[]).length;return n?'Add '+n+(n===1?' exercise':' exercises'):'Add exercises'};
+function edPickTog(id){const a=PICK.sel||(PICK.sel=[]),i=a.indexOf(id);if(i<0)a.push(id);else a.splice(i,1);
+ document.querySelectorAll('#sheet [data-act="edPickEx"]').forEach(b=>{if(b.dataset.ex===id){const on=a.includes(id);b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)}});
+ const g=$('#ped_go');if(g){g.disabled=!a.length;g.textContent=pedGoLabel()}}
+function edPickAdd(extra){const day=PED&&PED.doc.days[PICK.d],ids=[...(PICK.sel||[])];if(extra&&!ids.includes(extra))ids.push(extra);
+ if(day)ids.forEach(id=>{if(!day.exercises.some(e=>e.ex===id)){const u=(exdb().exercises[id]||{}).u;day.exercises.push({ex:id,sets:3,reps:u==='s'?'30-60':u==='m'?'20-40':'8-12'});PED.dirty=true}});
+ PICK.sel=[];closeSheet();pedDraw();if(ids.length>1)toast(ids.length+' exercises added.')}
 const sessMax=()=>{const v=+((profile()||{}).sessionMax);return v>0?v:90};
 function dayRaw(day,wo){if(!day)return 0;let m=0;const db=exdb().exercises;
  const add=(ex,n)=>{m+=Math.max(0,n)*((db[ex]||{}).big?3.5:2.3)+1.5};
@@ -2264,8 +2292,8 @@ function workoutView(){
   body=spRows.length?`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><h2 class="pt">${esc(sportNames(sel))}</h2><div class="sub">${sel<T?'Planned sport':'No lifting. Sport day.'}</div>`:`<div class="lbl">${isT?'Today':fmtLong(sel)}</div><h2 class="pt">Rest day</h2><div class="sub">${isT?'Nothing planned. Recover, walk, eat. Pick a day below to train anyway.':sel<T?'Nothing planned that day.':'Nothing planned. Recover, walk, eat.'}</div>`;
  }else{
   const mins=dayMinutes(day);preloadEx(day.exercises.map(e=>e.ex));
-  body=`${isT?'':`<div class="lbl">${fmtLong(sel)}${sel<T?', not logged':', planned'}</div>`}<h2 class="pt">${esc(day.name)}</h2><div class="sub">${esc(day.focus)} &middot; <span class="nw">about ${mins} min</span>${mins>sessMax()?` <span class="amb">over your ${sessMax()} min</span>`:''}</div>${!isT&&sel<T?`<button class="lnk l0" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}
-  <div class="lst" style="padding-bottom:96px">${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<button class="item" data-act="cues" data-ex="${e.ex}" aria-label="Notes and pictures for ${esc(exName(e.ex))}">${thumb(e.ex,72,false,true)}<div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${pv?'Last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' x ':'')+pv[0].r:esc((exdb().exercises[e.ex]||{}).eq||'')}</div></div><div class="r mut">${e.sets} x ${esc(e.reps)}</div></button>`}).join('')}</div>`;
+  body=`${isT?'':`<div class="lbl">${fmtLong(sel)}${sel<T?', not logged':', planned'}</div>`}<h2 class="pt">${esc(day.name)}</h2><div class="sub">${esc(day.focus)} &middot; <span class="nw">about ${mins} min</span>${mins>sessMax()?` <span class="amb">over your ${sessMax()} min</span>`:''}</div>${!isT&&sel<T?`<button class="lnk l0" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}${lrnDone('sets-reps')?'':`<button class="lnk mut l0" data-act="termLesson" data-id="sets-reps">New to lifting? What sets and reps mean</button>`}
+  <div class="lst" style="padding-bottom:96px">${day.exercises.map(e=>{const pv=prevFor(e.ex);return `<button class="item" data-act="cues" data-ex="${e.ex}" aria-label="Notes and pictures for ${esc(exName(e.ex))}">${thumb(e.ex,72,false,true)}<div class="sp"><div class="n">${esc(exName(e.ex))}</div><div class="xs mut">${pv?'Last '+(pv[0].w?fwU(pv[0].w,exU(e.ex))+' '+exU(e.ex)+' x ':'')+pv[0].r:esc((exdb().exercises[e.ex]||{}).eq||'')}</div></div><div class="r mut">${e.sets} sets of ${esc(e.reps)}</div></button>`}).join('')}</div>`;
  }
  const chips=isT&&!swo?`<details class="vs other"${td?'':' open'}><summary class="lbl">${td?'Train a different day':'Train anyway. Pick a day'}${ic('down',16)}</summary>${(()=>{const wk=(P.weekdays||{}),used=[];[1,2,3,4,5,6,0].forEach(i=>{const id=wk[String(i)];if(id&&id!=='rest'&&!used.includes(id)&&P.days.some(x=>x.id===id))used.push(id)});const ch=x=>`<button data-act="wday" data-id="${x.id}" class="item ${day&&x.id===day.id?'on':''}"><div class="sp"><div class="n">${esc(x.name)}</div></div><div class="r">${dayMinutes(x)} min</div></button>`,a=used.map(id=>P.days.find(x=>x.id===id)),o=P.days.filter(x=>!used.includes(x.id));return `<div class="lst ml dayl">${(a.length?a:P.days).map(ch).join('')}</div>${a.length&&o.length?`<details class="vs"><summary class="xs mut">Other days (${o.length})${ic('down',14)}</summary><div class="lst ml dayl">${o.map(ch).join('')}</div></details>`:''}`})()}</details>`:'';
  const go=isT&&!swo&&day;
@@ -2286,12 +2314,12 @@ function liveView(wo,lg){
   <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
   <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
   <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="${s.done?`Set ${i+1} done, tap to undo`:`Tick set ${i+1}`}">${ic('check',20)}</button></div></div>
-  ${s.done&&u==='REPS'?`<div class="sx"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}">+ Drop</button></div>`:''}
+  ${s.done&&u==='REPS'?`<div class="sx"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}" aria-label="Add a lighter drop set after this set">+ Drop set</button></div>`:''}
   ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
   <div class="xa"><button class="lnk" data-act="addSet" data-ex="${ex}">+ Add set</button><button class="lnk" data-act="hist" data-ex="${ex}" aria-label="History and PRs for ${esc(inf.n)}">${ic('hist',16)}History</button>${sets.length>1?`<button class="lnk" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">Remove set</button>`:''}${e.extra?`<button class="lnk" data-act="exDel" data-ex="${e.ex}">Remove exercise</button>`:''}</div></section>`}).join('')+`<button class="lnk addx" data-act="exAdd">+ Add exercise</button>`;
  const stt=woStats(wo),long=Date.now()-new Date(wo.startedAt)>3*3600000;
  const wlen=dayMinutes(day,wo),over=wlen>sessMax();
- return headerV1('Workout',[['wCancel','Discard workout'],['soundTog','Timer sound: '+(LS.get('forma.sound',1)===0?'off':'on')],['shakeTog','Shake to finish a set: '+(LS.get('forma.shake',1)===0?'off':'on')]])+`<div class="v1 live"><div class="lhero"><div class="lt"><h2 class="pt">${esc(day.name)}</h2><button class="btn ghost" data-act="wFinish">Finish</button></div>
+ return headerV1('Workout',[['termLesson','How a workout works',' data-id="workout-screen"'],['wCancel','Discard workout'],['soundTog','Timer sound: '+(LS.get('forma.sound',1)===0?'off':'on')],['shakeTog','Shake to finish a set: '+(LS.get('forma.shake',1)===0?'off':'on')]])+`<div class="v1 live"><div class="lhero"><div class="lt"><h2 class="pt">${esc(day.name)}</h2><button class="btn ghost" data-act="wFinish">Finish</button></div>
  <button class="hn" data-act="wStarted" aria-label="Change start time"><b class="big" id="el">${mmss((Date.now()-new Date(wo.startedAt))/1000)}</b><span class="of"${over?' style="color:var(--warn)"':''}>${stt.done} of ${stt.all} sets, about ${wlen} min</span></button></div>
  ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}${cards}</div><div style="height:calc(168px + env(safe-area-inset-bottom))"></div>
  <div id="setdone"><div><button class="btn" data-act="setDone">${ic('check',22)} ${(()=>{const n=nextSet();return n?'Set done: '+esc((exdb().exercises[n.ex]||{}).n||'')+' '+(n.i+1)+'/'+n.n:'All sets done'})()}</button></div></div>`;
@@ -2308,7 +2336,7 @@ function finishSheet(){
  const endIso=stale?new Date(last+2*60000).toISOString():new Date(now).toISOString();
  return `<h2>Finish ${esc(day.name)}</h2>
  <div class="stk"><div><b>${st.done}</b><span>sets done</span></div><div><b>${rnd(kg2u(st.vol)).toLocaleString('en-US')}</b><span>${wU()} volume</span></div><div><b id="fin_dur">${mmss((new Date(endIso)-new Date(wo.startedAt))/1000)}</b><span>duration</span></div></div>
- ${open?`<div class="fld"><label>${open} set${open===1?'':'s'} not ticked</label><div class="seg" style="margin:0" id="fin_mode"><button data-act="finMode" data-m="drop" class="on">Leave them out</button><button data-act="finMode" data-m="tick">Count ones with reps</button></div></div>`:''}
+ ${open?`<div class="fld"><label>${open} set${open===1?'':'s'} not ticked</label><div class="seg" style="margin:0" id="fin_mode"><button data-act="finMode" data-m="drop" class="on">Leave them out</button><button data-act="finMode" data-m="tick">Count ones with reps</button></div><div class="xs mut" id="fin_hint" style="margin-top:6px">Leave them out: sets you did not tick are dropped. Count ones with reps: unticked sets where you typed reps are kept.</div></div>`:''}
  ${stale?`<div class="xs" style="color:var(--warn);margin:-2px 0 8px">Your last set was at ${clock(wo.lastAt)}. End time is set to just after it.</div>`:''}
  <div class="g2"><div class="fld"><label>Started</label><input type="time" id="fin_s" value="${hhmm(wo.startedAt)}"></div><div class="fld"><label>Finished</label><input type="time" id="fin_f" value="${hhmm(endIso)}"></div></div>
  <div class="fld"><label>Notes (optional)</label><input id="fin_n" value="${esc(wo.note||'')}" placeholder="Felt strong, shoulder a bit tight"></div>
@@ -2361,7 +2389,7 @@ function nextSet(){
 let PICK={mode:'add',slot:null};
 const inWorkout=wo=>{const day=program().days.find(x=>x.id===wo.dayId)||{exercises:[]};return new Set([...day.exercises.map(e=>effEx(wo,e.ex)),...(wo.extra||[]).map(x=>effEx(wo,x.ex))])};
 function exMeta(id){const e=exdb().exercises[id]||{},m=exdb().muscles||{};return ((e.p||[]).map(k=>(m[k]||{name:k}).name).join(', ')+(e.eq?' - '+e.eq:'')).trim()}
-function exRow(id,tag,act){return `<button class="item" data-act="${act||'pickEx'}" data-ex="${esc(id)}">${thumb(id,48)}<div class="sp"><div class="n">${esc(exName(id))}${tag?' ('+tag+')':''}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(exMeta(id))}</div></div></button>`}
+function exRow(id,tag,act){const mk=act==='edPickEx',on=mk&&(PICK.sel||[]).includes(id);return `<button class="item${on?' on':''}" data-act="${act||'pickEx'}" data-ex="${esc(id)}"${mk?` aria-pressed="${on}"`:''}>${thumb(id,48)}<div class="sp"><div class="n">${esc(exName(id))}${tag?' ('+tag+')':''}${String(id).startsWith('custom_')?' <span class="chip" style="height:18px;font-size:10px;padding:0 6px;vertical-align:middle">Custom</span>':''}</div><div class="xs mut">${esc(exMeta(id))}</div></div>${mk?`<span class="ck" aria-hidden="true">${ic('check',16)}</span>`:''}</button>`}
 function pickSheet(){
  const wo=logOf(woDate()).workout,db=exdb().exercises,used=inWorkout(wo),swap=PICK.mode==='swap',slot=PICK.slot,eff=swap?effEx(wo,slot):null;
  const day=program().days.find(x=>x.id===wo.dayId)||{exercises:[]};
@@ -2375,12 +2403,12 @@ function pickSheet(){
  <div class="sstk"><input id="ex_q" placeholder="Search all exercises" autocomplete="off" autocapitalize="off" aria-label="Search all exercises"></div><div id="ex_res"></div><div id="ex_groups"><div class="xs mut" style="font-weight:600;margin:6px 0 0">Recommended</div>${recY.length?recY.map(x=>exRow(x,x===slot?'original':'')).join(''):'<div class="xs mut" style="padding:8px 0">No recommendations listed.</div>'}
  <div class="xs mut" style="font-weight:600;margin:12px 0 0">Same muscle</div>${sameY.length?sameY.map(x=>exRow(x)).join(''):'<div class="xs mut" style="padding:8px 0">Nothing else for that muscle.</div>'}${gymNoHTML(noGym,x=>exRow(x))}</div>`}
 function pickSearch(){
- const q=(($('#ex_q')||{}).value||'').toLowerCase().split(/\s+/).filter(Boolean),el=$('#ex_res'),gr=$('#ex_groups');if(!el)return;
+ const q=exTerms(($('#ex_q')||{}).value),el=$('#ex_res'),gr=$('#ex_groups');if(!el)return;
  if(gr)gr.hidden=q.length>0;
  if(!q.length){el.innerHTML='';return}
  const ed=PICK.mode==='ed',wo=logOf(woDate()).workout,used=ed?new Set(PED.doc.days[PICK.d].exercises.map(e=>e.ex)):inWorkout(wo),db=exdb().exercises,mu=exdb().muscles||{};
- const r=Object.keys(db).filter(id=>{if(used.has(id))return false;const e=db[id],h=(e.n+' '+(e.eq||'')+' '+[...(e.p||[]),...(e.s||[])].map(m=>(mu[m]||{name:m}).name+' '+m).join(' ')).toLowerCase();return q.every(w=>h.includes(w))}).sort((a,b)=>{const k=q.join(' '),pa=exName(a).toLowerCase().includes(k)?0:1,pb=exName(b).toLowerCase().includes(k)?0:1;return pa-pb||exName(a).localeCompare(exName(b))}).slice(0,30);
- const raw=(($('#ex_q')||{}).value||'').trim(),has=r.some(id=>exName(id).toLowerCase().includes(raw.toLowerCase()));
+ const r=Object.keys(db).filter(id=>{if(used.has(id))return false;return exHit(exHay(db[id],mu,true),q)}).sort((a,b)=>{const k=q.join(' '),pa=exName(a).toLowerCase().includes(k)?0:1,pb=exName(b).toLowerCase().includes(k)?0:1;return pa-pb||exName(a).localeCompare(exName(b))}).slice(0,30);
+ const raw=(($('#ex_q')||{}).value||'').trim(),has=r.some(id=>exName(id).toLowerCase().includes(raw.toLowerCase()))||(r.length>0&&exTerms(raw).every(w=>Object.keys(EX_SYN).some(k=>(k.replace(/_/g,' ')+' '+EX_SYN[k]).includes(w))));
  el.innerHTML=(has?'':`<button class="item" data-act="exNewOpen" data-q="${esc(raw)}"><div class="sp"><div class="n">Create "${esc(raw)}" as a new exercise</div><div class="xs mut">Saved in your exercise library</div></div></button>`)+(()=>{const ok=gymOk(r),row=x=>exRow(x,'',ed?'edPickEx':'');return r.filter(x=>ok.has(x)).map(row).join('')+gymNoHTML(r.filter(x=>!ok.has(x)),row)})();
 }
 let NEWX={name:'',eq:null,mu:null};
@@ -2392,7 +2420,7 @@ function newExSheet(){const db=exdb(),cnt={};Object.values(db.exercises).forEach
  <div class="fld"><label>Main muscle</label><div class="chips">${Object.keys(mu).map(k=>chip('nxMu','',k,mu[k].name,NEWX.mu===k).replace('data-v=""','data-v="'+esc(k)+'"')).join('')}</div></div>
  <div class="row" style="margin-top:12px"><button class="btn ghost" data-act="nxBack">Back</button><button class="btn sp" data-act="nxSave">${PICK&&PICK.mode==='lib'?'Create':'Create and use'}</button></div>`}
 function usePick(id){
- if(PICK.mode==='ed'){const day=PED&&PED.doc.days[PICK.d];if(day&&!day.exercises.some(e=>e.ex===id)){const u=(exdb().exercises[id]||{}).u;day.exercises.push({ex:id,sets:3,reps:u==='s'?'30-60':u==='m'?'20-40':'8-12'});PED.dirty=true}closeSheet();pedDraw();return}
+ if(PICK.mode==='ed'){edPickAdd(id);return}
  const T=woDate(),wo=logOf(T).workout;if(!wo)return;
  if(PICK.mode==='add')mutate(logP(T),{k:'wExtra',ex:id,n:3},{delay:1000});
  else{const from=effEx(wo,PICK.slot);mutate(logP(T),{k:'wSwap',slot:PICK.slot,alt:id,moved:true,from,to:id},{delay:1000})}
@@ -2677,7 +2705,7 @@ function bodyCard(part){
  return `<section class="vs">${gal||'<div class="s15 mut">No photos yet. Take the first one today and in a month you can see where you started.</div>'}
  <input type="file" id="pp_in" accept="image/*" multiple hidden><input type="file" id="pp_cam" accept="image/*" capture="environment" hidden>
  <div class="dsr"><div class="sp s15">Photo date: ${ppDay()===today()?'today':esc(fmtShort(ppDay()))}</div><button class="lnk" data-act="ppDateT" aria-expanded="${!!UI.ppOpen}">${UI.ppOpen?'Done':'Change'}</button></div>${UI.ppOpen?dateChips('pp',ppDay()):''}
- <div class="lst plst">${photoRows(photoRow('ppCam','camera','Take a photo'),photoRow('ppGal','image','Choose from gallery'))}${last&&ph.length>1?`<button class="item ph2" data-act="bodyCmp">${ic('hist',20)}<div class="sp"><div class="n">Compare two photos</div></div>${ic('right',18)}</button>`:''}${last?`<button class="item ph2" data-act="bodyAll">${ic('grid',20)}<div class="sp"><div class="n">All photos</div></div>${ic('right',18)}</button>`:''}<button class="item ph2" data-act="camOpen">${ic('camera',20)}<div class="sp"><div class="n">Use the app camera</div></div>${ic('right',18)}</button></div></section>`;
+ <div class="lst plst">${photoRows(photoRow('ppCam','camera','Take a photo','Opens your phone camera'),photoRow('ppGal','image','Choose from gallery'))}${last&&ph.length>1?`<button class="item ph2" data-act="bodyCmp">${ic('hist',20)}<div class="sp"><div class="n">Compare two photos</div></div>${ic('right',18)}</button>`:''}${last?`<button class="item ph2" data-act="bodyAll">${ic('grid',20)}<div class="sp"><div class="n">All photos</div></div>${ic('right',18)}</button>`:''}<button class="item ph2" data-act="camOpen">${ic('camera',20)}<div class="sp"><div class="n">Guided camera</div><div class="xs mut">${last?'Shows your last photo as an outline to line up with':'Shows a guide to line up your pose'}</div></div>${ic('right',18)}</button></div></section>`;
 }
 function bfHowSheet(){const nv=navyBF(),w=latestWeight();
  return `<h2>How body fat is estimated</h2>
@@ -2979,7 +3007,7 @@ function stepsCalCard(){
   const icon=it.main?`<span class="gi ${it.main.done?'on':''}">${ic(it.main.icon,18)}</span>`:'<span class="gp"></span>';
   return {inner:icon+(nm==='none'?'':`<span class="dv">${esc(num)}</span>`)+(it.more?`<span class="mo" title="+${it.more}"></span>`:'')}},'stepDay','ic');
  const kk=n=>n>=1000?(Math.round(n/100)/10)+'k':String(n);
- return `<section class="vs cl2"><div class="cfl" role="group" aria-label="Show">${chip('all','All',"grid")}${CAL_KINDS.map(([k,l,i])=>chip(k,l,i)).join('')}</div>
+ return `<section class="vs cl2"><div class="cfl" role="group" aria-label="Show">${chip('all','All',"grid")}${CAL_KINDS.map(([k,l,i])=>chip(k,l,i)).join('')}</div><div class="xs mut cfn">${f==='all'?'Showing everything':'Showing '+esc(((CAL_KINDS.find(c=>c[0]===f)||[])[1]||'').toLowerCase())}</div>
  <div class="mnav"><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button></div>${grid}</section>
  <section class="vs"><div class="g22">${gstat(any&&Math.max(planned,did)?did+'<small>of '+Math.max(planned,did)+'</small>':'-','','Workouts')}${gstat(savg?kk(savg):'-','','Steps a day')}${gstat(wd==null?'-':(wd>0?'+':wd<0?'-':'')+fw(Math.abs(wd)),wd==null?'':wU(),'Weight change')}${gstat(any?full+'<small>of '+md.length+'</small>':'-','','Full days')}</div>
  <div class="s15 mut stl">${best?`Full-day streak ${fullStreak}, best ${best}.`:any?'No full day yet.':'Nothing logged this month yet.'}</div><button class="lnk l0" data-act="calHow">How to read this</button></section>`;
@@ -3748,7 +3776,7 @@ function logDayToggle(d){
 let cmdText='',cmdHi=-1;const CMD={bad:{},res:null,line:'',date:'',acts:[],wkg:80,ctx:null,busy:false,aiErr:'',aiNotes:[],seq:0};
 let cmdHOpen=false,logDayOpen=false;
 const snapPref=()=>LS.get('forma.snapPref','cam');
-const photoRow=(act,icn,l)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div></div>${ic('right',18)}</button>`;
+const photoRow=(act,icn,l,sub)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div>${sub?`<div class="xs mut">${sub}</div>`:''}</div>${ic('right',18)}</button>`;
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
 function snapChoiceSheet(){
@@ -4010,7 +4038,7 @@ document.addEventListener('click',async e=>{
    openSheet(settingsSheet());
    if(notifState()!=='Allowed'){toast(notifState()==='Blocked'?'Notifications are blocked for Pulzo.':'Notifications are not available here.');break}
    swPost({k:'rest',end:Date.now()+5000,name:'Test',test:true});toast0('Lock your phone now. A test arrives in 5 seconds.');break}
-  case 'adAdd':{const f=foodById(D.id);if(!f)break;const df=adDefault(f,AD.v==='cook');adPush(f,df.q,df.u);break}
+  case 'adAdd':{const f=foodById(D.id);if(!f)break;const df=D.q&&D.u?{q:+D.q,u:D.u}:adDefault(f,AD.v==='cook');adPush(f,df.q,df.u);break}
   case 'adChip':{const f=foodById(D.id);if(!f)break;adPush(f,+D.q,D.u);break}
   case 'adAddRec':{const r=recipesDb().find(x=>x.id===D.id);if(!r)break;const x=AD.basket.find(e=>e.k==='recipe'&&e.r.id===r.id&&e.u==='serving');if(x)x.q=+(x.q+1).toFixed(2);else AD.basket.push({k:'recipe',r,q:1,u:'serving'});AD.q='';{const el=$('#ad_q');if(el)el.value=''}adDraw();break}
   case 'adSaved':{const m=savedMeals().find(x=>x.id===D.id);if(!m)break;(m.items||[]).forEach(adPushFixed);AD.q='';{const el=$('#ad_q');if(el)el.value=''}adDraw();{const b=$('#ad_bk');if(b)b.scrollIntoView({block:'nearest'})}break}
@@ -4112,8 +4140,9 @@ document.addEventListener('click',async e=>{
   case 'pedDayDel':{const ds=PED.doc.days,d=ds[+D.d];if(!d)break;const go=()=>{const i=ds.indexOf(d);if(i<0)return;ds.splice(i,1);PED.doc.retired=(PED.doc.retired||[]).filter(x=>x.id!==d.id).concat([{id:d.id,name:d.name}]);Object.keys(PED.doc.weekdays).forEach(k=>{if(PED.doc.weekdays[k]===d.id)PED.doc.weekdays[k]='rest'});pedDirty();pedDraw()};if(d.exercises.length){askConfirm({title:'Delete '+d.name+'?',body:'This removes the day and its '+d.exercises.length+' exercise'+(d.exercises.length===1?'':'s')+' from your program. Past workouts stay.',yes:'Delete day',no:'Keep it'},go);break}go();break}
   case 'pedExUp':case 'pedExDn':{const xs=PED.doc.days[+D.d].exercises,i=+D.i,j=a==='pedExUp'?i-1:i+1;if(j<0||j>=xs.length)break;[xs[i],xs[j]]=[xs[j],xs[i]];pedDirty();pedDraw();break}
   case 'pedExDel':PED.doc.days[+D.d].exercises.splice(+D.i,1);pedDirty();pedDraw();break;
-  case 'pedAddEx':PICK={mode:'ed',d:+D.d};openSheet(pedPickSheet());break;
-  case 'edPickEx':usePick(D.ex);break;
+  case 'pedAddEx':PICK={mode:'ed',d:+D.d,sel:[]};openSheet(pedPickSheet());break;
+  case 'edPickEx':edPickTog(D.ex);break;
+  case 'edPickGo':if((PICK.sel||[]).length)edPickAdd();break;
   case 'pedTemplates':openSheet(pedTemplatesSheet());break;
   case 'pedTpl':{PED.pend=pedBuild(D.k);openSheet(pedConfirmSheet(PED.pend));break}
   case 'pedTplGo':{const p=PED.pend;if(!p)break;const old=program();if(old&&old.days&&old.days.length)mutate('data/program-backup.json',{k:'replace',doc:old},{quiet:true});
