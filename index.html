@@ -723,6 +723,32 @@ header.hv2 .psub .seg{margin:0}
 body.live #rest{bottom:calc(var(--tabh,58px) + 72px + 8px)}
 #setdone{bottom:calc(var(--tabh,58px) + 8px)}
 body.live .toast{bottom:calc(var(--tabh,58px) + 8px + 56px + 12px)}
+/* live workout at big text (B3): one column track list for header, set and drop rows so nothing runs past the edge; 44 px targets; compact dock on short screens */
+.v1.live{--sc:30px minmax(0,1fr) 74px 74px 44px}
+.v1.live .set,.v1.live .set.h,.v1.live .set.drop{grid-template-columns:var(--sc)}
+.v1.live .set .pv,.v1.live .set.h>div{min-width:0;white-space:nowrap;overflow:hidden}
+.v1.live .set .sn{min-width:0}
+.v1.live .sx button{min-height:44px;min-width:44px}
+.v1.live .sx .tq::after{inset:-14px}
+.v1.live .xmb .rst{min-width:44px;justify-content:center}
+.v1.live .set.drop .sn{overflow:hidden}
+@media (max-width:359px){
+ .v1.live{--sc:22px minmax(0,1fr) 52px 52px 44px}
+ .v1.live .swr .set,.v1.live .set.h{gap:4px;padding-left:6px;padding-right:4px}
+ .v1.live .set.h{font-size:11px;letter-spacing:0}
+ .v1.live .set .pv{font-size:13px}
+ .v1.live .set input{font-size:16px;padding-left:0;padding-right:0}
+ .v1.live .sx{flex-wrap:wrap}
+ .v1.live .sx .dp{margin-left:0}
+}
+@media (max-height:700px){
+ #setdone .btn{min-height:48px;font-size:16px}
+ #rest .in{padding:8px 4px 10px 14px}
+ #rest .rtm b{font-size:22px}
+ #rest .rb2{min-width:48px}
+ #rest,body.live #rest{bottom:calc(var(--tabh,58px) + 48px + 16px)}
+ body.live .toast{bottom:calc(var(--tabh,58px) + 8px + 48px + 12px)}
+}
 body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 76px + 12px)}
 /* 2. Activity: Steps (hero, bar, chart), Calendar (bare glyphs, 2 by 2 month numbers), Sport (one list, one round button) */
 .v1 .hero>.rw{align-items:center}
@@ -1029,7 +1055,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='8d126d5ff04b091ff903494ae8ed775600909704';let verChecked=0;
+const BUILD='ce8f32dea37c63ca28f3f7bf8fdeeb62d5a52b11';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
