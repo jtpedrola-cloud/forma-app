@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.pulzo.android",
+      "sha256_cert_fingerprints": [
+        "22:58:F3:A1:8F:B7:CE:D0:15:2A:D9:51:0C:17:79:97:6C:C0:BA:19:6D:5D:57:CD:0E:02:4D:39:1F:99:83:80"
+      ]
+    }
+  }
+]
