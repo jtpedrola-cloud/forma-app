@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulzo: food, gym and sport in one place</title>
+<meta name="description" content="Pulzo tracks your food, gym and sport in one simple app. Free to use, made in the Philippines. Install it on Android or iPhone in a minute.">
+<meta name="theme-color" content="#101114">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Pulzo">
+<meta property="og:description" content="Food, gym and sport in one place. Free to use, made in the Philippines.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://jtpedrola-cloud.github.io/forma-app/welcome/today.png">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+:root{--bg:#101114;--card:#17191d;--card2:#1d2025;--line:#25282e;--txt:#f2f3ef;--mut:#8d9198;--soft:#d2d5d0;--acc:#D6FA5A;--onacc:#101114;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:clip}
+a{color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+section{padding:48px 0 0}
+h1,h2,h3,p,ul,ol{margin:0}
+.lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:16px}
+
+/* hero */
+.top{display:flex;align-items:center;gap:12px;padding-top:24px}
+.top img{width:40px;height:40px;border-radius:10px;display:block}
+.top b{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.hero{padding-top:48px}
+h1{font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.025em}
+.hero p{margin-top:16px;color:var(--soft);font-size:17px}
+.cta{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;margin-top:32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 28px;border-radius:14px;background:var(--acc);color:var(--onacc);font-weight:700;font-size:17px;text-decoration:none}
+.btn:active{opacity:.85}
+.lnk{color:var(--txt);text-underline-offset:4px;text-decoration-color:var(--mut);min-height:44px;display:inline-flex;align-items:center}
+
+/* screens */
+.shots{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+.shots::-webkit-scrollbar{display:none}
+.shots figure{margin:0;flex:none;width:62%;max-width:240px;scroll-snap-align:start}
+.shots img{display:block;width:100%;height:auto;border-radius:20px;border:1px solid var(--line);background:var(--card)}
+.shots figcaption{margin-top:8px;font-size:14px;color:var(--mut)}
+
+/* install */
+.how{display:grid;gap:32px}
+.how h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.how ol{padding-left:20px;color:var(--soft)}
+.how li{padding:4px 0 4px 4px}
+.how li::marker{color:var(--mut)}
+.how .note{margin-top:8px;font-size:14px;color:var(--mut)}
+
+/* pricing */
+.plans{display:grid;gap:12px}
+.plan{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--card)}
+.plan.now{border-color:var(--acc)}
+.plan .hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.plan h3{font-size:17px;font-weight:600}
+.plan .pr{font-size:17px;font-weight:700;white-space:nowrap}
+.plan .st{font-size:13px;color:var(--mut);margin-top:2px}
+.plan.now .st{color:var(--acc)}
+.plan p{margin-top:12px;color:var(--soft);font-size:15px}
+
+footer{margin-top:64px;padding:24px 0 48px;border-top:1px solid var(--line);font-size:14px;color:var(--mut)}
+footer nav{display:flex;flex-wrap:wrap;gap:0 24px}
+footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--soft);text-underline-offset:4px}
+footer p{margin-top:8px}
+
+@media (min-width:720px){
+ .wrap{max-width:880px;padding:0 24px}
+ .top{padding-top:32px}
+ .hero{padding-top:96px;max-width:560px}
+ h1{font-size:52px}
+ .hero p{font-size:19px}
+ section{padding-top:80px}
+ .shots{overflow:visible;margin:0;padding:0;gap:24px}
+ .shots figure{width:auto;flex:1;max-width:none}
+ .how{grid-template-columns:1fr 1fr;gap:48px}
+ .plans{grid-template-columns:repeat(3,1fr);gap:16px}
+ .plan{padding:20px;display:flex;flex-direction:column}
+ .plan .hd{flex-direction:column;gap:4px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+ <img src="../icon.svg" alt="" width="40" height="40">
+ <b>Pulzo</b>
+</header>
+
+<main>
+<section class="hero">
+ <h1>Food, gym and sport in one place.</h1>
+ <p>Log a meal, a set or a game in a few taps and see if you are on track. Made in the Philippines.</p>
+ <div class="cta">
+  <a class="btn" href="../">Open Pulzo</a>
+  <a class="lnk" href="#install">How to install</a>
+ </div>
+</section>
+
+<section aria-labelledby="s-screens">
+ <h2 class="lbl" id="s-screens">What it looks like</h2>
+ <div class="shots">
+  <figure><img src="today.png" width="780" height="1688" alt="The Today screen: calories left, protein, carbs and fat, and today's plan."><figcaption>Today</figcaption></figure>
+  <figure><img src="food.png" width="780" height="1688" alt="The Food screen: calories eaten, macro rings and meals with each food listed."><figcaption>Food</figcaption></figure>
+  <figure><img src="workout.png" width="780" height="1688" alt="A workout in progress: back squat sets with weight, reps and a rest timer."><figcaption>Workout</figcaption></figure>
+ </div>
+</section>
+
+<section id="install" aria-labelledby="s-install">
+ <h2 class="lbl" id="s-install">Install</h2>
+ <div class="how">
+  <div>
+   <h3>Android</h3>
+   <ol>
+    <li>Open Pulzo in Chrome.</li>
+    <li>Tap the menu (three dots).</li>
+    <li>Tap Add to Home screen.</li>
+   </ol>
+  </div>
+  <div>
+   <h3>iPhone</h3>
+   <ol>
+    <li>Open Pulzo in Safari.</li>
+    <li>Tap the Share button.</li>
+    <li>Tap Add to Home Screen.</li>
+   </ol>
+  </div>
+ </div>
+ <div class="cta"><a class="btn" href="../">Open Pulzo</a></div>
+</section>
+
+<section aria-labelledby="s-price">
+ <h2 class="lbl" id="s-price">Price</h2>
+ <div class="plans">
+  <div class="plan now">
+   <div class="hd"><h3>Free</h3><span class="pr">PHP 0</span></div>
+   <div class="st">Available now</div>
+   <p>The whole tracker: food, workouts with a rest timer, steps, weight and photos. No ads.</p>
+  </div>
+  <div class="plan">
+   <div class="hd"><h3>Plus</h3><span class="pr">PHP 349 once</span></div>
+   <div class="st">Coming soon</div>
+   <p>Pay once, keep it. Unlimited history, the weekly check-in, the program builder and export.</p>
+  </div>
+  <div class="plan">
+   <div class="hd"><h3>Coach</h3><span class="pr">PHP 199 a month</span></div>
+   <div class="st">Coming soon</div>
+   <p>AI help: log a meal from a photo or your voice, and get a weekly coaching note.</p>
+  </div>
+ </div>
+</section>
+</main>
+
+<footer>
+ <nav aria-label="Legal">
+  <a href="../privacy.html">Privacy</a>
+  <a href="../terms.html">Terms</a>
+  <a href="../delete-account.html">Delete account</a>
+ </nav>
+ <p>Questions: <a href="mailto:jtpedrola@gmail.com">jtpedrola@gmail.com</a></p>
+</footer>
+
+</div>
+</body>
+</html>
