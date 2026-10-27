@@ -1059,7 +1059,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='2aeab612d9d269681c9bf35e4ad5b7c78036ed63';let verChecked=0;
+const BUILD='b9c68f7280c25cdd6fc084c3b8496d7787d73d70';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1210,7 +1210,7 @@ function mutate(p,op,o={}){
 }
 
 /* ---------- GitHub backend ---------- */
-const HttpErr=PulzoBackend.HttpErr;
+const HttpErr=FormaBackend.HttpErr;
 const b64enc=s=>{const u=new TextEncoder().encode(s);let bin='';for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(bin)};
 const b64dec=s=>{const bin=atob(s.replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)};
 let KEEP=false;
@@ -1222,8 +1222,8 @@ async function gh(method,path,body,raw){
  return r;
 }
 const encPath=p=>p.split('/').map(encodeURIComponent).join('/');
-/* The GitHub calls now live in app/backend.js (PulzoBackend). Same methods and results as before; the adapter reads cfg on every call. */
-const GH=PulzoBackend.create('github',()=>cfg);
+/* The GitHub calls now live in app/backend.js (FormaBackend). Same methods and results as before; the adapter reads cfg on every call. */
+const GH=FormaBackend.create('github',()=>cfg);
 /* ---------- meal photos: shrunk in the browser, stored in the repo under data/photos/ ---------- */
 const PHOTOS={},PHLOAD={};
 function shrinkImage(file){
@@ -1299,7 +1299,7 @@ const DEMOB={
  external(p,fn){const cur=DEMOFILES.F[p]?JSON.parse(DEMOFILES.F[p]):blank(p);DEMOFILES.F[p]=JSON.stringify(fn(cur),null,2)+'\n';DEMOFILES.sha[p]='s'+(demoN++)}
 };
 const tick=()=>new Promise(r=>setTimeout(r,30));
-const SB=PulzoBackend.create('supabase',sbCfg);
+const SB=FormaBackend.create('supabase',sbCfg);
 let B=DEMO?DEMOB:GH;
 const useBackend=()=>{B=SBS.user?SB:(DEMO?DEMOB:GH)};
 if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
@@ -1408,7 +1408,7 @@ const root=$('#root');
 function ferr(id,m){const el=$('#'+id);if(!el){toast(m);return}let e=el.parentNode.querySelector('.ferr');if(!e){e=document.createElement('div');e.className='ferr';e.setAttribute('role','alert');el.parentNode.appendChild(e)}e.textContent=m;el.focus()}
 function toast(m){if([...document.querySelectorAll('.toast')].some(x=>x.textContent===m))return;const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function softRender(){
- if(window.PulzoTour&&PulzoTour.active)return;
+ if(window.FormaTour&&FormaTour.active)return;
  if(window.PGDRAG)return;
  const a=document.activeElement;
  if(a&&(a.tagName==='INPUT'||a.tagName==='SELECT')){setSync(UI.sync,UI.syncMsg);return}
@@ -1434,7 +1434,7 @@ const MODS=[['food','Food'],['workout','Workout'],['activity','Activity']];
 const modOn=m=>{const p=profile(),ms=p&&p.modules;return !ms||ms[m]!==false};
 /* Simple mode (docs/specs/simple-mode.md): profile.track is "count" (default) or "simple". Simple hides every food number; the food files are untouched. */
 const isSimple=()=>{const p=profile();return !!p&&p.track==='simple'};
-const SC=()=>PulzoCopy.simple;
+const SC=()=>FormaCopy.simple;
 function subOf(tab,subs){const x=(UI.sub||{})[tab];if(!x&&tab==='progress'&&isSimple()&&subs.some(z=>z[0]==='weight'))return 'weight';return subs.some(z=>z[0]===x)?x:subs[0][0]}
 function subSeg(tab,subs){const cur=subOf(tab,subs);return `<div class="psub"><div class="seg t2">${subs.map(([k,l])=>`<button data-act="sub" data-t="${tab}" data-s="${k}" class="${cur===k?'on':''}">${l}</button>`).join('')}</div></div>`}
 function setSub(tab,sk){UI.sub=UI.sub||{};UI.sub[tab]=sk;LS.set('forma.sub',UI.sub)}
@@ -1804,7 +1804,7 @@ function mealItemsAdd(d,no,its,ids){const t=new Date().toISOString();its.forEach
    data/recipes.json { recipes:[{ id, name, servings, totalG?, items:[{ foodId?, name, qty, unit, kcal, protein, carbs, fat }], by, t }] }
    data/myfoods.json { foods:[ same shape as data/foods.json, by:"app" ] } */
 const P_REC='data/recipes.json',P_MYF='data/myfoods.json';
-const AC=()=>PulzoCopy.add;
+const AC=()=>FormaCopy.add;
 const recipesDb=()=>((cur(P_REC)||{}).recipes||[]);
 const myFoodsDb=()=>((cur(P_MYF)||{}).foods||[]);
 const baseFoods=()=>{const b=foodsdb();return Array.isArray(b)?b:((b&&b.foods)||[])};
@@ -1865,7 +1865,7 @@ function adQtyFor(f,sp,cook){if(!sp||!sp.n)return null;let u=sp.u,n=sp.n;if(u===
  return us.includes(u)?{q:n,u}:null}
 function adSearch(q,cook){
  let sp=adQtySplit(q),qq=sp.n?sp.rest:q;
- const run=qs=>{const words=qs.toLowerCase().split(/\s+/).filter(Boolean),has=n=>words.every(w=>String(n).toLowerCase().includes(w)),S=(l)=>window.PulzoCmd?PulzoCmd.searchFoods(qs,l,12):l.filter(f=>has(f.name+' '+(f.aliases||[]).join(' ')));
+ const run=qs=>{const words=qs.toLowerCase().split(/\s+/).filter(Boolean),has=n=>words.every(w=>String(n).toLowerCase().includes(w)),S=(l)=>window.FormaCmd?FormaCmd.searchFoods(qs,l,12):l.filter(f=>has(f.name+' '+(f.aliases||[]).join(' ')));
   const mine=S(myFoodsDb()).slice(0,4).map(f=>({t:'mine',f,qty:adQtyFor(f,sp,cook)})),rec=cook?[]:recipesDb().filter(r=>has(r.name)).slice(0,3).map(r=>({t:'recipe',r})),
    sv=cook?[]:savedMeals().filter(m=>has(m.name)).slice(0,2).map(m=>({t:'saved',m})),db=S(baseFoods()).map(f=>({t:'food',f,qty:adQtyFor(f,sp,cook)}));
   return [...mine,...rec,...sv,...db].slice(0,8)};
@@ -3022,7 +3022,7 @@ function calHowSheet(){return `<h2>How to read the calendar</h2>
 
 /* ---------- Setup questionnaire (works without Claude; maths in plan.js; every string is in app/copy.js) ---------- */
 const INT={step:0,a:null};
-const OC=()=>PulzoCopy.intake,cf=(s,v)=>PulzoCopy.fill(s,v);
+const OC=()=>FormaCopy.intake,cf=(s,v)=>FormaCopy.fill(s,v);
 const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 /* One idea per screen. Some screens are skipped: pace (only when losing or gaining) and the photo (when redoing the questions). */
 function inScreens(){const a=INT.a,o=['hello','you','size','bf'];
@@ -3047,14 +3047,14 @@ const pill=(k,v,label,on)=>`<button data-act="inSet" data-k="${k}" data-v="${esc
 const mpill=(k,v,label,on)=>`<button data-act="inTog" data-k="${k}" data-v="${esc(String(v))}" class="${on?'on':''}">${label}</button>`;
 const opt=(k,v,title,sub,on,tag)=>`<button class="opt ${on?'on':''}" data-act="inSet" data-k="${k}" data-v="${esc(String(v))}">${tag?`<span class="tg">${tag}</span>`:''}<b>${title}</b>${sub?`<span>${sub}</span>`:''}</button>`;
 const inHead=(id,o)=>{o=o||{};const c=OC()[id];return `<h2>${o.title||c.title}</h2><div class="lead">${o.lead||c.lead}</div>`};
-const bfScaleOf=()=>PulzoCopy.bfScale[INT.a.sex==='female'?'female':'male'];
+const bfScaleOf=()=>FormaCopy.bfScale[INT.a.sex==='female'?'female':'male'];
 const bfIdx=()=>{const a=INT.a;return a.bfMode==='pick'&&a.bf!=null?bfScaleOf().findIndex(l=>a.bf>=l.low&&a.bf<=l.high):-1};
 const bfLabel=l=>cf(l.high>=99?OC().bf.rangeMore:OC().bf.range,{a:l.low,b:l.high});
 function bfMeta(){const a=INT.a,B=OC().bf,i=bfIdx(),bf=latestBF(),unsurePct=FormaPlan.bfFromBMI(a.sex,+a.age||30,+a.heightCm||170,+a.weight||70);
  const cur=i>=0?cf(B.pick,{range:bfLabel(bfScaleOf()[i])}):a.bfMode==='photo'&&bf?cf(B.photoUsing,{pct:bf.pct}):a.bfMode==='unsure'?cf(B.unsureUsing,{pct:unsurePct}):B.pickNone;
  return `<div class="bfcur ${i>=0||a.bfMode?'picked':''}">${cur}</div><div class="bflinks">${bf&&a.bfMode!=='photo'?`<button class="lnk" data-act="inSet" data-k="bfMode" data-v="photo">${cf(B.photoUse,{pct:bf.pct})}</button>`:''}${a.bfMode!=='unsure'?`<button class="lnk" data-act="inSet" data-k="bfMode" data-v="unsure">${B.unsure}</button>`:''}</div>`}
 function bfCenter(i,smooth){const row=$('#bf_row');if(!row)return;const c=row.children[i<0?3:i];if(!c)return;row.scrollTo({left:c.offsetLeft-(row.clientWidth-c.offsetWidth)/2,behavior:smooth?'smooth':'auto'})}
-function bfPick(i){const a=INT.a,l=bfScaleOf()[i];if(!l)return;a.bfMode='pick';a.bf=l.pick;a.bfRange=[l.low,l.high>=99?null:l.high];a.bfScale=PulzoCopy.bfScale.version;
+function bfPick(i){const a=INT.a,l=bfScaleOf()[i];if(!l)return;a.bfMode='pick';a.bf=l.pick;a.bfRange=[l.low,l.high>=99?null:l.high];a.bfScale=FormaCopy.bfScale.version;
  const row=$('#bf_row');if(row)[...row.children].forEach((c,j)=>{c.classList.toggle('on',j===i);c.setAttribute('aria-pressed',j===i)});const m=$('#bf_meta');if(m)m.innerHTML=bfMeta();bfCenter(i,true)}
 /* The first workout in a plan, from today: its name and when ("today", "tomorrow", "Monday"). */
 /* Shared with the Workout tab: the first program day from today on (n days ahead). */
@@ -3379,7 +3379,7 @@ let PG=null;
 function pageEl(){return root.querySelector(':scope > .v1')}
 function swipeBlocked(t){
  if(!t||!t.closest)return true;
- if(window.PulzoTour&&PulzoTour.active)return true;
+ if(window.FormaTour&&FormaTour.active)return true;
  if(UI.sheet||document.querySelector('#ov,#cam,#lib,#ped,#gym,#hist,#learn,#intake,#phv,#hqo,#rover,#ft'))return true;
  if(t.closest('.swr,input,textarea,select,[contenteditable],.cal,.mpanel,.sanc,#fst,.sstk'))return true;
  for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.scrollWidth>e.clientWidth+2){const o=getComputedStyle(e).overflowX;if(o==='auto'||o==='scroll')return true}}
@@ -3461,17 +3461,17 @@ const TOUR_STEPS={
   {id:'cmd',full:1,simple:false,target:'.fab',title:'Log anything',text:'The round button opens one line to type in, like 2 eggs and rice, steps 8200 or basketball 1 hour. You check the preview before anything saves.'},
   {id:'chk',target:'[data-tour=chk]',title:'Today\'s plan',text:'A filled circle means that job is done. Each row has one link that opens the right place.'},
   {id:'cal',full:1,mod:'food',simple:false,target:'[data-tour=cal]',title:'Your calories',text:'Calories and macros fill up as you log, and the lighter band is your range, so in range counts as on target.'},
-  {id:'cmdS',full:1,simple:true,target:'.fab',title:PulzoCopy.simple.tour.cmd[0],text:PulzoCopy.simple.tour.cmd[1]},
-  {id:'trend',full:1,simple:true,target:'[data-tour=trend]',title:PulzoCopy.simple.tour.trend[0],text:PulzoCopy.simple.tour.trend[1]},
-  {id:'verdict',full:1,simple:true,target:'[data-tour=verdict]',title:PulzoCopy.simple.tour.verdict[0],text:PulzoCopy.simple.tour.verdict[1]}],
+  {id:'cmdS',full:1,simple:true,target:'.fab',title:FormaCopy.simple.tour.cmd[0],text:FormaCopy.simple.tour.cmd[1]},
+  {id:'trend',full:1,simple:true,target:'[data-tour=trend]',title:FormaCopy.simple.tour.trend[0],text:FormaCopy.simple.tour.trend[1]},
+  {id:'verdict',full:1,simple:true,target:'[data-tour=verdict]',title:FormaCopy.simple.tour.verdict[0],text:FormaCopy.simple.tour.verdict[1]}],
  food:[
   {id:'seg',simple:false,target:'.psub',title:'Log and Insights',text:'Log is today\'s food, Insights shows your calorie chart and your maintenance, and you can swipe between them.'},
   {id:'tot',simple:false,before:tourSub('food','log'),target:'#fmain',title:'Your totals',text:'The rings and bar show Left or Over against your range for the day.'},
   {id:'meals',simple:false,before:tourSub('food','log'),target:()=>document.querySelector('details.sec')||document.querySelector('#fmain'),title:'Meals',text:'Each meal is a group: tap a food to edit it, tap + to add to it, or Save meal to reuse it later.'},
   {id:'add',full:1,simple:false,before:tourSub('food','log'),target:'.fab',title:'Add food fast',text:'The round button takes a meal as one typed line, like 2 eggs, 1 cup rice. Saved meals are in the three-dot menu.'},
-  {id:'eatv',full:1,simple:true,target:'[data-tour=verdict]',title:PulzoCopy.simple.tour.eat[0],text:PulzoCopy.simple.tour.eat[1]},
-  {id:'habits',simple:true,target:'[data-tour=habits]',title:PulzoCopy.simple.tour.habits[0],text:PulzoCopy.simple.tour.habits[1]},
-  {id:'numbers',simple:true,target:'[data-tour=numbers]',title:PulzoCopy.simple.tour.numbers[0],text:PulzoCopy.simple.tour.numbers[1]}],
+  {id:'eatv',full:1,simple:true,target:'[data-tour=verdict]',title:FormaCopy.simple.tour.eat[0],text:FormaCopy.simple.tour.eat[1]},
+  {id:'habits',simple:true,target:'[data-tour=habits]',title:FormaCopy.simple.tour.habits[0],text:FormaCopy.simple.tour.habits[1]},
+  {id:'numbers',simple:true,target:'[data-tour=numbers]',title:FormaCopy.simple.tour.numbers[0],text:FormaCopy.simple.tour.numbers[1]}],
  workout:[
   {id:'week',target:'.week.w2',title:'Your training week',text:'A dot under a day means a workout is done. The filled lime circle is the day you picked, and tapping a day shows its plan.'},
   {id:'start',full:1,target:()=>document.querySelector('[data-act=wStart]')||document.querySelector('.fab'),title:'Start a workout',text:'The round button starts the workout: it begins the timer and lists every set for you to tick off.'},
@@ -3509,20 +3509,20 @@ function tourRefocus(){const F=TOUR.opener;TOUR.opener=null;if(!F||document.quer
  if(el&&el.focus)try{el.focus({preventScroll:true})}catch(e){}}
 /* Runs steps with the history entry that makes Android back close the tour. Tab and sub-tab changes during the tour never touch history, and both are put back at the end. */
 function tourRun(steps,o){o=o||{};
- if(!window.PulzoTour||!steps.length)return Promise.resolve('stop');
- if(PulzoTour.active)PulzoTour.stop();
+ if(!window.FormaTour||!steps.length)return Promise.resolve('stop');
+ if(FormaTour.active)FormaTour.stop();
  TOUR.opener=document.activeElement&&document.activeElement!==document.body?fref(document.activeElement):(LASTO||LASTF);TOUR.on=true;TOUR.fromPop=false;TOUR.kind=o.kind||'';TOUR.tab=UI.tab;TOUR.sub=clone(UI.sub||{});navPush({l:'tour'});
  let act=null;
- return PulzoTour.start(steps,{onTab:tourTab,onAction:id=>{act=id}}).then(k=>{tourEnd();if(act&&o.action)o.action(act);return k});
+ return FormaTour.start(steps,{onTab:tourTab,onAction:id=>{act=id}}).then(k=>{tourEnd();if(act&&o.action)o.action(act);return k});
 }
 function tourMini(screen){tourRun(tourMiniSteps(screen),{kind:'mini',action:id=>{if(id==='full'){if(UI.sheet)closeSheet();setTimeout(tourFull,350)}else if(id==='learn')learnOpen({id:TOUR_LESSON[screen]})}})}
 /* A signed-in first open goes straight to the tour, then the setup questionnaire, then (for beginners) the Learn start-here path. */
 function tourFull(){tourRun(tourFullSteps(),{kind:'full'}).then(k=>{
  const p=profile();
- if(k!=='stop'&&SBS.user&&p&&!p.intake&&!LS.get('forma.intakeSeen',0)){SBS.firstRun=true;setTimeout(()=>{if(!document.getElementById('intake')&&!PulzoTour.active)intakeOpen()},450);return}
+ if(k!=='stop'&&SBS.user&&p&&!p.intake&&!LS.get('forma.intakeSeen',0)){SBS.firstRun=true;setTimeout(()=>{if(!document.getElementById('intake')&&!FormaTour.active)intakeOpen()},450);return}
  learnAfterTour()})}
 function tourHelp(){let s=UI.tab;if(s==='workout'){const wo=logOf(woDate()).workout;if(wo&&!wo.finishedAt)s='live'}tourMini(s)}
-function tourMaybe(){if(!window.PulzoTour||PulzoTour.active||TOUR.on)return;if(LS.get('forma.tourSeen',0)||!LS.get('forma.tourPending',0))return;
+function tourMaybe(){if(!window.FormaTour||FormaTour.active||TOUR.on)return;if(LS.get('forma.tourSeen',0)||!LS.get('forma.tourPending',0))return;
  if(UI.sheet||['intake','cam','lib','ped','hist','gym'].some(i=>document.getElementById(i)))return;if(!profile()||!program()||!exdb())return;
  LS.del('forma.tourPending');setTimeout(tourFull,500)}
 /* One-card help for sheets (add food, swap, program editor): two sentences, no spotlight. */
@@ -3781,7 +3781,7 @@ function navTab(t){
 function phvClose(fromPop){const v=$('#phv');if(!v)return;v.remove();if(!fromPop)navPop()}
 window.addEventListener('popstate',e=>{
  if(navPending){navPending--;if(!navPending)while(navQ.length){const [k,st]=navQ.shift();if(k==='push')history.pushState(st,'');else history.replaceState(st,'')}return}
- if(TOUR.on){TOUR.fromPop=true;PulzoTour.stop();return}
+ if(TOUR.on){TOUR.fromPop=true;FormaTour.stop();return}
  if($('#hqo')){hqClose(true);return}
  if($('#phv')){phvClose(true);return}
  if(UI.sheet){closeSheet(true);return}
@@ -3837,7 +3837,7 @@ const photoRow=(act,icn,l,sub)=>`<button class="item ph2" data-act="${act}">${ic
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
 function snapChoiceSheet(){
- if(!aiReady()){const A=PulzoCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button>${personalMode()?`<button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button>`:''}<div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
+ if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button>${personalMode()?`<button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button>`:''}<div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
  return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
@@ -3847,13 +3847,13 @@ function logSheet(){
  return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs 1 cup rice, steps 8200, weight 84.9'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?'':chip('foodAdd','plate','Add meal',` data-m="${nm}"`))+chip('snapPick','camera','Snap a meal',aiReady()?'':' class="noai"','<small>Needs AI</small>'):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}</div></div>`}
 function cmdRun(){
  const el=$('#cmd_in'),line=(el?el.value:cmdText).trim();if(!line)return;
- if(!window.PulzoCmd){toast('The command reader did not load. Refresh the app.');return}
+ if(!window.FormaCmd){toast('The command reader did not load. Refresh the app.');return}
  const dre=/(^|[\s,])(?:yesterday(?:'s)?|last night)(?=[\s,.]|$)/gi,wy=dre.test(line);dre.lastIndex=0;
  const pline=wy?line.replace(dre,' ').replace(/\s+/g,' ').replace(/^[\s,]+|[\s,]+$/g,''):line;
  if(!pline){toast('Nothing to log in that line.');return}
  const d=wy?addDays(today(),-1):UI.date,its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
  const ctx={foods:foodsdb()||[],weightKg:latestWeight(),hUnit:hUnitNow(),date:d,lastMealAt:d===today()?(lastT||null):null,lastMealNo:its.length?Math.max(...its.map(mealNo)):0,now:Date.now()};
- let res;try{res=PulzoCmd.parse(pline,ctx)}catch(e){toast('Could not read that line.');return}
+ let res;try{res=FormaCmd.parse(pline,ctx)}catch(e){toast('Could not read that line.');return}
  if(isSimple()){const fa=res.actions.find(x=>x.k==='food'),iss=res.issues||[],other=res.actions.filter(x=>x.k!=='food');
   res.issues=[];res.actions=other;
   if(fa||iss.length){const txt=other.length?[].concat(fa?fa.items.map(i=>i.src||i.name):[],iss.map(u=>u.text)).join(', '):pline;
@@ -3908,7 +3908,7 @@ function cmdSheet(){
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
  if(!CMD.res||CMD.busy)return;
- if(!aiReady()){CMD.aiErr=PulzoCopy.add.cmdNoAi+(personalMode()?' '+PulzoCopy.add.keyHint:'');openSheet(cmdSheet(),cmdSheet);return}
+ if(!aiReady()){CMD.aiErr=FormaCopy.add.cmdNoAi+(personalMode()?' '+FormaCopy.add.keyHint:'');openSheet(cmdSheet(),cmdSheet);return}
  const my=++CMD.seq,known=[];CMD.busy=true;CMD.aiErr='';CMD.aiNotes=[];openSheet(cmdSheet(),cmdSheet);
  CMD.acts.forEach(a=>{if(a.k==='food')a.items.forEach(i=>known.push({name:i.name,amount:i.amount||'',kcal:rnd(i.kcal)}))});
  try{
@@ -3918,7 +3918,7 @@ async function cmdAI(){
   if(!r.items.length)CMD.aiErr='No food found in the part it could not read. Add it by hand.';
   else{
    let fa=CMD.acts.find(x=>x.k==='food');
-   if(!fa){fa={k:'food',meal:window.PulzoCmd?PulzoCmd.mealNumber(CMD.ctx||{}):1,items:[]};CMD.acts.push(fa)}
+   if(!fa){fa={k:'food',meal:window.FormaCmd?FormaCmd.mealNumber(CMD.ctx||{}):1,items:[]};CMD.acts.push(fa)}
    r.items.forEach(it=>fa.items.push(Object.assign({},it,{assumed:true})));
    CMD.res.issues=[];CMD.res.unknown=[];
   }
@@ -3969,14 +3969,14 @@ const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.s
 const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
 /* Signed in: the ai-meal function with the user's token, 5 reads a day counted on the server. Signed out: personal mode, the key on this phone. */
 const aiServer=()=>!!SBS.user&&B.kind==='supabase';
-const aiReady=()=>aiServer()||(!!aiKey()&&!!window.PulzoAI);
+const aiReady=()=>aiServer()||(!!aiKey()&&!!window.FormaAI);
 function recentNames(){const out=[],seen={};for(let i=0;i<=14&&out.length<20;i++){const f=cur(foodP(addDays(today(),-i)));((f&&f.items)||[]).slice().reverse().forEach(it=>{const k=String(it.name||'').toLowerCase();if(k&&!seen[k]&&out.length<20){seen[k]=1;out.push(String(it.name).slice(0,60))}})}return out}
 async function aiMeal(o){
- if(!aiServer())return PulzoAI.meal(Object.assign({key:aiKey(),model:aiModel(),profile:profile()},o));
+ if(!aiServer())return FormaAI.meal(Object.assign({key:aiKey(),model:aiModel(),profile:profile()},o));
  const known=(o.known||[]).filter(k=>k&&k.name).map(k=>k.name+(k.amount?' ('+k.amount+')':''));
  const note=[o.note,known.length?'Already logged from this line, do not return them again: '+known.join('; ')+'.':''].filter(Boolean).join(' ')||undefined;
  try{
-  const r=await PulzoAI.mealServer({post:(b,sig)=>B.callFn('ai-meal',b,sig),imageBase64:o.imageBase64,text:o.text,note,units:unitsNow(),recent:recentNames()});
+  const r=await FormaAI.mealServer({post:(b,sig)=>B.callFn('ai-meal',b,sig),imageBase64:o.imageBase64,text:o.text,note,units:unitsNow(),recent:recentNames()});
   if(r.limit)SBS.limit=r.limit;if(r.used!=null){SBS.used=r.used;SBS.usedDay=mDay()}
   return r;
  }catch(e){if(e&&e.code==='limit'){SBS.used=SBS.limit;SBS.usedDay=mDay()}throw e}
@@ -4005,9 +4005,9 @@ function aiSettings(){
 function aiReopenSettings(){if(UI.sheet&&UI.sheet.indexOf('id="ai_key"')>=0){const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(settingsSheet());const s2=$('#sheet');if(s2)s2.scrollTop=y}}
 async function aiTest(){
  const k=aiKey();if(!k){toast('Paste your key and tap Save key first.');return}
- if(AI.testing)return;if(!window.PulzoAI){toast('The AI reader did not load. Refresh the app.');return}
+ if(AI.testing)return;if(!window.FormaAI){toast('The AI reader did not load. Refresh the app.');return}
  AI.testing=true;AI.err='';AI.msg='';aiReopenSettings();
- try{const r=await PulzoAI.test({key:k,model:aiModel()});LS.set('forma.aiOk',k.slice(-6));AI.msg='Claude answered: '+String(r.text||'').slice(0,40)+(r.model?' ('+r.model+')':'')}
+ try{const r=await FormaAI.test({key:k,model:aiModel()});LS.set('forma.aiOk',k.slice(-6));AI.msg='Claude answered: '+String(r.text||'').slice(0,40)+(r.model?' ('+r.model+')':'')}
  catch(e){LS.del('forma.aiOk');AI.err=aiErr(e)}
  AI.testing=false;aiReopenSettings();
 }
@@ -4016,7 +4016,7 @@ async function aiTest(){
 const SNAP={photo:'',note:'',status:'',items:[],notes:[],raw:'',err:'',meal:1,date:'',seq:0};
 function snapMealNo(d){
  const its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
- return window.PulzoCmd?PulzoCmd.mealNumber({lastMealNo:its.length?Math.max(...its.map(mealNo)):0,lastMealAt:d===today()?(lastT||null):null,now:Date.now()}):(its.length?Math.max(...its.map(mealNo))+1:1);
+ return window.FormaCmd?FormaCmd.mealNumber({lastMealNo:its.length?Math.max(...its.map(mealNo)):0,lastMealAt:d===today()?(lastT||null):null,now:Date.now()}):(its.length?Math.max(...its.map(mealNo))+1:1);
 }
 const snapDraw=()=>{if(UI.sheet&&UI.sheetFn===snapSheet)openSheet(snapSheet(),snapSheet)};
 async function snapStart(file){
@@ -4037,7 +4037,7 @@ function snapRow(j,it){return `<div class="crow"><div class="sp"><div class="n">
 function snapSheet(){
  const S=SNAP,img=S.photo?`<img class="phbig" src="${esc(S.photo)}" alt="" data-act="phView">`:'';
  let body='';
- if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${PulzoCopy.add.noAi}</div><div class="row"><button class="btn ${personalMode()?'ghost ':''}sp" data-act="snapHand">Add by search</button>${personalMode()?'<button class="btn sp" data-act="snapSettings">Open Settings</button>':''}</div>`;
+ if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${FormaCopy.add.noAi}</div><div class="row"><button class="btn ${personalMode()?'ghost ':''}sp" data-act="snapHand">Add by search</button>${personalMode()?'<button class="btn sp" data-act="snapSettings">Open Settings</button>':''}</div>`;
  else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">The AI is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
  else if(S.status==='error')body=`<div class="cunk"><div class="n">${esc(S.err)}</div>${S.raw?`<div class="xs" style="margin-top:6px;word-break:break-word;max-height:120px;overflow:auto">${esc(S.raw.slice(0,800))}</div>`:''}</div><div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapAsk">Try again</button></div>`;
  else{
