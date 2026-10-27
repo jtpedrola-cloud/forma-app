@@ -1,4 +1,4 @@
-/* Forma smart maintenance. Shared by the app (window.FormaSmart) and scripts/checkin.js (require).
+/* Pulzo smart maintenance. Shared by the app (window.FormaSmart) and scripts/checkin.js (require).
    Formula: Mifflin-St Jeor BMR (Katch-McArdle when a body fat estimate exists) + 15% daily life,
    walking 0.000375 kcal per step per kg, lifting 0.05 kcal per kg per minute.
    Adaptive: least-squares weight slope over the last 28 days + average logged intake gives measured

@@ -1,4 +1,4 @@
-/* Forma service worker. Two jobs: (1) the rest-timer and still-training notifications run on its own clock, so they
+/* Pulzo service worker. Two jobs: (1) the rest-timer and still-training notifications run on its own clock, so they
    still ring when the page is frozen in the background (Android throttles page timers with the screen off);
    (2) an offline shell: the page, scripts, icons and the lib JSON are cached so the app opens with no signal.
    The cache name carries the build stamp the page was published with (the same value as version.txt), so a new
@@ -37,7 +37,7 @@ async function page(){
     if(res.ok){try{await learn(res)}catch(x){}return res}
   }catch(x){}
   const c=await shellCache(),hit=c&&await c.match(PAGE);
-  return hit||new Response('<!doctype html><meta name="viewport" content="width=device-width"><body style="font:16px system-ui;padding:24px;background:#101114;color:#eee">Forma has not been opened on this phone with a connection yet. Connect once, then it opens without a signal.',{status:503,headers:{'content-type':'text/html'}});
+  return hit||new Response('<!doctype html><meta name="viewport" content="width=device-width"><body style="font:16px system-ui;padding:24px;background:#101114;color:#eee">Pulzo has not been opened on this phone with a connection yet. Connect once, then it opens without a signal.',{status:503,headers:{'content-type':'text/html'}});
 }
 async function asset(r){
   const c=await shellCache(),v=await curVer(),hit=c&&await c.match(r);
@@ -65,7 +65,7 @@ self.addEventListener('message',e=>{
   if(d.k==='restCancel'){clearRest();return}
   if(d.k==='finishCancel'){clearFin();return}
   if(d.k==='finish'){
-    /* the still-training nudge: 20 minutes after the last set, only if no Forma window is open and visible */
+    /* the still-training nudge: 20 minutes after the last set, only if no Pulzo window is open and visible */
     clearFin();
     const fms=Math.max(0,(+d.at||0)-Date.now());
     e.waitUntil(new Promise(res=>{

@@ -1,4 +1,4 @@
-/* Forma plan builder: turns intake answers into targets and a training program. No AI, no network.
+/* Pulzo plan builder: turns intake answers into targets and a training program. No AI, no network.
    Shared by the app (window.FormaPlan) and node scripts (require). Uses FormaSmart for maintenance.
    Portable on purpose: the public app will run the same logic on its backend. */
 (function (root) {

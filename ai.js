@@ -1,4 +1,4 @@
-/* Forma AI (Claude). Portable: no DOM, no storage. It builds the request, calls the Claude API with fetch and parses
+/* Pulzo AI (Claude). Portable: no DOM, no storage. It builds the request, calls the Claude API with fetch and parses
  * the answer. The caller owns the key (the app keeps it in localStorage only). Browser: window.FormaAI. Node: module.exports.
  *
  *   FormaAI.meal({ key, model, imageBase64?, text?, note?, known?, profile?, today?, fetch? })
