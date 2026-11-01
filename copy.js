@@ -9,6 +9,7 @@
     hello: {
       title: "Let's get your numbers right.",
       lead: 'Two minutes, one question at a time. You can change every answer later.',
+      promise: 'Log food, train, see your progress. Free, offline, yours.',
       titleAgain: "Let's update your plan.",
       leadAgain: 'Your old answers are filled in. Change what is different now.',
       known: 'I know my numbers',
@@ -271,6 +272,7 @@
       height: 'Add your height in cm.',
       weightKg: 'Add your weight in kg.',
       weightLb: 'Add your weight in lb.',
+      sex: 'Choose one to continue.',
       photo: 'Could not read that photo. Try another.',
     },
   };
