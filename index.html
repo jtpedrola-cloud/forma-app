@@ -521,8 +521,10 @@ details.more{position:relative}details.more>summary{list-style:none;cursor:point
 #root{touch-action:pan-y}html{touch-action:manipulation}.tabs,.tabs button,.fab,.chk,button.chip,.chip{-webkit-user-select:none;user-select:none}
 @media (prefers-reduced-motion:reduce){.pgx{transition:none!important}}
 /* The one round button, the log sheet and the notice block (design-v1 amendments, October 24, 2026) */
+:root{--fab:56px}
 .fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 16px);z-index:26;width:56px;height:56px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}
-.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 32px)}
+.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 16px + var(--fab,56px) + 24px + 8px)}
+html:has(.fab){scroll-padding-bottom:calc(var(--tabh,58px) + 16px + var(--fab,56px) + 24px)}
 @media (min-width:700px){.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 96px)}}
 body:has(#ov,#cam,#lib,#ped,#gym,#hist,#svm,#tpl,#learn,#intake,#rover) .fab{display:none}
 .lsh .cmdbar{margin:6px 0 0;gap:0;background:var(--inset);border:1px solid var(--line);border-radius:28px;padding:3px 3px 3px 18px}
@@ -754,6 +756,15 @@ body.live .toast{bottom:calc(var(--tabh,58px) + 8px + 56px + 12px)}
  body.live .toast{bottom:calc(var(--tabh,58px) + 8px + 48px + 12px)}
 }
 body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 76px + 12px)}
+/* The live dock (audit leftovers, item 2): Set done and the rest bar are one opaque stack above the tab bar, never floating over a set row; the page reserves exactly their height. */
+:root{--sdh:56px}
+@media (max-height:700px){:root{--sdh:48px}}
+body.live::after{content:"";position:fixed;left:0;right:0;bottom:0;z-index:23;pointer-events:none;background:var(--bg);height:calc(var(--tabh,58px) + 8px + var(--sdh) + 8px)}
+body.live:has(#rest:not([hidden]))::after{height:calc(var(--tabh,58px) + 8px + var(--sdh) + 8px + var(--rh,74px) + 8px)}
+#rest,body.live #rest{bottom:calc(var(--tabh,58px) + 8px + var(--sdh) + 8px)}
+body.live .wrap{padding-bottom:calc(var(--tabh,58px) + 8px + var(--sdh) + 24px)}
+body.live:has(#rest:not([hidden])) .wrap{padding-bottom:calc(var(--tabh,58px) + 8px + var(--sdh) + 8px + var(--rh,74px) + 24px)}
+body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 8px + var(--sdh) + 8px + var(--rh,74px) + 8px + 12px)}
 /* 2. Activity: Steps (hero, bar, chart), Calendar (bare glyphs, 2 by 2 month numbers), Sport (one list, one round button) */
 .v1 .hero>.rw{align-items:center}
 .v1 .hero .rw .hn{flex:1;min-width:0}
@@ -814,6 +825,7 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 .v1 .pvn .sp{flex:1;min-width:0}
 .v1 .phh{position:relative;margin-top:16px}
 .v1 .phim{display:block;width:100%;aspect-ratio:4/5;max-height:42vh;object-fit:cover;border-radius:12px;background:var(--card2);outline:1px solid var(--line);outline-offset:-1px}
+.v1 .phe span,.v1 .empty{text-wrap:balance}
 .v1 .phe{width:100%;box-sizing:border-box;aspect-ratio:4/5;max-height:42vh;border:2px dashed var(--faint);border-radius:12px;display:grid;place-items:center;color:var(--mut);font-size:15px;padding:0 24px;text-align:center}
 .v1 .cam44{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border-radius:22px;background:var(--acc);color:var(--onacc);display:grid;place-items:center;box-shadow:0 4px 14px -4px rgba(0,0,0,.5)}
 .v1 .phl{margin:12px 0 0}
@@ -956,7 +968,6 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 80px + 
 :root[data-theme="daylight"] .toast{box-shadow:0 8px 24px rgba(16,17,20,.14)}
 :root[data-theme="daylight"] .v1 .pr.nt,:root[data-theme="daylight"] .v1 .nb{background:var(--card2)}
 /* 0.11.12 polish */
-.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 32px)}
 .v1 .xm{flex-wrap:wrap}.v1 .xm .xmb{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;flex:none}
 @media (max-width:370px){.v1 .xm{font-size:14px;gap:4px 8px}.v1 .xm .xmb{gap:6px}}
 .v1 .rst,.v1 .rst.alt{min-height:44px;margin:-6px 0;padding:0 2px;white-space:nowrap}
@@ -1111,16 +1122,17 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 .v1 .mnav.cn .ib:last-child{margin-right:-12px}
 #sheet .cof{min-height:52px;gap:12px}
 #sheet .cof .pi{flex:none;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--faint);display:grid;place-items:center;color:var(--mut)}
+#sheet .cof[aria-pressed=true] .pi{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.v1 .mnav.cn .ib.fl{width:auto;min-width:44px;border-radius:22px;padding:0 12px 0 10px;display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--soft)}
+.v1 .mnav.cn .ib.fl.on{color:var(--acct)}
 .v1 .lkc{display:flex;flex-direction:column;align-items:flex-start}
 .v1 .mls .mact{gap:20px}.v1 .mls .mact .svm{width:auto}
 /* 0.12.0 Workout v3 (handoff 036, DECISIONS.md October 26, 2026): the day is one hero with a shape, exercises are icon rows, the live hero is a set-progress ring. Scoped to .wh, .xr, .ld and .lh. */
 .v1 .wh{background:var(--card);border-radius:20px;padding:20px;margin-top:16px}
 .v1 .wh .pt,.v1>.wh:first-child .pt{margin:0}
 .v1 .wh .sub{margin-top:4px}
-.v1 .mmr{display:flex;gap:4px;margin-top:20px}
-.v1 .mm{flex:0 1 60px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
-.v1 .mm b{width:36px;height:36px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--faint);display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--mut)}
-.v1 .mm span{font-size:12px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v1 .mmr{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.v1 .mm{flex:none;display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--faint);font-size:13px;color:var(--soft);white-space:nowrap}
 .v1 .wh .btn.pri{margin-top:20px;width:100%}
 .v1 .wh>.lnk{display:inline-flex;margin-top:12px}
 .v1 .wh .tany{margin:16px 0 0}
@@ -1165,6 +1177,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 .v1.live .sx .tq{width:44px;height:44px;margin:-13px -13px -13px -8px;border:0;background:radial-gradient(circle at center,transparent 7.4px,var(--faint) 7.5px,var(--faint) 9px,transparent 9.2px)}
 .lsh .dchip{height:44px;border:6px solid transparent;background-clip:padding-box;margin:-6px -6px -6px 0;border-radius:22px}
 @media (max-width:340px),(max-height:660px){
+ :root{--fab:48px}
  .fab{width:48px;height:48px;right:max(12px,calc(50% - 228px));bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 12px)}
  body:has(.fab) .toast{bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 12px + 48px + 12px)}
 }
@@ -1226,7 +1239,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='0e7cc022ca975e0a8e5b30193b25f3b46b29b028';let verChecked=0;
+const BUILD='8494a9be60006a32a976a7eb5e788c555fd11dd0';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1904,7 +1917,7 @@ function insightsView(){
  const tile=(k,icn,val,u,lab)=>pvTile(k,icn,val+(val!=='-'&&u?`<small>${u}</small>`:''),lab,lab+(val==='-'?', not yet':', '+val+' '+u)+'. How this is calculated.','calcOpen');
  const trend=sm.rate==null?'-':(sm.rate<0?'-':'+')+fw(Math.abs(sm.rate),1);
  return `<section class="vs ch"><div class="lbl">Last 7 days</div>${barChart2(cv,cl,tg.kcal,'Calories for the last 7 days',null,rg)}</section>
- <div class="tiles">${tile('burn','bolt',sm.eatDays||sm.weighIns?fmtN(sm.tdee):'-','kcal','You burn')}${tile('eat','food',sm.avgIn?fmtN(sm.avgIn):'-','kcal','You eat')}${tile('trend','scale',trend,wU()+'/wk','Weight trend')}${tile('next','today',sm.status==='collecting'?'-':fmtN(sm.suggested),'kcal','Next target')}</div>
+ <div class="tiles">${tile('eat','food',sm.avgIn?fmtN(sm.avgIn):'-','kcal','Eaten a day')}${tile('burn','bolt',sm.eatDays||sm.weighIns?fmtN(sm.tdee):'-','kcal','Maintenance')}${tile('trend','scale',trend,wU()+' a week','Weekly change')}${tile('next','today',sm.status==='collecting'?'-':fmtN(sm.suggested),'kcal','Next target')}</div>
  <div class="s15 mut stl">${status}</div><button class="lnk l0" data-act="calcOpen">How this is calculated</button>`}
 function calcSheet(){
  const pr=profile(),T=today(),b=pr.body||{},sg=pr.stepGoal,sm=smartNow(),goal=pr.goalRate!=null?pr.goalRate:0.7,train=maintFor(sg,60),rest=maintFor(sg,0),fmt=fmtN,pct=Math.round(sm.conf*100);
@@ -2520,7 +2533,7 @@ function workoutView(){
   const mins=dayMinutes(day);preloadEx(day.exercises.map(e=>e.ex));
   const ld=lastDone(day.id,isT?T:sel),mm=dayMuscles(day,5),n=day.exercises.length,go=isT&&!swo;
   body=`${isT?'':`<div class="lbl">${fmtLong(sel)}${sel<T?', not logged':', planned'}</div>`}<section class="hero wh"><h2 class="pt">${esc(day.name)}</h2><div class="sub">${n} exercise${n===1?'':'s'}, about <span class="nw">${mins} min</span>${ld?', last done '+fmtShort(ld):''}${mins>sessMax()?` <span class="amb">over your ${sessMax()} min</span>`:''}</div>
-  <div class="mmr">${mm.map(m=>`<span class="mm"><b>${m[0]}</b><span>${esc(m[1])}</span></span>`).join('')}</div>
+  <div class="mmr" role="list" aria-label="Muscles worked">${mm.map(m=>`<span class="mm" role="listitem">${esc(m[1])}</span>`).join('')}</div>
   ${go?`<button class="btn pri full" data-act="wStart" data-id="${day.id}" aria-label="Start ${esc(day.name)}">${ic('play',20)} Start workout</button>`:!isT&&sel<T?`<button class="lnk l0" data-act="wMark" data-d="${sel}" data-id="${day.id}">I did this workout, mark as done</button>`:''}${lrnDone('sets-reps')?'':`<button class="lnk mut l0" data-act="termLesson" data-id="sets-reps">New to lifting? What sets and reps mean</button>`}</section>
   <div class="xlst">${day.exercises.map(e=>`<button class="xr" data-act="cues" data-ex="${esc(e.ex)}" data-sets="${e.sets}" data-reps="${esc(e.reps)}" aria-label="Notes and pictures for ${esc(exName(e.ex))}">${xlead(e.ex,44)}<span class="xn">${esc(exName(e.ex))}</span><span class="xv">${e.sets} sets of ${esc(e.reps)}</span>${ic('right',18)}</button>`).join('')}</div>`;
  }
@@ -2825,7 +2838,7 @@ function updateRest(){
  if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;restDone(r,live)}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
  if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div class="rtm"><b id="rt">0:00</b><div class="xs mut">${esc(r.name||'Rest')}</div></div><button class="rb2" data-act="rest15m">-15</button><button class="rb2" data-act="rest30">+30</button><button class="rb2" data-act="restSkip">Skip</button><div class="bar"><i id="rb" style="width:100%"></i></div></div></div>`}
- $('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
+ if(el.offsetHeight)document.documentElement.style.setProperty('--rh',el.offsetHeight+'px');$('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
  const sec=Math.ceil(left);if(sec<=3&&sec>=1&&r.lastTick!==sec){r.lastTick=sec;restTick()}
 }
 setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
@@ -2950,7 +2963,7 @@ function photosCard(){
  const e=es[UI.tlIdx],bf=e&&h.find(x=>x.d===e.d),cam=`<button class="cam44" data-act="ppChoose" aria-label="Add a ${pose==='other'?'':pose+' '}photo">${ic('camera',22)}</button>`;
  const tabs=`<div class="seg t2 tlt">${poses.map(z=>`<button data-act="tlPose" data-p="${z}" class="${pose===z?'on':''}">${z[0].toUpperCase()+z.slice(1)}</button>`).join('')}</div>`;
  const hero=e?`<div class="phh">${pimg(e.p,`class="phim" alt="${pose} photo, ${fmtLong(e.d)}" data-act="phView"`)}${cam}</div><div class="s15 mut stl phl">${fmtLong(e.d)}${bf?' · about '+bf.pct+'% body fat':''}</div>`
-  :`<div class="phh"><div class="phe"><span>${ph.length?'Take your first '+pose+' photo':'Take your first photo'}</span></div>${cam}</div>`;
+  :`<div class="phh"><div class="phe"><span>${ph.length?'Take your first '+pose+' photo':'No photos yet. Take the first set: front, side, back.'}</span></div>${cam}</div>`;
  const row=es.length>1?`<div class="thr" id="thr">${es.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<button class="th${i===UI.tlIdx?' on':''}" data-act="tlPick" data-i="${i}" aria-label="${fmtLong(x.d)}" aria-pressed="${i===UI.tlIdx}">${pimg(x.p,'alt="" loading="lazy"')}<span>${fmtShort(x.d)}</span></button>`).join('')}</div>`:'';
  const tiles=ph.length?`<div class="tiles pt2">${ph.length>1?pvTile('cmp','mirror','Compare','Two photos','Compare two photos','bodyCmp'):`<div class="tile off" aria-hidden="true">${ic('mirror',24)}<span class="tx"><span class="tv">Compare</span><span class="tlab">Needs two photos</span></span></div>`}${pvTile('all','grid',String(ph.length),'All photos','All photos, '+ph.length+(ph.length===1?' session':' sessions'),'bodyAll')}</div>`:'';
  return `${tabs}${hero}${row}${tiles}<input type="file" id="pp_in" accept="image/*" multiple hidden><input type="file" id="pp_cam" accept="image/*" capture="environment" hidden>`;
@@ -3201,7 +3214,7 @@ function sring(v,goal,px,sw,inner){
 function stepsHero(d){
  const sg=profile().stepGoal,st=logOf(d).steps,left=Math.max(0,sg-(st||0)),fm=n=>n.toLocaleString('en-US');
  const line=st==null?'Not logged yet':left?fm(left)+' to go':'Goal reached';
- return `<section class="hero h3 s3" data-tour="steps">${RING_DEFS}<button class="hk" data-act="stepsEdit" aria-label="Steps today, ${st==null?'none logged':fm(st)} of ${fm(sg)}, tap to edit">${sring(st||0,sg,168,4,`<b class="big">${st==null?'-':fm(st)}</b><span class="of">of ${fm(sg)}</span>`)}</button><div class="s15 mut stl">${line}</div><button class="lnk" data-act="stepsEdit">Log steps</button></section>`}
+ return `<section class="hero h3 s3" data-tour="steps">${RING_DEFS}<div class="lbl">${d===today()?'Today':fmtShort(d)}</div><button class="hk" data-act="stepsEdit" aria-label="Steps today, ${st==null?'none logged':fm(st)} of ${fm(sg)}, tap to edit">${sring(st||0,sg,168,4,`<b class="big">${st==null?'-':fm(st)}</b><span class="of">of ${fm(sg)}</span>`)}</button><div class="s15 mut stl">${line}</div><button class="lnk" data-act="stepsEdit">Log steps</button></section>`}
 function activityView(){
  const pr=profile(),T=today(),fm=n=>n.toLocaleString('en-US');
  const sub=subOf('activity',ACT_SUBS),hdr=headerV1('Activity',[],subSeg('activity',ACT_SUBS)),W=(x,fab)=>hdr+`<div class="v1">${x}</div>`+(fab||logFab());
@@ -3213,7 +3226,7 @@ function activityView(){
  const avg=l7.length?rnd(l7.reduce((a,b)=>a+b,0)/l7.length):null,km=Math.round(wkSteps*.75/100)/10,streak=streakOf(x=>dayFlags(x).hit);
  const tile=(k,icn,val,u,lab,aria)=>pvTile(k,icn,val+(val!=='-'&&u?`<small>${u}</small>`:''),lab,aria,'actTile');
  const anyActs=wk.some(d=>actsOf(d).length>0),anySteps=sv.some(x=>x!=null),sMin=anyActs&&wkMin?String(wkMin):'-',sStr=anySteps||streak?String(streak):'-',sKm=wkSteps?String(km):'-';
- const tiles=`<div class="tiles">${tile('sport','ball',sMin,'min a week','Sport',sMin==='-'?'Sport, none this week. Open Sport.':'Sport, '+wkMin+' minutes this week. Open Sport.')}${tile('calendar','cal',sStr,'days in a row','Calendar',sStr==='-'?'Calendar. Open Calendar.':'Calendar, '+streak+' days in a row at your step goal. Open Calendar.')}${tile('chart','walk',avg==null?'-':fm(avg),'a day','Average','Average steps over the last 7 days'+(avg==null?', none logged':', '+fm(avg)))}${tile('chart','run',sKm,'km a week','Distance',sKm==='-'?'Distance, no steps this week':'Distance this week, about '+km+' kilometres')}</div>`;
+ const tiles=`<div class="tiles">${tile('sport','ball',sMin,'min','Sport this week',sMin==='-'?'Sport, none this week. Open Sport.':'Sport, '+wkMin+' minutes this week. Open Sport.')}${tile('calendar','cal',sStr,'days in a row','Calendar',sStr==='-'?'Calendar. Open Calendar.':'Calendar, '+streak+' days in a row at your step goal. Open Calendar.')}${tile('chart','walk',avg==null?'-':fm(avg),'a day','Average, last 7 days','Average steps over the last 7 days'+(avg==null?', none logged':', '+fm(avg)))}${tile('chart','run',sKm,'km','Distance this week',sKm==='-'?'Distance, no steps this week':'Distance this week, about '+km+' kilometres')}</div>`;
  const chart=`<section class="vs ch" id="s14"><div class="lbl">Last 14 days</div>${sv.some(x=>x!=null)?barChart2(sv,sl,pr.stepGoal,'Steps for the last 14 days',sdt)+'<div class="xs mut">Tap a day to add or fix its steps.</div>':'<div class="s15 mut">No steps logged yet.</div>'}</section>`;
  return W(stepsHero(T)+tiles+chart);
 }
@@ -3223,9 +3236,10 @@ function sportCard(){
  const T=today(),wk=weekDates(T),rows=[],kinds=[];let wkMin=0;
  for(let i=0;i<30;i++){const d=addDays(T,-i);actsOf(d).forEach(a=>{rows.push({d,a});if(wk.includes(d)){wkMin+=a.min||0;if(!kinds.includes(a.kind))kinds.push(a.kind)}})}
  const plan=sportPlan(T);
- return `<section class="vs hero sp3"><div class="lbl">This week</div><div class="hn"><b class="big">${wkMin}</b><span class="of">min</span></div><div class="s15 mut stl">${kinds.length?kinds.map(actName).join(', '):'Nothing yet'}</div></section>
+ const none=!rows.length;
+ return `${none?'':`<section class="vs hero sp3"><div class="lbl">This week</div><div class="hn"><b class="big">${wkMin}</b><span class="of">min</span></div><div class="s15 mut stl">${kinds.length?kinds.map(actName).join(', '):'Nothing yet'}</div></section>`}
  ${plan.length?`<section class="vs"><div class="lbl">Today</div>${plan.map(s=>sportRow3(T,s)).join('')}</section>`:''}
- <section class="vs"><div class="lbl">Last 30 days</div>${rows.length?rows.map(({d,a})=>`<button class="item lg3" data-act="actDay" data-d="${d}"><span class="pi">${ic(ACT_ICON[a.kind]||'bolt',24)}</span><div class="sp"><div class="n">${esc(actName(a.kind))}</div><div class="xs mut">${d===T?'Today':fmtShort(d)}</div></div><div class="r">${minLbl(a.min)}</div></button>`).join(''):'<div class="empty lft">No sport yet.</div>'}</section>`;
+ <section class="vs">${none?'':'<div class="lbl">Last 30 days</div>'}${rows.length?rows.map(({d,a})=>`<button class="item lg3" data-act="actDay" data-d="${d}"><span class="pi">${ic(ACT_ICON[a.kind]||'bolt',24)}</span><div class="sp"><div class="n">${esc(actName(a.kind))}</div><div class="xs mut">${d===T?'Today':fmtShort(d)}</div></div><div class="r">${minLbl(a.min)}</div></button>`).join(''):'<div class="empty lft">No sport logged. Tap + to add a game or a session.</div>'}</section>`;
 }
 
 /* Consistency: a day is on schedule if its planned workout was finished, or it was a rest day.
@@ -3243,7 +3257,7 @@ const dayFull=d=>{const sc=dayScore(d);return sc.all>0&&sc.done===sc.all};
 /* Activity > Calendar: one icon per day and at most one small number, no colour grades. A filled disc means done, an outlined disc means a planned workout.
    A day with several things shows the main one (workout, then sport, then walk) and a small +N. Chips filter by kind; the scale chip is a plain weight view. */
 const ACT_ICON={basketball:'ball',volleyball:'ball',football:'ball',badminton:'racket',tennis:'racket',pickleball:'racket',running:'run',cycling:'bike',swimming:'swim',hiking:'walk',boxing:'glove',muaythai:'glove',kickboxing:'glove',mma:'glove',jiujitsu:'belt',judo:'belt',karate:'belt',taekwondo:'belt',wrestling:'belt',arnis:'belt',other:'bolt'};
-const CAL_KINDS=[['workout','Workouts','dumbbell'],['walk','Walks','walk'],['sport','Sport','ball'],['food','Food','plate'],['weigh','Weigh-ins','scale']];
+const CAL_KINDS=[['workout','Workouts','dumbbell'],['walk','Steps','walk'],['sport','Sport','ball'],['food','Food','plate'],['weigh','Weight','scale']];
 const CAL_NUMS=[['weight','Weight'],['steps','Steps'],['kcal','Calories'],['none','Nothing']];
 const calKinds=()=>{const k=LS.get('forma.calKinds',null);return Array.isArray(k)?k.filter(x=>CAL_KINDS.some(c=>c[0]===x)):['workout','walk','sport']};
 const calNum=()=>{const v=LS.get('forma.calNum','none');return CAL_NUMS.some(c=>c[0]===v)?v:'weight'};
@@ -3281,7 +3295,7 @@ function stepsCalCard(){
   const icon=it.main?`<span class="gi ${it.main.done?'on':''}">${ic(it.main.icon,18)}</span>`:'<span class="gp"></span>';
   return {inner:icon+(nm==='none'?'':`<span class="dv">${esc(num)}</span>`)+(it.more?`<span class="mo" title="+${it.more}"></span>`:'')}},'stepDay','ic');
  const kk=n=>n>=1000?(Math.round(n/100)/10)+'k':String(n);
- return `<section class="vs cl2"><div class="mnav cn"><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button><button class="ib${f!=='all'?' on':''}" data-act="calOpts" aria-label="Choose what the calendar shows">${ic('grid',20)}</button></div>${grid}</section>
+ return `<section class="vs cl2"><div class="mnav cn"><b>${monthName(m)}</b><button class="ib" data-act="pNav" data-n="-1" aria-label="Previous month">${ic('left')}</button><button class="ib" data-act="pNav" data-n="1" aria-label="Next month" ${m>=ym(T)?'disabled style="opacity:.3"':''}>${ic('right')}</button><button class="ib fl${f!=='all'?' on':''}" data-act="calOpts" aria-label="Choose what the calendar shows, now ${f==='all'?'All':esc((CAL_KINDS.find(c=>c[0]===f)||[0,f])[1])}">${ic('grid',20)}<span>${f==='all'?'All':esc((CAL_KINDS.find(c=>c[0]===f)||[0,f])[1])}</span></button></div>${grid}</section>
  <section class="vs"><div class="g22">${gstat(any&&Math.max(planned,did)?did+'<small>of '+Math.max(planned,did)+'</small>':'-','','Workouts')}${gstat(savg?kk(savg):'-','','Steps a day')}${gstat(wd==null?'-':(wd>0?'+':wd<0?'-':'')+fw(Math.abs(wd)),wd==null?'':wU(),'Weight change')}${gstat(any?full+'<small>of '+md.length+'</small>':'-','','Everything done')}</div>
  <div class="s15 mut stl">${best?`Everything done ${fullStreak} day${fullStreak===1?'':'s'} in a row, best ${best}.`:any?'No day with everything done yet.':'Nothing logged this month yet.'}</div><button class="lnk l0" data-act="calHow">How to read this</button></section>`;
 }
@@ -3536,9 +3550,12 @@ function settingsSheet(){
  const row=(act,label,sub,attr='')=>`<button class="srow" data-act="${act}"${attr}><span class="sp">${label}${sub?`<span class="xs">${sub}</span>`:''}</span><span class="mut">${ic('right',18)}</span></button>`;
  const ctl=(label,inner)=>`<div class="sctl"><span class="sp">${label}</span>${inner}</div>`;
  const sw=(label,act,on,attr='')=>`<div class="sctl"><span class="sp">${label}</span><button class="swt${on?' on':''}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="${act}"${attr}><i></i></button></div>`;
- const anc=[['account','Account'],['units','Units'],['reminders','Reminders'],['data','Targets and data'],['app','App']].concat(personalMode()?[['personal','Personal mode']]:[]);
- const account=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
- ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}${row('learnOpen','Learn',lrnList().length?lrnCount()+' of '+lrnList().length+' lessons done':'')}${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
+ const adv=aiServer()||personalMode();
+ const anc=[['profile','Profile'],['data','Targets and data'],['reminders','Reminders'],['units','Units'],['look','Appearance'],['track','What you track'],['learn','Learn and tour'],['account','Account and backups']].concat(adv?[['advanced','Advanced']]:[]);
+ const profileG=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
+ ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}`;
+ const learnG=`${row('learnOpen','Learn',lrnList().length?lrnCount()+' of '+lrnList().length+' lessons done':'')}${row('tourShow','Show the tour')}`;
+ const account=`${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
  <button class="srow bad" data-act="${SBS.user?'sbOut':'signout'}">Sign out</button>`;
  const units=`${ctl('Weight in',`<div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div>`)}
  ${ctl('Height in',`<div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div>`)}
@@ -3560,21 +3577,22 @@ function settingsSheet(){
  <details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Pulzo Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
  <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Pulzo Steps</a></details>`:'';
- const app=`${MODS.map(([k,l])=>sw(l,'modTog',modOn(k),` data-m="${k}"`)).join('')}
+ const trackG=`${pr?`${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div>`:''}
+ ${MODS.map(([k,l])=>sw(l,'modTog',modOn(k),` data-m="${k}"`)).join('')}
  <div class="snote">Turn off what you do not use and its tab, rows and reminders go away.</div>
- ${sw('Sunday measurements row','measTog',modOn('measure'))}
- ${ctl('Style',`<div class="mods">${THEMES.map(([id,n])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}">${n}</button>`).join('')}</div>`)}
+ ${sw('Sunday measurements row','measTog',modOn('measure'))}`;
+ const look=`${ctl('Style',`<div class="mods">${THEMES.map(([id,n])=>`<button data-act="theme" data-t="${id}" class="${cur===id?'on':''}">${n}</button>`).join('')}</div>`)}
  <div class="sctl cal"><span class="sp">Calendar icons</span></div>
  <div class="opts">${CAL_KINDS.map(([k,l])=>`<button data-act="calKind" data-k="${k}" class="${calKinds().includes(k)?'on':''}" aria-pressed="${calKinds().includes(k)}">${l}</button>`).join('')}</div>
  <div class="sctl cal"><span class="sp">Number in each day</span></div>
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
- ${aiServer()?aiSettings():''}
- ${row('tourShow','Show the tour')}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.13.0${DEMO?' (demo mode)':''}</div>`;
+ ${sw('Timer sound','soundTog',LS.get('forma.sound',1)!==0)}
+ ${sw('Shake to finish a set','shakeTog',LS.get('forma.shake',1)!==0)}`;
+ const advanced=`${aiServer()?aiSettings():''}${personalMode()?personal:''}`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
- ${pr?`<div class="ss" id="set_track">${sw(SC().settings.label,'trackTog',!isSimple())}<div class="snote">${SC().settings.line}</div></div>`:''}
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
- ${sec('account','Account',account)}${sec('units','Units',units)}${sec('reminders','Reminders',rem)}${sec('data','Targets and data',data)}${sec('app','App',app)}${personal?sec('personal','Personal mode',personal):''}`;
+ ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.13.1${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -3769,7 +3787,7 @@ const TOUR_STEPS={
   {id:'weight',target:'[data-s=weight]',title:'Body',text:'Your weight trend, body fat estimates and tape measurements live here.'}],
  settings:[
   {id:'setup',target:'#sheet [data-act=inOpen]',title:'Your plan',text:'Redo setup changes your goal, targets and program from a few questions.'},
-  {id:'track',target:'#sheet .sanc',title:'Jump to a section',text:'Account, Units, Reminders, Data and App are one tap apart. Turn Food, Workout or Activity off under App and its tab and reminders go away.'},
+  {id:'track',target:'#sheet .sanc',title:'Jump to a section',text:'Profile, Targets and data, Reminders, Units and the rest are one tap apart. Turn Food, Workout or Activity off under What you track and its tab and reminders go away.'},
   {id:'data',target:'#sheet [data-act=exportGo]',title:'Your data',text:'Export my data downloads everything you logged as a zip you can keep.'}]
 };
 const tourOk=s=>(!s.mod||modOn(s.mod))&&!(isSimple()&&s.simple===false)&&!(!isSimple()&&s.simple===true);
@@ -4692,9 +4710,9 @@ document.addEventListener('click',async e=>{
   case 'chk':{if(Date.now()-(UI.wStartAt||0)<600)break;const ck=D.ex+'|'+D.i,now=Date.now();UI.chkT=UI.chkT||{};if(now-(UI.chkT[ck]||0)<350)break;UI.chkT[ck]=now;tickSet(D.ex,+D.i,'tap');break}
   case 'setDone':askMotion();doneNext('tap');break;
   case 'sdUndo':undoDone();break;
-  case 'shakeTog':{const on=LS.get('forma.shake',1)!==0;LS.set('forma.shake',on?0:1);askMotion();render();toast0(on?'Shake is off.':'Shake on: shake your phone firmly to finish a set.');break}
+  case 'shakeTog':{const on=LS.get('forma.shake',1)!==0;LS.set('forma.shake',on?0:1);askMotion();if(t.classList.contains('swt')){t.classList.toggle('on',!on);t.setAttribute('aria-checked',String(!on))}else render();toast0(on?'Shake is off.':'Shake on: shake your phone firmly to finish a set.');break}
   case 'restSet':{const cur=restFor(D.ex),nx=REST_PRESETS.find(v=>v>cur)||REST_PRESETS[0],t=LS.get('forma.restWo',null),m=t&&t.d===T&&t.m?t.m:{};m[D.ex]=nx;LS.set('forma.restWo',{d:T,m});render();break}
-  case 'soundTog':{const on=LS.get('forma.sound',1)!==0;LS.set('forma.sound',on?0:1);t.textContent=t.classList.contains('mi')?'Timer sound: '+(on?'off':'on'):on?'Muted':'Sound';if(!on)beep();break}
+  case 'soundTog':{const on=LS.get('forma.sound',1)!==0;LS.set('forma.sound',on?0:1);if(t.classList.contains('swt')){t.classList.toggle('on',!on);t.setAttribute('aria-checked',String(!on))}else t.textContent=t.classList.contains('mi')?'Timer sound: '+(on?'off':'on'):on?'Muted':'Sound';if(!on)beep();break}
   case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
   case 'rir':editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const v=+D.v;if(x.rir===v)delete x.rir;else x.rir=v},{delay:1500});render();break;
   case 'dropAdd':{let w0=0;editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const base=(x.drops&&x.drops.length?x.drops[x.drops.length-1].w:x.w)||0;w0=base>=20?Math.round(base*.8/2.5)*2.5:Math.round(base*.8);(x.drops=x.drops||[]).push({w:w0,r:0})},{delay:1500});UI.rest=null;updateRest();render();break}
