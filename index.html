@@ -719,14 +719,15 @@ svg rect.bh{cursor:pointer;fill:transparent}svg rect.bh:focus-visible{outline:2p
 .v1 .xa .lnk{color:var(--mut);text-decoration:none}
 .v1 .addx{margin-top:32px}
 /* rest bar: charcoal surface, lime time and a thin lime progress line; set-done bar: the one lime button */
-#rest .in{background:var(--card);border:0;border-radius:16px;padding:12px 8px 14px 16px;display:grid;grid-template-columns:1fr repeat(4,auto);align-items:center;gap:0 2px;position:relative;overflow:hidden}
+#rest .in{background:var(--card);border:0;border-radius:16px;padding:12px 8px 14px 16px;display:grid;grid-template-columns:minmax(0,1fr) repeat(4,auto);align-items:center;gap:0 2px;position:relative;overflow:hidden}
+#rest .rtm{padding-right:4px}
 #rest .rundo{text-decoration:underline;color:var(--txt)}
 #rest .rundo[hidden]{display:none}
 #rest>div{animation:rup .2s ease-out}
 @keyframes rup{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 #rest .rtm b{font-size:28px;font-weight:600;color:var(--acct);font-variant-numeric:tabular-nums;line-height:1.1;display:block}
 #rest .rtm .xs{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
-#rest .rb2{min-width:56px;min-height:44px;font-size:15px;color:var(--soft)}
+#rest .rb2{min-width:48px;min-height:44px;font-size:15px;color:var(--soft)}
 #rest .bar{margin:0;height:3px;background:var(--track);position:absolute;left:0;right:0;bottom:0;border-radius:0}
 #rest .bar>i{background:var(--acc);border-radius:0}
 #setdone .btn{border-radius:16px;font-size:17px;box-shadow:none;min-height:56px;line-height:1.2;padding:0 16px}
@@ -737,9 +738,12 @@ body.live #rest{bottom:calc(var(--tabh,58px) + 72px + 8px)}
 #setdone{bottom:calc(var(--tabh,58px) + 8px)}
 body.live .toast{bottom:calc(var(--tabh,58px) + 8px + 56px + 12px)}
 /* live workout at big text (B3): one column track list for header, set and drop rows so nothing runs past the edge; 44 px targets; compact dock on short screens */
-.v1.live{--sc:30px minmax(0,1fr) 74px 74px 44px}
+.v1.live{--sc:minmax(30px,auto) minmax(0,1fr) 74px 74px 44px}
 .v1.live .set,.v1.live .set.h,.v1.live .set.drop{grid-template-columns:var(--sc)}
-.v1.live .set .pv,.v1.live .set.h>div{min-width:0;white-space:nowrap;overflow:hidden}
+.v1.live .set.h>div{min-width:0;white-space:nowrap;overflow:visible}
+.v1.live .set .pv{min-width:0;line-height:1.15;overflow-wrap:normal}
+.v1.live .sx{flex-wrap:wrap;row-gap:4px}
+.v1.live .sx button{padding:0 4px}
 .v1.live .set .sn{min-width:0}
 .v1.live .sx button{min-height:44px;min-width:44px}
 .v1.live .sx .tq::after{inset:-14px}
@@ -826,11 +830,11 @@ body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + 8px + v
 .v1 .pvh .stl{margin:4px 0 0}
 .v1 .pvh .wl{display:block;width:100%;height:auto;margin-top:16px}
 .v1 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:32px}
-.v1 .tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:16px;min-height:112px;padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:left;color:var(--txt)}
+.v1 .tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:16px;min-height:112px;padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:left;color:var(--txt);container-type:inline-size}
 .v1 .tile>svg{color:var(--mut);flex:none}
 .v1 .tile .tx{display:block;min-width:0;max-width:100%}
-.v1 .tile .tv{display:block;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.v1 .tile .tv small{font-size:15px;color:var(--mut);margin-left:4px}
+.v1 .tile .tv{display:block;font-size:min(28px,24cqw);line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:break-word}
+.v1 .tile .tv small{font-size:15px;color:var(--mut);margin-left:4px;white-space:nowrap}
 .v1 .tile .tlab{display:block;font-size:12px;color:var(--mut);margin-top:2px}
 .v1 .tile.off{opacity:.45}
 .v1 .tile .tv.ta .why{font-size:14px;line-height:20px;font-weight:500;color:var(--soft)}
@@ -1060,7 +1064,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 .cfl button,.v1 .cfl button{min-height:44px}
 /* 0.12.0 Today v3 (docs/specs/design-v2.md, DECISIONS.md October 26, 2026): one calories ring, icon plan rows, rings open a sheet. Scoped to .t3 and the two sheets. */
 .v1 .h3{margin-top:16px;display:flex;flex-direction:column;align-items:center}
-.hr3{position:relative;display:block;flex:none}
+.hr3{position:relative;display:block;flex:none;container-type:size}
 .hr3 svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
 .hr3 circle{fill:none;stroke-linecap:round}
 .hr3 .tr{stroke:var(--track)}.hr3 .pg{stroke:var(--acl);transition:stroke-dashoffset .2s}
@@ -1068,7 +1072,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 .hr3.over .pg,.hr3.over .bd{stroke:var(--warn)}
 .hr3 .hv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;font-variant-numeric:tabular-nums}
 .hr3 .hv b{font-size:17px;font-weight:500}
-:root .v1 .hr3 .hv b.big{font-size:40px;font-weight:600;letter-spacing:-1px;line-height:1.1}
+:root .v1 .hr3 .hv b.big{font-size:min(40px,27cqw);font-weight:600;letter-spacing:-1px;line-height:1.1}
 .hr3 .hv .of{font-size:12px;color:var(--mut);margin-top:4px}
 .v1 .hk{display:block;padding:0;border-radius:50%}
 .v1 .h3 .stl{margin-top:12px;text-align:center}
@@ -1171,9 +1175,9 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 .v1 .tany summary::-webkit-details-marker{display:none}
 .v1 .tany .lst{margin-top:12px}
 .v1 .xlst{margin-top:24px}
-.v1 .xr{display:grid;grid-template-columns:44px minmax(0,1fr) auto 18px;align-items:center;column-gap:16px;width:100%;min-height:64px;padding:10px 0;text-align:left}
+.v1 .xr{display:grid;grid-template-columns:44px minmax(0,1fr) fit-content(36%) 18px;align-items:center;column-gap:16px;width:100%;min-height:64px;padding:10px 0;text-align:left}
 .v1 .xr .xn{font-size:17px;line-height:1.25;overflow-wrap:anywhere}
-.v1 .xr .xv{font-size:15px;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.v1 .xr .xv{font-size:15px;color:var(--mut);font-variant-numeric:tabular-nums;text-align:right}
 .v1 .xr>svg{color:var(--faint);justify-self:end}
 .ld{position:relative;flex:none;width:var(--s,44px);height:var(--s,44px);border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--card2);color:var(--mut);font-size:13px;font-weight:600;letter-spacing:.04em}
 .ld img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -1193,7 +1197,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 /* short phones (360x780): a smaller ring and tighter gaps so the first plan rows end above the round + */
 @media (max-height:800px){
  .v1 .h3 .hk .hr3{width:120px!important;height:120px!important}
- :root .v1 .h3 .hk .hr3 .hv b.big{font-size:32px}
+ :root .v1 .h3 .hk .hr3 .hv b.big{font-size:min(32px,27cqw)}
  .v1 .h3 .stl{margin-top:8px}
  .v1 .hrow{margin-top:12px}
  .v1 .pr.p3{min-height:48px}
@@ -1271,7 +1275,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='db2b8fe6791c9d51f84760c8943d16ac888a99c3';let verChecked=0;
+const BUILD='c70b9b5972fbe4c0e6329c90700dbb1645c6cf59';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1487,7 +1491,7 @@ let DEMOFILES=null,demoN=1;
 const DEMOB={
  async init(){
   const F={},sha={};
-  for(const n of ['profile','program','exercises','foods','lessons']){F['data/'+n+'.json']=await (await fetch('../data/'+n+'.json')).text()}
+  await Promise.all(['profile','program','exercises','foods','lessons'].map(async n=>{F['data/'+n+'.json']=await (await fetch('../data/'+n+'.json')).text()}));
   const prog=JSON.parse(F[P_PROG]),T=today();let seed=7;const rn=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
   const meals=[['breakfast','Oatmeal with banana','1 bowl',380,14,62,8],['breakfast','Eggs and toast','3 eggs, 2 toast',420,26,30,22],['lunch','Chicken adobo with rice','1 cup rice',650,42,70,20],['lunch','Tuna sandwich','1',430,32,40,14],['dinner','Grilled chicken, veg','200 g',520,48,20,18],['dinner','Beef and broccoli','1 plate',610,40,45,25],['snacks','Whey shake','1 scoop',130,25,3,2],['snacks','Banana','1',100,1,26,0]];
   for(let i=0;i<=10;i++){
@@ -3674,7 +3678,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.14.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.14.2${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
