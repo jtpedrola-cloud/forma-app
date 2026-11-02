@@ -5,6 +5,9 @@
  *       -> Promise<{ items:[{ name, amount, kcal, protein, carbs, fat }], assumptions:[string] }>
  *   FormaAI.mealServer({ post, imageBase64?, text?, note?, units, recent? })
  *       -> Promise<{ items, assumptions, used, limit }>   signed-in path through the ai-meal Edge Function (no key on the phone)
+ *   FormaAI.ask({ key, model, question, context?, history?, fetch? })
+ *       -> Promise<{ text }>   Coach: a short answer (three sentences at most). context is a plain-text note of his numbers and plan,
+ *          built by the app; history is the last few turns [{ role:'user'|'assistant', text }]. Personal mode only (his own key).
  *   FormaAI.test({ key, model })  -> Promise<{ ok:true, text }>   one tiny request, to check the key
  *   FormaAI.bodyFat / FormaAI.review                              stubs, throw "not built yet"
  *
@@ -52,6 +55,13 @@
     '- If a correction note is given, it overrides what you saw or assumed.\n' +
     '- If the input has no food, return {"items":[],"assumptions":["No food found."]}.';
 
+  var COACH_SYSTEM =
+    'You are Coach inside Pulzo, a personal food, gym and steps tracker. Answer in three sentences or fewer, in plain words. ' +
+    'No markdown, no lists, no headings, no em-dashes. Use his numbers below when they help and never invent numbers that are not given. ' +
+    'Give at most one concrete next step. He lives in the Philippines; show money in pesos. ' +
+    'For pain, injury or medical questions, say in one sentence to see a doctor or physio. ' +
+    'If the question is not about food, training, steps, weight or sleep, say briefly that you only help with those.';
+
   function cleanB64(s) {
     s = String(s || '');
     var i = s.indexOf('base64,');
@@ -94,6 +104,22 @@
       'anthropic-version': VERSION,
       'anthropic-dangerous-direct-browser-access': 'true'
     };
+    if (o.ask) {
+      var msgs = [];
+      (o.history || []).slice(-6).forEach(function (h) {
+        if (h && h.text && (h.role === 'user' || h.role === 'assistant')) {
+          var last = msgs[msgs.length - 1];
+          if (last && last.role === h.role) last.content += '\n' + String(h.text).slice(0, 600);
+          else msgs.push({ role: h.role, content: String(h.text).slice(0, 600) });
+        }
+      });
+      while (msgs.length && msgs[0].role !== 'user') msgs.shift();
+      var lastM = msgs[msgs.length - 1];
+      if (lastM && lastM.role === 'user') msgs.pop();
+      msgs.push({ role: 'user', content: String(o.question).slice(0, 1500) });
+      return { url: ENDPOINT, headers: headers, body: { model: modelId(o.model), max_tokens: 500, output_config: { effort: 'low' },
+        system: COACH_SYSTEM + (o.context ? '\n\nHis numbers:\n' + String(o.context).slice(0, 3000) : ''), messages: msgs } };
+    }
     if (o.ping) {
       return { url: ENDPOINT, headers: headers, body: { model: modelId(o.model), max_tokens: 300, output_config: { effort: 'low' }, messages: [{ role: 'user', content: 'Reply with the single word OK.' }] } };
     }
@@ -193,6 +219,14 @@
     return parseMeal(r.text);
   }
 
+  async function ask(o) {
+    if (!o || !o.question || !String(o.question).trim()) throw AIError('request', 'Nothing to ask.');
+    var r = await send(Object.assign({}, o, { ask: true }));
+    var text = String(r.text || '').replace(/\u2014/g, ',').trim();
+    if (!text) throw AIError('parse', 'Claude sent back an empty answer. Try again.');
+    return { text: text, model: r.model };
+  }
+
   async function test(o) {
     var r = await send({ key: o && o.key, model: o && o.model, fetch: o && o.fetch, ping: true });
     return { ok: true, text: r.text, model: r.model };
@@ -256,6 +290,7 @@
   var api = {
     meal: meal,
     mealServer: mealServer,
+    ask: ask,
     test: test,
     bodyFat: notBuilt,
     review: notBuilt,

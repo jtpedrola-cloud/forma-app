@@ -493,7 +493,7 @@
     man: ['Enter numbers myself', 'Name and calories. Macros are optional.'],
     snap: ['Snap a meal', ''],
     snapOn: 'Reads a photo for you',
-    snapNo: 'Needs AI',
+    snapNo: 'Needs AI, set up in Settings',
     noAi: 'Photo estimates need AI, which is not switched on here. Add the food by search, or attach the photo to the meal anyway.',
     cmdNoAi: 'AI is not switched on here. Tap Add by hand under each line, or search for the food. Your text is kept.',
     keyHint: 'To switch it on, add a key in Settings, Personal mode.',
@@ -501,7 +501,92 @@
     bySearch: 'Add food by search',
   };
 
+  /* Snap a meal, one flow: camera, reading card, rows with an amount stepper, one Log button. */
+  const snap = {
+    title: 'Snap a meal',
+    needsAi: 'Needs AI, set up in Settings',
+    reading: 'Reading your plate',
+    readingSub: 'A few seconds.',
+    cancel: 'Cancel',
+    log1: 'Log 1 food, {kcal} kcal',
+    logN: 'Log {n} foods, {kcal} kcal',
+    empty: 'No food found in that photo.',
+    assumed: 'Assumed: {text}',
+    retake: 'Retake',
+    gallery: 'Gallery',
+    fix: 'Correct it',
+    fixPh: 'half rice, no sauce',
+    fixGo: 'Read again',
+    byHand: 'Add by hand',
+    addKey: 'Add key',
+    retry: 'Try again',
+    bySearch: 'Add by search',
+    saved: 'Logged {n} item{s} to Meal {meal}.',
+  };
+
+  /* Coach: a chat sheet. Answers about his own numbers are built from these templates with no AI; the AI is for the rest. */
+  const coach = {
+    title: 'Coach',
+    sub: 'Ask about your day, or tell me what you ate',
+    tile: 'Coach',
+    tileSub: 'Ask, or log by voice or photo',
+    ph: 'Ask or log food',
+    chips: [['Protein left', 'how much protein is left'], ['Workout today', "what's my workout today"], ['Last week', 'how was last week']],
+    aiOff: 'AI is off, so I answer questions about your numbers only. Add your Claude key in Settings to turn on photos, food and other questions.',
+    aiOffAcct: 'Other questions are not on your account yet. I can still read food and photos, and answer questions about your numbers.',
+    openSettings: 'Open Settings',
+    noAi: 'I can answer questions about your numbers. For food, photos and other questions, add your Claude key in Settings, Advanced.',
+    noFood: 'I did not find any food in that. Try "2 eggs and rice", or ask about your numbers.',
+    retry: 'Try again',
+    logIt: 'Log it',
+    logged: 'Logged to Meal {meal}.',
+    estimate: 'Meal {meal}, estimate',
+    total: 'Total',
+    after: 'Left after',
+    photo: 'Photo',
+    busy: 'Thinking',
+    left: 'Left today: {list}.',
+    also: 'Also left: {list}.',
+    focus: '{label}: {eaten} of {target} {unit} so far, {rest}.',
+    workout: 'Today: {name}{focus}. {n}: {list}.',
+    workoutDone: 'You finished {name} today.',
+    workoutRest: 'Today is a rest day.',
+    workoutNone: 'No workout is planned. Add a program in Settings.',
+    sport: 'Planned sport: {list}.',
+    week: '{range}: {parts}',
+    weekFood: 'You ate {kcal} kcal and {protein} g protein a day on {days} logged day{s} (target {tk} kcal, {tp} g protein)',
+    weekNoFood: 'No food was logged',
+    weekWo: '{n} workout{s} done',
+    weekAct: '{n} sport session{s}',
+    weekSteps: 'Steps averaged {n} a day',
+    weekWt: 'Weight went from {from} to {to} {unit}',
+    lastEx: 'Your last {name} was {when} ({date}): {sets} set{s}, top set {top}.',
+    lastNone: 'No {term} sets are logged yet.',
+    lastUnknown: 'I could not find an exercise called "{term}" in your library.',
+  };
+
+  /* Settings > Advanced > Claude key: paste, pick a model, Test. */
+  const key = {
+    lead: 'Snap a meal and Coach use your own Claude key. It takes about a minute.',
+    steps: ['Make a key at console.anthropic.com, under API keys.', 'Paste it below.', 'Pick Fast or Careful, then tap Test.'],
+    paste: 'Paste your Claude key',
+    pasteFirst: 'Paste your key first.',
+    saved: 'Key saved, ends {end}. Paste to replace.',
+    fast: 'Fast',
+    careful: 'Careful',
+    cost: 'Fast is about PHP 0.03 a photo. Careful is about PHP 0.5 and reads plates more closely.',
+    test: 'Test',
+    testing: 'Testing',
+    works: 'Works',
+    none: 'No key yet',
+    untested: 'Saved, not tested yet',
+    bad: 'Claude refused this key. Paste a new one.',
+    notKey: 'That is not a Claude key. It starts with sk-ant-.',
+    remove: 'Remove key',
+    private: 'The key stays on this phone and goes only to Anthropic.',
+  };
+
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? v[k] : m));
-  root.FormaCopy = { intake, bfScale, simple, add, fill };
+  root.FormaCopy = { intake, bfScale, simple, add, snap, coach, key, fill };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.FormaCopy;
 })(typeof window !== 'undefined' ? window : globalThis);

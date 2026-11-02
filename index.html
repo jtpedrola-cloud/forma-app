@@ -350,6 +350,32 @@ details.ngym{margin-top:12px;border-top:1px solid var(--line)}details.ngym summa
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ph{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--inset);flex:none}
 .phbig{width:100%;max-height:220px;object-fit:cover;border-radius:12px;background:var(--inset);margin-bottom:8px;display:block}
+/* Snap a meal (handoff 054): the photo with a soft sweep while it is read, skeleton rows, rows with an amount stepper */
+.snp{position:relative;overflow:hidden;border-radius:14px;background:var(--inset);height:150px;margin-bottom:4px}.snp img{width:100%;height:100%;object-fit:cover;display:block;outline:1px solid var(--line);outline-offset:-1px;border-radius:14px}
+.snp.rd{height:210px}.snp.rd::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(-100%);animation:snsweep 1.6s ease-in-out infinite}
+@keyframes snsweep{to{transform:translateX(100%)}}
+.srw{padding:10px 0;border-top:1px solid var(--line)}.srw:first-of-type{border-top:0}
+.srt{display:flex;align-items:center;gap:8px}.srt .n{font-weight:600;word-break:break-word}.srk{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end}.srk b{font-weight:600}
+.smul{display:flex;gap:8px;margin-top:8px}.smul button{flex:1;min-height:40px;border-radius:12px;background:var(--inset);color:var(--mut);font-weight:600;font-size:14px;border:1px solid transparent}.smul button.on{color:var(--txt);border-color:var(--acc)}
+.sk{height:14px;border-radius:7px;background:linear-gradient(100deg,var(--line) 30%,var(--faint) 50%,var(--line) 70%);background-size:200% 100%;animation:phsk 1.3s linear infinite}.sk.w1{width:55%}.sk.w2{width:30%;margin-top:8px;height:10px}
+.snl{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:6px}.snl .lnk{min-height:44px}
+#sheet #snap_cta{position:sticky;bottom:0;background:var(--card);box-shadow:0 12px 0 12px var(--card);margin-top:12px}
+@media (prefers-reduced-motion:reduce){.snp.rd::after,.sk{animation:none}}
+.lch button.wide,.lch button[data-w]{grid-column:1/-1}
+/* Coach chat (handoff 054): his lines on the right in a bubble, Coach on the left as plain text, the AI marked with a small chip */
+.cth{display:flex;flex-direction:column;gap:14px;padding:8px 0 16px;min-height:96px}
+.cm{display:flex}.cm.me{justify-content:flex-end;align-items:flex-end;gap:8px}.cm.bt{justify-content:flex-start}
+.cm .cb{max-width:84%;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);border-radius:16px 16px 4px 16px;padding:10px 14px;word-break:break-word;line-height:1.4}
+.cm .cph{width:112px;height:112px;object-fit:cover;border-radius:14px;outline:1px solid var(--line);outline-offset:-1px}
+.cm .ct{max-width:94%;word-break:break-word;line-height:1.5}.cm .cmt{width:100%;max-width:100%}
+.cai{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:9px;font-size:10px;font-weight:700;letter-spacing:.04em;background:var(--chip);color:var(--chiptx);margin-right:8px;vertical-align:middle}
+.cmr{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.cmr .n{font-weight:600}.cmr.tot{border-top:1px solid var(--faint)}
+.cch{display:flex;flex-wrap:wrap;gap:8px}.cch button{min-height:44px;padding:0 16px;border-radius:22px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);font-size:15px;font-weight:500}
+.cob{position:sticky;bottom:0;background:var(--card);box-shadow:0 12px 0 12px var(--card);padding-top:4px}
+.cob .cmdbar{margin:0;gap:0;background:var(--inset);border:1px solid var(--line);border-radius:28px;padding:3px 3px 3px 18px}.cob .cmdbar:focus-within{border-color:var(--acct)}
+#sheet .cob .cmdbar input,#sheet .cob .cmdbar input:focus{border:0;outline:none;box-shadow:none;background:none;border-radius:0;padding:0;min-height:46px;font-size:16px}
+.cob .cmdhist{width:42px;height:46px;display:grid;place-items:center;color:var(--soft)}.cob .cmdhist.on{color:var(--acc)}
+.cob .cmdgo{width:46px;height:46px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;flex:none}
 #phv{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92)}#phv img{max-width:100%;max-height:90vh;object-fit:contain}
 .ferr{color:var(--warn);font-size:13px;margin-top:6px}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--badbg);border:1px solid var(--badline);color:var(--badtx);padding:10px 14px;border-radius:12px;z-index:60;max-width:90%;font-size:13px}
@@ -1312,7 +1338,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='a6c3218ba2b07e2c02f733aa719b8c5b09f9e986';let verChecked=0;
+const BUILD='2b842abce18ede9b88d14bbc343f8ff6360c9121';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1365,7 +1391,7 @@ const IC={
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/>',
  check:'<path d="M5 12l5 5 9-10"/>',
- left:'<path d="M15 5l-7 7 7 7"/>',send:'<path d="M12 19V5M5 12l7-7 7 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 7h6M9 11h6"/>',plus:'<path d="M12 5v14M5 12h14"/>',play:'<path d="M8 5v14l11-7z" fill="currentColor"/>',more:'<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>'
+ left:'<path d="M15 5l-7 7 7 7"/>',send:'<path d="M12 19V5M5 12l7-7 7 7"/>',mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',chat:'<path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',flipc:'<path d="M20 7h-4l-2-3h-4L8 7H4v12h16z"/><path d="M9 13a3 3 0 0 1 5-2.2M15 13a3 3 0 0 1-5 2.2M14 9.5v1.5h-1.5M10 16.5V15h1.5"/>',mirror:'<path d="M12 3v18"/><path d="M8 7l-4 5 4 5zM16 7l4 5-4 5z"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',right:'<path d="M9 5l7 7-7 7"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 7h6M9 11h6"/>',plus:'<path d="M12 5v14M5 12h14"/>',play:'<path d="M8 5v14l11-7z" fill="currentColor"/>',more:'<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>'
 };
 IC.image='<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 9"/>';
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
@@ -1690,7 +1716,7 @@ const MARK=z=>`<svg class="mk" width="${z}" height="${z}" viewBox="3 3.4 18 18" 
 function headerV1(title,items,sub=''){
  const mi=([act,label,attr])=>`<button class="mi" data-act="${act}"${attr||''}>${label}</button>`;
  const syn={synced:'Synced',syncing:'Syncing',offline:'Offline, tap to retry',error:'Sync failed, tap to retry'}[UI.sync]||'Sync status';
- return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}</summary><div class="mpanel">${items.map(mi).join('')}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
+ return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}</summary><div class="mpanel">${items.map(mi).join('')}${profile()&&!isSimple()?mi(['coachOpen','Coach']):''}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
 }
 const logFab=()=>`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
 document.addEventListener('click',e=>{document.querySelectorAll('details.more[open]').forEach(d=>{if(!d.contains(e.target)||e.target.closest('.mi'))d.open=false})});
@@ -1728,6 +1754,7 @@ function render(){
  {const nv=document.querySelector('nav.tabs');if(nv)document.documentElement.style.setProperty('--tabh',nv.offsetHeight+'px')}
  renderSheet();updateRest();foodSticky();a11yFix();
  if(sc)window.scrollTo(0,sc);
+ ringPlay();
 }
 
 /* ---------- derived numbers ---------- */
@@ -3686,7 +3713,7 @@ function settingsSheet(){
  const row=(act,label,sub,attr='')=>`<button class="srow" data-act="${act}"${attr}><span class="sp">${label}${sub?`<span class="xs">${sub}</span>`:''}</span><span class="mut">${ic('right',18)}</span></button>`;
  const ctl=(label,inner)=>`<div class="sctl"><span class="sp">${label}</span>${inner}</div>`;
  const sw=(label,act,on,attr='')=>`<div class="sctl"><span class="sp">${label}</span><button class="swt${on?' on':''}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="${act}"${attr}><i></i></button></div>`;
- const adv=aiServer()||personalMode();
+ const adv=aiServer()||personalMode()||DEMO;
  const anc=[['profile','Profile'],['data','Targets and data'],['reminders','Reminders'],['units','Units'],['look','Appearance'],['track','What you track'],['learn','Learn and tour'],['account','Account and backups']].concat(adv?[['advanced','Advanced']]:[]);
  const profileG=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
  ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}`;
@@ -3726,11 +3753,11 @@ function settingsSheet(){
  <div class="opts">${CAL_NUMS.filter(([k])=>!(isSimple()&&k==='kcal')).map(([k,l])=>`<button data-act="calNum" data-k="${k}" class="${calNum()===k?'on':''}">${l}</button>`).join('')}</div>
  ${sw('Timer sound','soundTog',LS.get('forma.sound',1)!==0)}
  ${sw('Shake to finish a set','shakeTog',LS.get('forma.shake',1)!==0)}`;
- const advanced=`${aiServer()?aiSettings():''}${personalMode()?personal:''}`;
+ const advanced=`${aiServer()||(DEMO&&!personalMode())?aiSettings():''}${personalMode()?personal:''}`;
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.16.2${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.17.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4293,14 +4320,15 @@ const photoRow=(act,icn,l,sub)=>`<button class="item ph2" data-act="${act}">${ic
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
 function snapChoiceSheet(){
- if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button>${personalMode()?`<button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div></div>${ic('right',18)}</button>`:''}<div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
+ if(!aiReady()){const A=FormaCopy.add;return `<h2>Snap a meal</h2><div class="sm" style="margin:-4px 0 8px">${A.noAi}</div><button class="item ph2" data-act="snapSearch">${ic('plate',20)}<div class="sp"><div class="n">${A.bySearch}</div></div>${ic('right',18)}</button>${personalMode()||DEMO?`<button class="item ph2" data-act="snapSettings">${ic('gear',20)}<div class="sp"><div class="n">Open Settings</div><div class="xs mut">${SN().needsAi}</div></div>${ic('right',18)}</button>`:''}<div class="adl">${A.attach}</div>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}`}
  return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
  const chip=(act,icn,l,x='',sub='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}${sub}</span></button>`;
+ const tiles=[modOn('food')?(isSimple()?chip('snapPick','camera','Snap a meal',aiReady()?'':' class="noai"','<small>Needs AI</small>'):chip('foodAdd','plate','Meal',` data-m="${nm}"`)):'',chip('weightEdit','scale','Weight'),chip('stepsEdit','walk','Steps'),modOn('activity')?chip('logSport','ball','Sport'):''].filter(Boolean);
  const dc=UI.date,dcl=dc===today()?'Today':dc===addDays(today(),-1)?'Yesterday':fmtShort(dc),T0=today();
  const dopt=(k,l,on)=>`<button data-act="logDaySet" data-k="${k}" class="${on?'on':''}">${l}</button>`;
- return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs and rice'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')?(isSimple()?chip('snapPick','camera','Snap a meal',aiReady()?'':' class="noai"','<small>Needs AI</small>'):chip('foodAdd','plate','Meal',` data-m="${nm}"`)):''}${chip('weightEdit','scale','Weight')}${chip('stepsEdit','walk','Steps')}${modOn('activity')?chip('logSport','ball','Sport'):''}</div></div>`}
+ return `<div class="lsh"><div class="lrow"><div class="lbl">Log</div><button class="dchip" data-act="logDay" aria-expanded="${logDayOpen}" aria-label="Day to log for, ${dcl}">${dcl}</button></div>${logDayOpen?`<div class="dopt">${dopt('t','Today',dc===T0)}${dopt('y','Yesterday',dc===addDays(T0,-1))}<button data-act="logDayPickOpen" class="${dc!==T0&&dc!==addDays(T0,-1)?'on':''}">Pick a date</button></div>`:''}<div class="cmdbar"><input id="cmd_in" data-af value="${esc(cmdText)}" placeholder="${isSimple()?SC().eat.cmdPh:'2 eggs and rice'}" enterkeyhint="send" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type what to log">${h.length?`<button class="cmdhist" data-act="cmdHist" aria-label="Recent lines" aria-expanded="${cmdHOpen}">${ic('clock',20)}</button>`:''}<button class="cmdgo" data-act="cmdGo" aria-label="Save this line">${ic('send',20)}</button></div>${cmdHOpen&&h.length?`<div class="cmdhl">${h.map((x,k)=>`<button data-act="cmdHistPick" data-k="${k}">${esc(x)}</button>`).join('')}</div>`:''}<div class="lch">${modOn('food')&&!isSimple()?chip('snapGo','camera',SN().title,aiReady()?' class="wide"':' class="wide noai"',aiReady()?'':`<small>${SN().needsAi}</small>`):''}${tiles.map((x,i)=>i===tiles.length-1&&tiles.length%2?x.replace('<button ','<button data-w="1" '):x).join('')}${isSimple()?'':chip('coachOpen','chat',CO().tile,' class="wide"',`<small>${CO().tileSub}</small>`)}</div></div>`}
 function cmdRun(){
  const el=$('#cmd_in'),line=(el?el.value:cmdText).trim();if(!line)return;
  if(!window.FormaCmd){toast('The command reader did not load. Refresh the app.');return}
@@ -4425,10 +4453,11 @@ const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.s
 const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
 /* Signed in: the ai-meal function with the user's token, 5 reads a day counted on the server. Signed out: personal mode, the key on this phone. */
 const aiServer=()=>!!SBS.user&&B.kind==='supabase';
-const aiReady=()=>aiServer()||(!!aiKey()&&!!window.FormaAI);
+const aiBad=()=>{const k=aiKey();return !!k&&LS.get('forma.aiBad','')===k.slice(-6)};
+const aiReady=()=>aiServer()||(!!aiKey()&&!aiBad()&&!!window.FormaAI);
 function recentNames(){const out=[],seen={};for(let i=0;i<=14&&out.length<20;i++){const f=cur(foodP(addDays(today(),-i)));((f&&f.items)||[]).slice().reverse().forEach(it=>{const k=String(it.name||'').toLowerCase();if(k&&!seen[k]&&out.length<20){seen[k]=1;out.push(String(it.name).slice(0,60))}})}return out}
 async function aiMeal(o){
- if(!aiServer())return FormaAI.meal(Object.assign({key:aiKey(),model:aiModel(),profile:profile()},o));
+ if(!aiServer()){try{return await FormaAI.meal(Object.assign({key:aiKey(),model:aiModel(),profile:profile()},o))}catch(e){if(e&&e.code==='badkey'){LS.del('forma.aiOk');LS.set('forma.aiBad',aiKey().slice(-6))}throw e}}
  const known=(o.known||[]).filter(k=>k&&k.name).map(k=>k.name+(k.amount?' ('+k.amount+')':''));
  const note=[o.note,known.length?'Already logged from this line, do not return them again: '+known.join('; ')+'.':''].filter(Boolean).join(' ')||undefined;
  try{
@@ -4448,36 +4477,57 @@ function aiSettings(){
  <div class="sm">Snap a meal and Ask AI are included with your account. No key needed.</div>
  <div class="sm" style="margin-top:8px"><b>${u==null?L+' reads a day':u+' of '+L+' AI reads used today'}</b></div>
  <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div></div></div>`}
- const k=aiKey(),m=aiModel();
- const st=!k?['Not connected','var(--mut)']:AI.testing?['Testing...','var(--mut)']:AI.err?['Not working','var(--badtx)']:aiConnected()?['Connected','var(--ok)']:['Key saved, not tested yet','var(--mut)'];
+ const k=aiKey(),m=aiModel(),c=FormaCopy.key;
+ const st=AI.testing?[c.testing,'var(--mut)']:AI.err?[AI.err,'var(--badtx)']:!k?[c.none,'var(--mut)']:aiBad()?[c.bad,'var(--badtx)']:aiConnected()?[c.works,'var(--ok)']:[c.untested,'var(--mut)'];
  return `<div class="fld"><label>Claude key</label><div class="card" style="margin:0;padding:12px 14px">
- <div class="xs mut" style="margin-bottom:8px">This key lets Snap a meal and Ask AI work in personal mode. A Pulzo account includes the AI and needs no key.</div>
- <div class="sm">Status: <b id="ai_st" style="color:${st[1]}">${st[0]}</b></div>
- ${AI.err?`<div class="xs" style="color:var(--badtx);margin-top:4px;word-break:break-word">${esc(AI.err)}</div>`:AI.msg&&aiConnected()?`<div class="xs mut" style="margin-top:4px;word-break:break-word">${esc(AI.msg)}</div>`:''}
- <div class="fld" style="margin:10px 0 8px"><input id="ai_key" type="password" placeholder="${k?'Key saved (ends '+esc(k.slice(-4))+'). Paste to replace.':'Paste your Claude API key'}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
- <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sm" data-act="aiSave">Save key</button><button class="lnk" data-act="aiTest" ${k&&!AI.testing?'':'disabled'}>Test</button>${k?'<button class="lnk" data-act="aiRemove">Remove key</button>':''}</div>
- <div class="fld" style="margin:12px 0 4px"><label>Model</label><div class="mods"><button data-act="aiModel" data-m="haiku" class="${m==='haiku'?'on':''}">Haiku (cheap, fast)</button><button data-act="aiModel" data-m="sonnet" class="${m==='sonnet'?'on':''}">Sonnet (more careful)</button></div></div>
- <div class="xs mut" style="margin-top:6px">About PHP 0.03 a photo on Haiku (about PHP 0.5 on Sonnet). The key stays on this phone and goes only to Anthropic.</div></div></div>`}
+ <div class="sm">${c.lead}</div>
+ <ol class="xs mut" style="padding-left:18px;margin:8px 0 12px">${c.steps.map(x=>`<li>${x}</li>`).join('')}</ol>
+ <div class="fld" style="margin:0 0 12px"><input id="ai_key" type="password" placeholder="${k?esc(cf(c.saved,{end:k.slice(-4)})):c.paste}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Claude API key"></div>
+ <div class="mods" role="group" aria-label="Model"><button data-act="aiModel" data-m="haiku" class="${m==='haiku'?'on':''}">${c.fast}</button><button data-act="aiModel" data-m="sonnet" class="${m==='sonnet'?'on':''}">${c.careful}</button></div>
+ <div class="xs mut" style="margin:6px 0 12px">${c.cost}</div>
+ <button class="btn full" data-act="aiTest" ${AI.testing?'disabled':''}>${AI.testing?c.testing:c.test}</button>
+ <div class="s15" id="ai_st" role="status" style="margin-top:10px;color:${st[1]};word-break:break-word">${esc(st[0])}</div>
+ ${k?`<button class="lnk" style="margin-top:4px" data-act="aiRemove">${c.remove}</button>`:''}
+ <div class="xs mut" style="margin-top:8px">${c.private}</div></div></div>`}
 function aiReopenSettings(){if(UI.sheet&&UI.sheet.indexOf('id="ai_key"')>=0){const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(settingsSheet());const s2=$('#sheet');if(s2)s2.scrollTop=y}}
+/* Test saves a pasted key first, so setup is: paste, pick a model, tap Test. "Works" or the plain reason. */
 async function aiTest(){
- const k=aiKey();if(!k){toast('Paste your key and tap Save key first.');return}
- if(AI.testing)return;if(!window.FormaAI){toast('The AI reader did not load. Refresh the app.');return}
+ if(AI.testing)return;
+ const el=$('#ai_key'),typed=el?el.value.trim():'';
+ if(typed){if(!/^sk-ant-[\w-]{20,}$/.test(typed)){AI.err=FormaCopy.key.notKey;aiReopenSettings();return}
+  aiKeySet(typed);LS.del('forma.aiOk');LS.del('forma.aiBad')}
+ const k=aiKey();if(!k){AI.err=FormaCopy.key.pasteFirst;aiReopenSettings();return}
+ if(!window.FormaAI){toast('The AI reader did not load. Refresh the app.');return}
  AI.testing=true;AI.err='';AI.msg='';aiReopenSettings();
- try{const r=await FormaAI.test({key:k,model:aiModel()});LS.set('forma.aiOk',k.slice(-6));AI.msg='Claude answered: '+String(r.text||'').slice(0,40)+(r.model?' ('+r.model+')':'')}
- catch(e){LS.del('forma.aiOk');AI.err=aiErr(e)}
+ try{await FormaAI.test({key:k,model:aiModel()});LS.set('forma.aiOk',k.slice(-6));LS.del('forma.aiBad')}
+ catch(e){LS.del('forma.aiOk');AI.err=aiErr(e);if(e&&(e.code==='badkey'||e.code==='forbidden'))LS.set('forma.aiBad',k.slice(-6))}
  AI.testing=false;aiReopenSettings();
 }
 
-/* ---------- Snap a meal: photo -> Claude -> rows to check -> saved like Claude saves meals (photo on the first item) ---------- */
-const SNAP={photo:'',note:'',status:'',items:[],notes:[],raw:'',err:'',meal:1,date:'',seq:0};
+/* ---------- Snap a meal: photo -> Claude -> rows to check -> saved like Claude saves meals (photo on the first item) ----------
+   One flow (handoff 054): + then Snap opens the camera (or the gallery, whichever he used last), a reading card with a shimmer
+   and skeleton rows, then one row per food with an amount stepper and one Log button. A failure is one sentence and one fixing button. */
+const SNAP={photo:'',note:'',status:'',items:[],notes:[],raw:'',err:'',fix:'retry',meal:1,date:'',seq:0,showFix:false};
+const SN=()=>FormaCopy.snap;
 function snapMealNo(d){
  const its=food(d).items,lastT=its.map(i=>i.t).filter(Boolean).sort().pop();
  return window.FormaCmd?FormaCmd.mealNumber({lastMealNo:its.length?Math.max(...its.map(mealNo)):0,lastMealAt:d===today()?(lastT||null):null,now:Date.now()}):(its.length?Math.max(...its.map(mealNo))+1:1);
 }
 const snapDraw=()=>{if(UI.sheet&&UI.sheetFn===snapSheet)openSheet(snapSheet(),snapSheet)};
+/* "200 g" at 1.5x is "300 g"; an amount with no leading number ("a bowl") gets the multiplier after it. */
+function snapAmt(a,m){a=String(a||'');if(m===1)return a;const x=/^(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(a);
+ if(x)return String(+(num(x[1])*m).toFixed(1)).replace(/\.0$/,'')+(x[2]?' '+x[2]:'');return (a?a+', ':'')+m+'x'}
+const snapV=(it,k)=>rnd(num(it[k])*(it.m||1));
+const snapTot=items=>items.reduce((a,i)=>{a.k+=snapV(i,'kcal');a.p+=snapV(i,'protein');a.c+=snapV(i,'carbs');a.f+=snapV(i,'fat');return a},{k:0,p:0,c:0,f:0});
+/* What fixes each failure: a key (none or wrong), another go (network, busy, limits), or the search sheet (refused, no credit, nothing to retry). */
+function snapFixFor(e){const c=e&&e.code;
+ if(c==='nokey'||c==='badkey'||c==='forbidden')return aiServer()?'search':'key';
+ if(c==='refused'||c==='credit'||c==='budget'||c==='toolarge')return 'search';
+ if(c==='limit'&&aiServer())return 'search';
+ return 'retry'}
 async function snapStart(file){
  let photo;try{photo=await shrinkImage(file)}catch(e){toast('Could not read that photo.');return}
- Object.assign(SNAP,{photo,note:'',items:[],notes:[],raw:'',err:'',status:'',date:UI.date,seq:SNAP.seq+1});
+ Object.assign(SNAP,{photo,note:'',items:[],notes:[],raw:'',err:'',status:'',date:UI.date,seq:SNAP.seq+1,showFix:false});
  SNAP.meal=snapMealNo(SNAP.date);
  if(!aiReady()){closeSheet();addOpen(SNAP.meal,{photo,keep:true});toast0('Photo attached. Add the food by search.');return}
  SNAP.status='reading';openSheet(snapSheet(),snapSheet);snapAsk();
@@ -4485,36 +4535,46 @@ async function snapStart(file){
 async function snapAsk(){
  const my=++SNAP.seq;SNAP.status='reading';SNAP.err='';SNAP.raw='';snapDraw();
  try{const r=await aiMeal({imageBase64:SNAP.photo,note:SNAP.note.trim()||undefined,today:SNAP.date});
-  if(my!==SNAP.seq)return;SNAP.items=r.items;SNAP.notes=r.assumptions;SNAP.status='done'}
- catch(e){if(my!==SNAP.seq)return;SNAP.status='error';SNAP.err=aiErr(e);SNAP.raw=e&&e.raw||''}
+  if(my!==SNAP.seq)return;SNAP.items=r.items.map(i=>Object.assign({},i,{m:1}));SNAP.notes=r.assumptions;SNAP.status='done'}
+ catch(e){if(my!==SNAP.seq)return;SNAP.status='error';SNAP.err=aiErr(e);SNAP.fix=snapFixFor(e);SNAP.raw=''}
  snapDraw();
 }
-function snapRow(j,it){return `<div class="crow"><div class="sp"><div class="n">${esc(it.name)}</div><div class="xs mut">${esc(it.amount||'')}<br>P ${rnd(it.protein)}g, C ${rnd(it.carbs)}g, F ${rnd(it.fat)}g</div></div><div class="cin"><input inputmode="decimal" value="${esc(rnd(it.kcal))}" data-sj="${j}" aria-label="${esc(it.name)} calories"><span class="xs mut">kcal</span></div><button class="ib" data-act="snapDrop" data-j="${j}" aria-label="Remove ${esc(it.name)}">${ic('x',18)}</button></div>`}
+function snapRow(j,it){const m=it.m||1;
+ return `<div class="srw"><div class="srt"><div class="sp"><div class="n">${esc(it.name)}</div><div class="xs mut">${esc(snapAmt(it.amount,m))}</div></div><div class="srk"><b>${snapV(it,'kcal')} kcal</b><span class="xs mut">P ${snapV(it,'protein')} g</span></div><button class="ib" data-act="snapDrop" data-j="${j}" aria-label="Remove ${esc(it.name)}">${ic('x',18)}</button></div>
+ <div class="smul" role="group" aria-label="Amount of ${esc(it.name)}">${[0.5,1,1.5,2].map(x=>`<button data-act="snapMul" data-j="${j}" data-m="${x}" class="${m===x?'on':''}" aria-pressed="${m===x}">${x}x</button>`).join('')}</div></div>`}
 function snapSheet(){
- const S=SNAP,img=S.photo?`<img class="phbig" src="${esc(S.photo)}" alt="" data-act="phView">`:'';
+ const S=SNAP,c=SN(),rd=S.status==='reading';
+ const img=S.photo?`<div class="snp${rd?' rd':''}"><img src="${esc(S.photo)}" alt="Your meal"${rd?'':' data-act="phView"'}></div>`:'';
  let body='';
- if(S.status==='nokey')body=`<div class="sm" style="margin:6px 0 12px">${FormaCopy.add.noAi}</div><div class="row"><button class="btn ${personalMode()?'ghost ':''}sp" data-act="snapHand">Add by search</button>${personalMode()?'<button class="btn sp" data-act="snapSettings">Open Settings</button>':''}</div>`;
- else if(S.status==='reading')body=`<div class="row" style="gap:12px;margin:10px 0 4px"><span class="spin"></span><b>Reading your meal</b></div><div class="xs mut" style="margin-bottom:12px">The AI is looking at the photo. A few seconds.</div><button class="btn ghost full" data-act="snapCancel">Cancel</button>`;
- else if(S.status==='error')body=`<div class="cunk"><div class="n">${esc(S.err)}</div>${S.raw?`<div class="xs" style="margin-top:6px;word-break:break-word;max-height:120px;overflow:auto">${esc(S.raw.slice(0,800))}</div>`:''}</div><div class="row" style="margin-top:12px"><button class="btn ghost sp" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapAsk">Try again</button></div>`;
+ if(rd)body=`<div class="n" style="margin:14px 0 2px">${c.reading}</div><div class="xs mut" style="margin-bottom:12px">${c.readingSub}</div>${'<div class="srw"><div class="sk w1"></div><div class="sk w2"></div></div>'.repeat(3)}<button class="lnk" style="margin-top:8px" data-act="snapCancel">${c.cancel}</button>`;
+ else if(S.status==='error'){const fx=S.fix,lab=fx==='key'?c.addKey:fx==='search'?c.bySearch:c.retry,act=fx==='key'?'snapSettings':fx==='search'?'snapHand':'snapAsk';
+  body=`<div class="s15" style="margin:14px 0 12px">${esc(S.err)}</div><button class="btn full" data-act="${act}">${lab}</button>`}
  else{
-  const tot=S.items.reduce((a,i)=>{a.k+=rnd(i.kcal);a.p+=rnd(i.protein);a.c+=rnd(i.carbs);a.f+=rnd(i.fat);return a},{k:0,p:0,c:0,f:0}),n=S.items.length;
-  body=`<div class="cmeal">Meal ${S.meal}</div>${n?S.items.map((it,j)=>snapRow(j,it)).join(''):'<div class="empty" style="padding:10px 0">No food found in that photo.</div>'}
-  ${n?`<div class="xs mut" style="margin-top:6px">Total ${tot.k} kcal, P ${tot.p}g, C ${tot.c}g, F ${tot.f}g</div>`:''}
-  ${S.notes.length?`<div class="xs mut" style="margin-top:8px">${S.notes.map(x=>'Assumed: '+esc(x)).join('<br>')}</div>`:''}
-  <div class="fld" style="margin-top:12px"><label>Anything to add? (e.g. half rice, no sauce)</label><div class="row" style="gap:8px"><input id="snap_note" value="${esc(S.note)}" placeholder="half rice, no sauce" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">Ask again</button></div></div>
-  <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="snapHand">Add by hand</button><button class="btn sp" data-act="snapSave" ${n?'':'disabled'}>Save${n?' '+n+' item'+(n===1?'':'s'):''}</button></div>`;
+  const tot=snapTot(S.items),n=S.items.length;
+  body=`${n?S.items.map((it,j)=>snapRow(j,it)).join(''):`<div class="empty" style="padding:14px 0">${c.empty}</div>`}
+  ${S.notes.length?`<div class="xs mut" style="margin-top:10px">${esc(cf(c.assumed,{text:S.notes.slice(0,2).join(' ')}))}</div>`:''}
+  <div class="snl"><button class="lnk" data-act="snapCam">${c.retake}</button><button class="lnk" data-act="snapGal">${c.gallery}</button><button class="lnk" data-act="snapFix" aria-expanded="${S.showFix}">${c.fix}</button></div>
+  ${S.showFix?`<div class="row" style="gap:8px;margin-top:6px"><input id="snap_note" value="${esc(S.note)}" placeholder="${c.fixPh}" autocomplete="off" aria-label="Correction" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">${c.fixGo}</button></div>`:''}
+  <div id="snap_cta">${n?`<button class="btn full" data-act="snapSave">${esc(cf(n===1?c.log1:c.logN,{n,kcal:fmtN(tot.k)}))}</button>`:`<button class="btn full" data-act="snapHand">${c.bySearch}</button>`}</div>`;
  }
- return `<h2>Snap a meal</h2><div class="xs mut" style="margin:-6px 0 8px">${fmtLong(S.date)}</div>${img}${body}${aiCounter()}`;
+ return `<h2>${c.title}</h2><div class="xs mut" style="margin:-6px 0 10px">Meal ${S.meal}, ${fmtLong(S.date)}</div>${img}${body}${aiCounter()}`;
 }
+/* The Today rings move from where they were to where they are: remember them before a save, play after the redraw. */
+const RINGFROM={v:null};
+const ringKeep=()=>{RINGFROM.v=[...document.querySelectorAll('.hr3 .pg')].map(c=>c.getAttribute('stroke-dashoffset'))};
+function ringPlay(){const v=RINGFROM.v;RINGFROM.v=null;if(!v||!v.length||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ document.querySelectorAll('.hr3 .pg').forEach((c,i)=>{const to=c.getAttribute('stroke-dashoffset');if(v[i]==null||v[i]===to)return;
+  c.style.transition='none';c.style.strokeDashoffset=v[i];c.getBoundingClientRect();c.style.transition='stroke-dashoffset .5s ease-out';c.style.strokeDashoffset=to})}
 function snapSave(){
  const S=SNAP,d=S.date;if(!S.items.length)return;
  const t=new Date().toISOString();let n=0;
+ ringKeep();
  S.items.forEach((it,j)=>{
-  const item={id:uid(),meal:S.meal,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t};
+  const m=it.m||1,item={id:uid(),meal:S.meal,name:it.name,amount:snapAmt(it.amount,m),kcal:snapV(it,'kcal'),protein:snapV(it,'protein'),carbs:snapV(it,'carbs'),fat:snapV(it,'fat'),by:'app',t};
   if(j===0&&S.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=S.photo.split(',')[1];item.photo=p}
   mutate(foodP(d),{k:'foodAdd',item},{quiet:true});n++;
  });
- S.seq++;S.status='';S.photo='';closeSheet();render();toastSv('Saved '+n+' item'+(n===1?'':'s')+' to Meal '+S.meal+'.');
+ const meal=S.meal;S.seq++;S.status='';S.photo='';closeSheet();render();toastSv(cf(SN().saved,{n,meal,s:n===1?"":"s"}));
 }
 document.addEventListener('input',e=>{if(e.target.id==='snap_note')SNAP.note=e.target.value});
 document.addEventListener('change',e=>{
@@ -4522,12 +4582,141 @@ document.addEventListener('change',e=>{
  if(t.id==='mp_in'){const f=t.files&&t.files[0];t.value='';if(f)mealPhotoSet(f);return}
  if(t.id==='snap_in'||t.id==='snap_cam'){const f=t.files&&t.files[0];t.value='';if(f)isSimple()?journalSnap(f):snapStart(f);return}
  if(t.dataset&&t.dataset.hid!==undefined){const L=habitList().map(h=>h.id===t.dataset.hid?{id:h.id,label:t.value.trim()||h.label}:h);habSave(L);return}
- if(t.dataset&&t.dataset.sj!==undefined&&SNAP.status==='done'){
-  const it=SNAP.items[+t.dataset.sj],v=num(t.value);
-  if(it&&v>=0){const r=it.kcal>0?v/it.kcal:1;['protein','carbs','fat'].forEach(k=>{it[k]=Math.round(num(it[k])*r)});it.kcal=Math.round(v)}
-  snapDraw();
- }
 });
+
+/* ---------- Coach: a chat sheet (handoff 054). What his own data can answer is answered at once, exactly, with no AI (templates in
+   app/copy.js). Food (text or photo) is read with FormaAI.meal into an item table with a Log it button. Anything else goes to Claude
+   with a short note of today's numbers (FormaAI.ask, personal mode only). The day's thread lives in localStorage, per day, not synced. ---------- */
+const CO=()=>FormaCopy.coach;
+const COACH={draft:'',busy:false,listening:false,full:{},last:null,rec:null};
+const coKey=d=>'forma.coach.'+d;
+const coThread=()=>LS.get(coKey(today()),[]);
+const coSave=t=>{LS.set(coKey(today()),t.slice(-40))};
+function coPrune(){try{const keep=coKey(today());Object.keys(localStorage).filter(k=>k.indexOf('forma.coach.')===0&&k!==keep).forEach(k=>localStorage.removeItem(k))}catch(e){}}
+const coSR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
+function coThumb(src){return new Promise(res=>{const img=new Image();img.onload=()=>{const k=Math.min(1,200/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};img.onerror=()=>res('');img.src=src})}
+/* Left today for all four, in his ranges: "840 kcal, 54 g protein, 90 g carbs, fat in range". */
+function coLeftLine(t,skip){const T=TG(profile());
+ return [['kcal','calories'],['protein','protein'],['carbs','carbs'],['fat','fat']].filter(x=>x[0]!==skip).map(([k,w])=>{const rs=rangeState(k,t[k],T),u=k==='kcal'?' kcal':' g '+w;
+  return rs.in?w+' in range':rs.l==='Over'?fmtN(rs.amt)+u+' over':fmtN(rs.amt)+u}).join(', ')}
+const coMacro=s=>/protein/.test(s)?'protein':/\bcarbs?\b|carbohydrate/.test(s)?'carbs':/\bfat\b/.test(s)&&!/\b(lose|lost|loss|burn|body)\b/.test(s)?'fat':/calorie|kcal|\bcals?\b/.test(s)?'kcal':'';
+const coIsQ=s=>/\?\s*$/.test(s)||/^(how|what|when|where|why|who|which|can|could|should|would|is|are|am|do|does|did|will|tell me|explain|give me|suggest|any|help)\b/i.test(s.trim());
+/* Loads the day files a question needs, without redrawing anything. */
+async function coLoad(ds){try{await Promise.all(ds.flatMap(d=>[foodP(d),logP(d)]).filter(p=>DB.tree[p]&&!(DB.files[p]&&DB.files[p].sha===DB.tree[p])).map(p=>fetchFile(p)));persist()}catch(e){}}
+function coLeft(s,mk){const c=CO(),T=TG(profile()),t=totals(today());
+ if(!mk)return cf(c.left,{list:coLeftLine(t)});
+ const lab={kcal:['Calories','kcal'],protein:['Protein','g'],carbs:['Carbs','g'],fat:['Fat','g']}[mk],rs=rangeState(mk,t[mk],T),u=mk==='kcal'?' kcal':' g';
+ const rest=rs.in?'in range':rs.l==='Over'?fmtN(rs.amt)+u+' over':fmtN(rs.amt)+u+' to go';
+ return cf(c.focus,{label:lab[0],eaten:fmtN(t[mk]),target:fmtN(T[mk]),unit:lab[1],rest})+' '+cf(c.also,{list:coLeftLine(t,mk)})}
+const coExName=id=>((exdb().exercises||{})[id]||{}).n||id;
+function coWorkout(){const c=CO(),T=today();
+ if(!program())return c.workoutNone;
+ const pd=progDay(T),sp=plannedSports(T),spT=sp.length?' '+cf(c.sport,{list:sp.map(x=>actName(x.kind)+', '+x.min+' min').join('; ')}):'';
+ if(!pd)return c.workoutRest+spT;
+ if(woDone(T))return cf(c.workoutDone,{name:pd.name})+spT;
+ const ex=pd.exercises.map(e=>coExName(e.ex)+' '+e.sets+'x'+e.reps),list=ex.slice(0,4).join(', ')+(ex.length>4?' and '+(ex.length-4)+' more':'');
+ return cf(c.workout,{name:pd.name,focus:pd.focus?', '+String(pd.focus).replace(/[.\s]+$/,''):'',n:ex.length+' exercise'+(ex.length===1?'':'s'),list})+spT}
+async function coWeek(s){const c=CO(),T=today(),thisW=/\bthis week\b|\bmy week\b/.test(s)&&!/last week/.test(s),to=thisW?T:addDays(T,-1),from=addDays(to,-6),ds=Array.from({length:7},(_,i)=>addDays(from,i));
+ await coLoad(ds);const tg=TG(profile()),parts=[];
+ const fd=ds.filter(d=>food(d).items.some(i=>!i.journal&&num(i.kcal)>0));
+ if(fd.length){const sum=k=>fd.reduce((a,d)=>a+totals(d)[k],0)/fd.length;parts.push(cf(c.weekFood,{kcal:fmtN(sum('kcal')),protein:fmtN(sum('protein')),days:fd.length,s:fd.length===1?'':'s',tk:fmtN(tg.kcal),tp:fmtN(tg.protein)}))}else parts.push(c.weekNoFood);
+ const wo=ds.filter(d=>{const w=logOf(d).workout;return w&&(w.finishedAt||w.marked)}).length;if(wo)parts.push(cf(c.weekWo,{n:wo,s:wo===1?'':'s'}));
+ const ac=ds.reduce((a,d)=>a+((logOf(d).activities)||[]).length,0);if(ac)parts.push(cf(c.weekAct,{n:ac,s:ac===1?'':'s'}));
+ const st=ds.map(d=>num(logOf(d).steps)).filter(x=>x>0);if(st.length)parts.push(cf(c.weekSteps,{n:fmtN(st.reduce((a,b)=>a+b,0)/st.length)}));
+ const ws=ds.map(d=>logOf(d).weight).filter(x=>x!=null);if(ws.length>1)parts.push(cf(c.weekWt,{from:fw(ws[0]),to:fw(ws[ws.length-1]),unit:wU()}));
+ return cf(c.week,{range:fmtShort(from)+' to '+fmtShort(to),parts:parts.join('. ')+'.'})}
+const CO_STOP=new Set('when did do i last the time my was a an have had done does is it of on for to in performed perform workout session exercise trained train that latest previous ever actually really hit lifted lift'.split(' '));
+async function coLastEx(s){const c=CO(),words=s.replace(/[^a-z ]+/g,' ').split(/\s+/).filter(w=>w&&!CO_STOP.has(w));if(!words.length)return null;
+ const db=(exdb()||{}).exercises||{},stems=w=>[w,w.replace(/(ed|ing)$/,''),w.replace(/es$/,''),w.replace(/s$/,'')].filter(x=>x.length>=3);
+ const hit=Object.keys(db).filter(id=>{const nw=String(db[id].n||'').toLowerCase().split(/[^a-z]+/);return words.every(w=>stems(w).some(st=>nw.some(n=>n.indexOf(st)===0)))});
+ if(!hit.length)return null;
+ await loadAllLogs();
+ let best=null;hit.forEach(id=>{const ss=exSessions(id);if(ss.length){const l=ss[ss.length-1];if(!best||l.d>best.d)best={id,d:l.d,sets:l.sets}}});
+ const term=words.join(' ');if(!best)return cf(c.lastNone,{term});
+ const top=best.sets.slice().sort((a,b)=>num(b.w)-num(a.w)||num(b.r)-num(a.r))[0],u=unitOf(best.id),w=num(top.w),r=num(top.r),
+  topT=u==='SEC'?r+' s':u==='M'?r+' m':w>0?fw(w)+' '+wU()+' x '+r:r+' reps',n=Math.round((parseD(today())-parseD(best.d))/864e5);
+ return cf(c.lastEx,{name:coExName(best.id),when:n<=0?'today':n===1?'yesterday':n+' days ago',date:fmtLong(best.d),sets:best.sets.length,s:best.sets.length===1?'':'s',top:topT})}
+/* The data intents. Returns a string, or null when his data cannot answer it. */
+async function coData(text){
+ const s=String(text).toLowerCase().replace(/[’]/g,"'"),mk=coMacro(s);
+ if(/\b(left|remaining|to go|so far|still|eaten|today)\b|\b(have|did) i\b|\bi('ve| have) (had|eaten)\b/.test(s)&&(mk&&/\b(how|what|much|many|left|remaining|have|did)\b/.test(s)||/\b(what'?s|what is|how much is|how much do i have) (left|remaining)\b|\bleft today\b|\bremaining today\b/.test(s)))return coLeft(s,mk);
+ if(/\b(workout|train(ing)?|gym|lift(ing)?|session|exercise)\b/.test(s)&&/\b(today|tonight|my|planned|scheduled|plan|next)\b|\bdo i train\b/.test(s)&&!/\b(when|last|did|how (many|much|long)|good|best|for)\b/.test(s)||/\bwhat should i train\b/.test(s))return coWorkout();
+ if(/\b(week|last 7 days|past 7 days)\b/.test(s)&&/\b(how|summary|recap|review|doing|average|avg|went|was|did)\b/.test(s)&&!/\b(next week|plan)\b/.test(s))return coWeek(s);
+ if(/\blast\b/.test(s)&&/\b(when|time)\b/.test(s))return coLastEx(s);
+ return null}
+function coContext(){const pr=profile(),T=today(),tg=TG(pr),t=totals(T),L=logOf(T),pd=program()?progDay(T):null,its=food(T).items.filter(i=>!i.journal);
+ return [`Today is ${fmtLong(T)}, ${parseD(T).getFullYear()}. He thinks in ${wU()}.`,`Goal: ${pr.goal||'not set'}.`,
+  `Daily targets: ${tg.kcal} kcal, ${tg.protein} g protein, ${tg.carbs} g carbs, ${tg.fat} g fat. Step goal: ${pr.stepGoal||'none'}.`,
+  `Eaten so far today: ${rnd(t.kcal)} kcal, ${rnd(t.protein)} g protein, ${rnd(t.carbs)} g carbs, ${rnd(t.fat)} g fat${its.length?' ('+its.slice(0,12).map(i=>i.name).join(', ')+')':''}.`,
+  `Latest weight: ${fw(latestWeight())} ${wU()}.${L.steps!=null?' Steps today: '+L.steps+'.':''}`,
+  program()?`Plan today: ${pd?pd.name+' ('+pd.exercises.map(e=>coExName(e.ex)).join(', ')+')':'rest day'}${woDone(T)?', already done':''}.`:'No program set.'].join('\n')}
+function coHistory(){return coThread().filter(m=>m.text).slice(-7,-1).map(m=>({role:m.k==='me'?'user':'assistant',text:m.text}))}
+async function coAnswer(text,photo,id){
+ const c=CO();
+ if(!photo){const d=await coData(text);if(d)return {k:'bot',text:d}}
+ if(!aiReady())return {k:'bot',text:c.noAi,act:personalMode()||DEMO?'settings':''};
+ const q=!photo&&coIsQ(text);
+ if(!q){
+  const r=await aiMeal({imageBase64:photo||undefined,text:text||undefined,today:today()});
+  if(r.items.length)return {k:'bot',ai:1,meal:{items:r.items,notes:r.assumptions,date:today(),logged:0,src:id}};
+  if(photo)return {k:'bot',text:c.noFood};
+ }
+ if(aiServer())return {k:'bot',text:c.aiOffAcct};
+ const r=await FormaAI.ask({key:aiKey(),model:aiModel(),question:text,context:coContext(),history:coHistory()});
+ return {k:'bot',ai:1,text:r.text}}
+async function coRespond(text,photo,id){
+ COACH.busy=true;coDraw();let bot;
+ try{bot=await coAnswer(text,photo,id)}catch(e){const fx=snapFixFor(e);bot={k:'bot',text:aiErr(e),act:fx==='key'?'settings':fx==='retry'?'retry':''}}
+ COACH.busy=false;const th=coThread();th.push(bot);coSave(th);coDraw()}
+async function coSend(text,photo){
+ text=String(text||'').trim();if((!text&&!photo)||COACH.busy)return;
+ const th=coThread(),me={k:'me',id:uid()};if(text)me.text=text;
+ if(photo){me.ph=await coThumb(photo);COACH.full[me.id]=photo}
+ th.push(me);coSave(th);COACH.draft='';const el=$('#co_in');if(el)el.value='';
+ COACH.last={text,photo,id:me.id};coRespond(text,photo,me.id)}
+const coSendDraft=()=>{const el=$('#co_in');coSend(el?el.value:COACH.draft)};
+function coMealHtml(m,i,lastPend){const c=CO(),M=m.meal,k=M.items.reduce((a,x)=>{a.k+=rnd(x.kcal);a.p+=rnd(x.protein);a.c+=rnd(x.carbs);a.f+=rnd(x.fat);return a},{k:0,p:0,c:0,f:0}),b=totals(M.date),
+  after=M.logged?b:{kcal:b.kcal+k.k,protein:b.protein+k.p,carbs:b.carbs+k.c,fat:b.fat+k.f},no=M.logged||snapMealNo(M.date);
+ return `<div class="ct cmt"><div class="xs mut" style="margin-bottom:4px"><span class="cai">AI</span>${esc(cf(c.estimate,{meal:no}))}</div>
+ ${M.items.map(x=>`<div class="cmr"><div class="sp"><div class="n">${esc(x.name)}</div><div class="xs mut">${esc(x.amount||'')}</div></div><div class="srk"><b>${rnd(x.kcal)} kcal</b><span class="xs mut">P ${rnd(x.protein)} g</span></div></div>`).join('')}
+ <div class="cmr tot"><div class="sp n">${c.total}</div><div class="srk"><b>${k.k} kcal</b><span class="xs mut">P ${k.p} g, C ${k.c} g, F ${k.f} g</span></div></div>
+ <div class="xs mut" style="margin-top:6px">${c.after}: ${esc(coLeftLine(after))}</div>
+ ${M.notes&&M.notes.length?`<div class="xs mut" style="margin-top:6px">${esc(cf(FormaCopy.snap.assumed,{text:M.notes.slice(0,2).join(' ')}))}</div>`:''}
+ ${M.logged?`<div class="xs mut" style="margin-top:8px">${esc(cf(c.logged,{meal:M.logged}))}</div>`:`<button class="btn${i===lastPend?'':' ghost'} full" style="margin-top:10px" data-act="coLog" data-i="${i}">${c.logIt}</button>`}</div>`}
+function coThreadHtml(){const c=CO(),th=coThread(),ai=aiReady();let lastPend=-1;th.forEach((m,i)=>{if(m.meal&&!m.meal.logged)lastPend=i});
+ let h=th.map((m,i)=>{
+  if(m.k==='me')return `<div class="cm me">${m.ph?`<img class="cph" src="${esc(m.ph)}" alt="${c.photo}">`:''}${m.text?`<div class="cb">${esc(m.text)}</div>`:''}</div>`;
+  if(m.meal)return `<div class="cm bt">${coMealHtml(m,i,lastPend)}</div>`;
+  return `<div class="cm bt"><div class="ct">${m.ai?'<span class="cai">AI</span>':''}${esc(m.text||'')}${m.act==='settings'?`<div><button class="lnk" data-act="coSettings">${c.openSettings}</button></div>`:m.act==='retry'?`<div><button class="lnk" data-act="coRetry">${c.retry}</button></div>`:''}</div></div>`}).join('');
+ if(!th.length)h=`<div class="s15 mut" style="margin:6px 0 12px">${ai?c.sub:esc(aiServer()?c.aiOffAcct:c.aiOff)}</div>${!ai&&(personalMode()||DEMO)?`<button class="lnk" data-act="coSettings" style="margin-bottom:12px">${c.openSettings}</button>`:''}<div class="cch">${c.chips.map(x=>`<button data-act="coChip" data-q="${esc(x[1])}">${x[0]}</button>`).join('')}</div>`;
+ if(COACH.busy)h+=`<div class="cm bt" role="status" aria-label="${c.busy}"><div style="width:70%"><div class="sk" style="width:90%"></div><div class="sk w2" style="width:55%"></div></div></div>`;
+ return h}
+function coDraw(){const el=$('#co_th');if(!el)return;el.innerHTML=coThreadHtml();const sh=$('#sheet');if(sh)sh.scrollTop=sh.scrollHeight}
+function coachSheet(){const c=CO();
+ return `<h2 class="hh">${c.title}</h2><div class="xs mut" style="margin:-6px 0 4px">${fmtLong(today())}</div><div id="co_th" class="cth">${coThreadHtml()}</div>
+ <div class="cob"><div class="cmdbar"><input id="co_in" value="${esc(COACH.draft)}" placeholder="${c.ph}" enterkeyhint="send" autocomplete="off" autocapitalize="sentences" aria-label="Message to Coach"><button class="cmdhist" data-act="coCam" aria-label="Send a photo of a meal">${ic('camera',20)}</button>${coSR()?`<button class="cmdhist${COACH.listening?' on':''}" id="co_mic" data-act="coMic" aria-label="Speak" aria-pressed="${COACH.listening}">${ic('mic',20)}</button>`:''}<button class="cmdgo" data-act="coGo" aria-label="Send">${ic('send',20)}</button></div></div><input type="file" id="co_file" accept="image/*" hidden>`}
+function coOpen(){coPrune();openSheet(coachSheet(),coachSheet);const sh=$('#sheet');if(sh)sh.scrollTop=sh.scrollHeight}
+function coMicDraw(){const b=$('#co_mic');if(b){b.classList.toggle('on',COACH.listening);b.setAttribute('aria-pressed',COACH.listening)}}
+function coMicToggle(){const SR=coSR();if(!SR)return;
+ if(COACH.rec){try{COACH.rec.stop()}catch(e){}return}
+ let rec;try{rec=new SR()}catch(e){return}
+ COACH.rec=rec;rec.lang='en-PH';rec.interimResults=true;rec.continuous=false;let fin=false;
+ rec.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;if(e.results[i].isFinal)fin=true}const el=$('#co_in');if(el)el.value=t;COACH.draft=t};
+ rec.onerror=()=>{};
+ rec.onend=()=>{COACH.rec=null;COACH.listening=false;coMicDraw();if(fin&&COACH.draft.trim())coSendDraft()};
+ try{rec.start();COACH.listening=true;coMicDraw()}catch(e){COACH.rec=null}}
+function coLog(i){const th=coThread(),m=th[i];if(!m||!m.meal||m.meal.logged)return;
+ const M=m.meal,d=M.date,no=snapMealNo(d),t=new Date().toISOString(),full=COACH.full[M.src];
+ ringKeep();
+ M.items.forEach((it,j)=>{const item={id:uid(),meal:no,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t};
+  if(j===0&&full){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=full.split(',')[1];item.photo=p}
+  mutate(foodP(d),{k:'foodAdd',item},{quiet:true})});
+ M.logged=no;coSave(th);render();coDraw()}
+document.addEventListener('input',e=>{if(e.target.id==='co_in')COACH.draft=e.target.value});
+document.addEventListener('keydown',e=>{if(e.target.id==='co_in'&&e.key==='Enter'){e.preventDefault();coSendDraft()}});
+document.addEventListener('change',async e=>{const t=e.target;if(t.id!=='co_file')return;const f=t.files&&t.files[0];t.value='';if(!f)return;
+ let photo;try{photo=await shrinkImage(f)}catch(x){toast('Could not read that photo.');return}
+ const el=$('#co_in');coSend(el?el.value:COACH.draft,photo)});
 
 /* ---------- events ---------- */
 let foodMeal=1,foodPhoto=null;
@@ -4600,11 +4789,8 @@ document.addEventListener('click',async e=>{
   case 'tryDemo':{const u=new URL(location.href);u.searchParams.set('demo','1');location.href=u.toString();break}
   case 'leaveDemo':{const u=new URL(location.href);u.searchParams.delete('demo');location.href=u.toString();break}
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){const go=()=>{cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)};if(pendCount()){askConfirm({title:'Switch repo?',body:'Some changes have not synced yet and will be lost.',yes:'Switch anyway',no:'Stay on this repo'},go);break}go()}else toast('The repo should look like owner/name.');break}
-  case 'aiSave':{const el=$('#ai_key'),v=el?el.value.trim():'';if(!v){toast('Paste your Claude API key first.');break}
-   if(!/^sk-ant-[\w-]{20,}$/.test(v)){toast('That is not a Claude key. It starts with sk-ant-.');break}
-   aiKeySet(v);LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key saved on this phone. Tap Test.');break}
   case 'aiTest':aiTest();break;
-  case 'aiRemove':aiKeySet('');LS.del('forma.aiOk');AI.err='';AI.msg='';aiReopenSettings();toast0('Key removed from this phone.');break;
+  case 'aiRemove':aiKeySet('');LS.del('forma.aiOk');LS.del('forma.aiBad');AI.err='';AI.msg='';aiReopenSettings();toast0('Key removed from this phone.');break;
   case 'aiModel':LS.set('forma.aiModel',D.m==='sonnet'?'sonnet':'haiku');aiReopenSettings();break;
   case 'snapPick':openSheet(snapChoiceSheet());break;
   case 'snapCam':case 'snapGal':{LS.set('forma.snapPref',a==='snapCam'?'cam':'gal');const el=$(a==='snapCam'?'#snap_cam':'#snap_in');closeSheet();if(el)el.click();break}
@@ -4626,11 +4812,22 @@ document.addEventListener('click',async e=>{
    if(k==='photos'){setSub('progress','photos');window.scrollTo(0,0);render();break}
    if(k==='meas'&&!MEAS.some(([z])=>measHistory()[z].length)){measOpen(today());break}
    setSub('progress','weight');render();const el=$(k==='bf'?'#p_bf':'#p_meas');if(el)el.scrollIntoView({block:'start'});else window.scrollTo(0,0);break}
+  case 'coachOpen':coOpen();break;
+  case 'coGo':coSendDraft();break;
+  case 'coCam':{const f=$('#co_file');if(f)f.click();break}
+  case 'coMic':coMicToggle();break;
+  case 'coLog':coLog(+D.i);break;
+  case 'coChip':coSend(D.q);break;
+  case 'coRetry':{const L=COACH.last;if(L&&!COACH.busy){const th=coThread();if(th.length&&th[th.length-1].k==='bot'&&!th[th.length-1].meal){th.pop();coSave(th)}coRespond(L.text,L.photo,L.id)}break}
+  case 'coSettings':closeSheet();openSheet(settingsSheet());setTimeout(()=>{const el=$('#set_advanced');if(el)el.scrollIntoView({block:'start'})},60);break;
+  case 'snapGo':{if(!aiReady()){openSheet(snapChoiceSheet());break}const cam=snapPref()!=='gal',el=$(cam?'#snap_cam':'#snap_in');closeSheet();if(el)el.click();break}
+  case 'snapMul':{const it=SNAP.items[+D.j];if(it){it.m=+D.m;snapDraw()}break}
+  case 'snapFix':SNAP.showFix=!SNAP.showFix;snapDraw();if(SNAP.showFix){const n=$('#snap_note');if(n)n.focus()}break;
   case 'snapAsk':snapAsk();break;
   case 'snapCancel':SNAP.seq++;closeSheet();break;
   case 'snapDrop':SNAP.items.splice(+D.j,1);snapDraw();break;
   case 'snapSave':snapSave();break;
-  case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());break;
+  case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());setTimeout(()=>{const el=$('#set_advanced');if(el)el.scrollIntoView({block:'start'})},60);break;
   case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodPhoto=null;addOpen(m,{photo:ph||''});break}
   case 'force':closeSheet();refresh(true);break;
   case 'signout':{const go=()=>{LS.del('forma.cfg');LS.del('forma.db');cfg={token:'',repo:cfg.repo};DB={files:{},pend:{},tree:{},photos:{}};closeSheet();render()};if(pendCount()){askConfirm({title:'Sign out?',body:'Some changes have not synced yet and will be lost.',yes:'Sign out anyway',no:'Stay signed in'},go);break}go();break}
