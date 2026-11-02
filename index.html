@@ -1312,7 +1312,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='0574ad624151f5fe434e028ee663d556dbd541c0';let verChecked=0;
+const BUILD='a6c3218ba2b07e2c02f733aa719b8c5b09f9e986';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -3730,7 +3730,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.16.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.16.2${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
