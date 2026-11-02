@@ -379,7 +379,7 @@
       recomp: { title: 'Recomping', text: 'Weight is flat and your waist is shrinking. Keep eating and training as you are.' },
     },
     tour: {
-      cmd: ['Log anything', 'The round button opens one line to type in, like weight 84.9, steps 8200, waist 90 or basketball 1 hour. You check the preview before anything saves.'],
+      cmd: ['Log anything', 'The Log something else row opens one line to type in, like weight 84.9, steps 8200, waist 90 or basketball 1 hour. You check the preview before anything saves.'],
       trend: ['Your weight trend', 'The dots are your weigh-ins and the line is the trend. The number under it is how fast you are moving each week.'],
       verdict: ['This week', 'Once there are enough weigh-ins, this says in plain words whether to eat the same, less or more.'],
       eat: ['What to change', 'Your weekly instruction sits at the top of Eat. It comes from your weight trend, not from counting.'],
@@ -494,11 +494,11 @@
     snap: ['Snap a meal', ''],
     snapOn: 'Reads a photo for you',
     snapNo: 'Needs AI, set up in Settings',
-    noAi: 'Photo estimates need AI, which is not switched on here. Add the food by search, or attach the photo to the meal anyway.',
     cmdNoAi: 'AI is not switched on here. Tap Add by hand under each line, or search for the food. Your text is kept.',
     keyHint: 'To switch it on, add a key in Settings, Personal mode.',
-    attach: 'Attach photo to the meal anyway',
-    bySearch: 'Add food by search',
+    snapNoTitle: 'Photo estimates need AI.',
+    setUpAi: 'Set up AI',
+    snapSearch: 'Add by search',
   };
 
   /* Snap a meal, one flow: camera, reading card, rows with an amount stepper, one Log button. */
