@@ -1302,6 +1302,125 @@ button:focus-visible,summary:focus-visible,a:focus-visible,select:focus-visible,
 /* The body fat drawings carry their own charcoal backdrop. In a dark look it melts into the card (lighten blend); in light mode it stays a charcoal tile, like a photo. */
 .v1 .bfh .bfhi,.bfc .bfi{background:var(--card)}
 :root[data-mode="dark"] .v1 .bfh .bfhi img,:root[data-mode="dark"] .bfc .bfi img{mix-blend-mode:lighten}
+/* ===== 0.17.0 Live workout as the Focus card (handoff 056, layout A). Scoped to .lfx so nothing else moves. ===== */
+.v1.lfx .lfh{display:block;margin-top:8px}
+.v1.lfx .lfh .lt{display:flex;align-items:center;gap:12px;width:100%}
+.v1.lfx .lftt{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;font-size:20px;line-height:28px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v1.lfx .lfn{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--txt)}
+.v1.lfx .lftt .tm{flex:none;min-height:44px;padding:0;font-size:inherit;color:var(--mut);text-decoration:none;display:inline-flex;align-items:center}.v1.lfx .lftt .tm b{font-weight:400}
+.v1.lfx .lfseg{display:flex;gap:4px;margin-top:8px}
+.v1.lfx .lfseg button{flex:1;min-width:0;height:36px;margin:-16px 0;padding:0;display:flex;align-items:center}
+.v1.lfx .lfseg i{display:block;width:100%;height:4px;border-radius:2px;background:var(--track)}
+.v1.lfx .lfseg .isd i{background:var(--txt)}.v1.lfx .lfseg .isc i{background:var(--acc)}
+.v1.lfx .lfcap{display:flex;justify-content:space-between;margin-top:8px;color:var(--mut);font-variant-numeric:tabular-nums}
+.v1.lfx .lfart{position:relative;display:block;width:100%;height:180px;margin-top:12px;border-radius:20px;background:var(--inset);overflow:hidden;text-align:left}
+.v1.lfx .lfa,.v1.lfx .lfa>span{position:absolute;inset:0}
+.v1.lfx .lfa .xart{position:absolute;inset:0;width:100%;height:100%;background:transparent;transform:scale(1.04);transform-origin:50% 55%}
+.v1.lfx .lfa .f2{opacity:0;animation:xaB 2.4s ease-in-out infinite}
+.v1.lfx .lfa img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--inset)}
+.v1.lfx .lfa>.xart.xm{transform:none}
+.v1.lfx .lfm{position:absolute;left:14px;bottom:10px;right:14px;font-size:13px;line-height:16px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-height:800px){.v1.lfx .lfart{height:140px;margin-top:8px}}
+@media (prefers-reduced-motion:reduce){.v1.lfx .lfa .f2{animation:none}}
+.v1.lfx .lfnm{align-items:flex-start;gap:12px;margin-top:12px}
+.v1.lfx .lfnn{margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--txt);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.v1.lfx .lfnm .xl{display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.v1.lfx .lfnm .xl .lnk{min-height:44px;margin:-8px 0;padding:0 0 0 8px;color:var(--mut);font-size:15px;text-decoration:none;display:inline-flex;align-items:center}
+.v1.lfx{--tk:52px}
+@media (min-width:380px){.v1.lfx{--tk:56px}}
+.v1.lfx .lfhd{display:grid;grid-template-columns:24px 62px minmax(0,1fr) minmax(0,1fr) var(--tk);column-gap:6px;padding:0 10px;margin-top:16px;font-size:12px;letter-spacing:.08em;color:var(--mut);text-align:center}
+.v1.lfx .lfr{position:relative;margin-top:8px;border-radius:16px;overflow:hidden}
+.v1.lfx .lfrow{position:relative;display:grid;grid-template-columns:24px 62px minmax(0,1fr) minmax(0,1fr) var(--tk);column-gap:6px;align-items:center;min-height:64px;padding:0 10px;background:var(--card);border-radius:16px;touch-action:pan-y}
+.v1.lfx .lfn1{text-align:center;color:var(--mut);font-size:15px}.v1.lfx .lfn1 b{font-weight:400}.v1.lfx .lfn1 .prc{font-weight:800}
+.v1.lfx .lfpv{text-align:center;color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v1.lfx .lfc{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.v1.lfx .lfi{width:100%;min-width:0;height:44px;padding:0;text-align:center;background:none;border:0;border-bottom:1.5px solid var(--faint);border-radius:0;font-size:22px;font-weight:500;line-height:1;font-family:inherit;font-variant-numeric:tabular-nums;color:var(--txt);box-shadow:none}
+.v1.lfx .lfi::placeholder{color:var(--mut);opacity:1}
+.v1.lfx .lfi:focus{border-bottom-color:var(--acc);outline:0}
+.v1.lfx .lfi.x5{font-size:18px}
+.v1.lfx .dn .lfi{color:var(--mut);border-bottom-color:transparent}
+.v1.lfx .lfu{display:none}
+.v1.lfx .lfst{display:none}
+.v1.lfx .lftag{margin-top:-2px;height:14px;padding:0;position:relative;font-size:11px;line-height:14px;color:var(--mut);background:none;border:0;white-space:nowrap}
+.v1.lfx .lftag::after{content:"";position:absolute;inset:-16px -10px}
+.v1.lfx .lftk{width:var(--tk);height:var(--tk);justify-self:center;border-radius:50%;border:2.5px solid var(--chk);display:grid;place-items:center;color:transparent;background:none}
+.v1.lfx .lftk.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.v1.lfx .act .lfrow{grid-template-columns:44px minmax(0,1fr) minmax(0,1fr) var(--tk);grid-template-rows:44px 44px;height:88px;min-height:88px;padding:0 10px 0 6px;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 55%,transparent)}
+.v1.lfx .act .lfn1{grid-area:1/1;align-self:end;line-height:22px}
+.v1.lfx .act .lfpv{grid-area:2/1;align-self:start;font-size:11px;line-height:16px}
+.v1.lfx .act .lfw{grid-area:1/2/3/3}
+.v1.lfx .act .lfq{grid-area:1/3/3/4}
+.v1.lfx .act .lftk{grid-area:1/4/3/5;border-color:var(--acc);color:var(--acc)}
+.v1.lfx .act .lfc{display:grid;grid-template-columns:minmax(0,1fr) 44px;grid-template-rows:68px 20px;align-items:stretch;justify-items:stretch}
+.v1.lfx .act .lfi{grid-area:1/1;height:68px;font-size:32px;border:0;border-radius:12px;background:var(--inset);box-shadow:inset 0 0 0 1.5px var(--faint)}
+.v1.lfx .act .lfi.x4{font-size:26px}.v1.lfx .act .lfi.x5{font-size:20px}
+.v1.lfx .act .lfi:focus{box-shadow:inset 0 0 0 2px var(--acc)}
+.v1.lfx .act .lfu{grid-area:2/1;display:block;text-align:center;font-size:12px;line-height:20px;color:var(--mut)}
+.v1.lfx .act .lfst{grid-area:1/2/3/3;display:grid;grid-template-rows:44px 44px;margin-left:2px}
+.v1.lfx .lfst button{width:44px;height:44px;display:grid;place-items:center;color:var(--soft)}
+.v1.lfx .lfst button:first-child{border-bottom:1px solid var(--line)}
+.v1.lfx .lfrir{display:flex;align-items:center;flex-wrap:wrap;margin:4px 0 0;padding:0 2px}
+.v1.lfx .lfrir .xs{padding-right:2px;white-space:nowrap}.v1.lfx .lftt #elab:not(:empty){margin-right:.3em}
+.v1.lfx .lfrir button{min-height:44px;min-width:44px;padding:0 6px;background:none;border:0;color:var(--mut);font-size:14px;white-space:nowrap}
+.v1.lfx .lfrir button.on{background:var(--acc);color:var(--onacc);font-weight:600;border-radius:18px;min-height:36px}
+.v1.lfx .lfrir button.on.f{background:var(--warn);color:var(--bg)}
+.v1.lfx .lfrir .dp{margin-left:auto;color:var(--txt)}
+.v1.lfx .lfdrop{display:grid;grid-template-columns:24px 62px minmax(0,1fr) minmax(0,1fr) var(--tk);column-gap:6px;align-items:center;margin-top:4px;padding:0 10px}
+.v1.lfx .lfdl{grid-column:1/3;text-align:right;font-size:12px;color:var(--acct)}
+.v1.lfx .lfdrop .x{width:44px;height:44px;justify-self:center;border-radius:50%;color:var(--mut);display:grid;place-items:center}
+:root[data-mode="light"] .v1.lfx .lftk.on{background:var(--acc);border-color:var(--acl)}
+/* The Set done bar is gone: the tick is in the row, shake ticks the active row. The rest band is one card over the bottom of the list, above the tab bar. */
+
+body.live::after,body.live:has(#rest:not([hidden]))::after{display:none}
+body.live .wrap{padding-bottom:calc(var(--tabh,58px) + var(--pkh) + 24px)}
+body.live:has(#rest:not([hidden])) .wrap{padding-bottom:calc(var(--tabh,58px) + var(--pkh) + var(--rh,96px) + 8px)}
+body.live .toast,body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + var(--pkh) + 12px)}
+body.live:has(#rest:not([hidden])) .toast{bottom:calc(var(--tabh,58px) + var(--pkh) + var(--rh,96px) + 12px)}
+body.live #rest,body.live:has(.lfx) #rest{bottom:calc(var(--tabh,58px) + var(--pkh))}
+body.live #rest>div{max-width:none;padding:0}
+body.live #rest .in{height:96px;padding:4px 8px 10px 20px;background:var(--card2);border-radius:22px 22px 0 0;grid-template-columns:minmax(0,1fr) repeat(4,auto);align-items:center}
+body.live #rest .rtm{min-width:0;display:flex;flex-direction:column}
+body.live #rest .rtm b{font-size:40px;line-height:44px}
+body.live #rest .rtm .xs{max-width:none;font-size:13px}
+body.live #rest .rb2{min-width:44px;padding:0 6px}
+body.live #rest .bar{height:6px}
+@media (max-width:370px){body.live #rest .rtm b{font-size:34px;line-height:38px}body.live #rest .in{padding-left:16px}body.live #rest .rb2{min-width:42px;padding:0 4px;font-size:14px}}
+/* Next exercise: one pinned row above the tab bar. The rest band stacks over it. */
+body.live{--pkh:64px}
+.lfpeek{position:fixed;left:16px;right:16px;bottom:calc(var(--tabh,58px) + 8px);max-width:448px;margin:0 auto;height:56px;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:16px;background:var(--card);text-align:left;z-index:24}
+.lfpeek .lfpn{flex:1;min-width:0;display:flex;flex-direction:column}
+.lfpeek .lfpn b{font-size:16px;font-weight:500;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lfpeek .lfpn .xs{line-height:14px;white-space:nowrap}
+.lfpeek .lfpv2{flex:none;font-size:15px;color:var(--mut);font-variant-numeric:tabular-nums}
+.lfpeek>svg{flex:none;color:var(--faint)}
+/* While resting the band names what is next, so the row steps aside, unless this exercise is finished (then it is the way on). */
+body.live:has(#rest:not([hidden])):not(:has(.lfpeek.fin)){--pkh:0px}
+body.live:has(#rest:not([hidden])):not(:has(.lfpeek.fin)) .lfpeek{display:none}
+.lfpeek.pulse{animation:lfpulse .6s ease-in-out 1.25s 1 both}
+@keyframes lfpulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 3px var(--acc)}}
+.v1.lfx[data-dir="1"] .lfcard{animation:lfin1 .2s ease-out}
+.v1.lfx[data-dir="-1"] .lfcard{animation:lfin2 .2s ease-out}
+@keyframes lfin1{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}
+@keyframes lfin2{from{transform:translateX(-48px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.lfpeek.pulse,.v1.lfx[data-dir] .lfcard{animation:none}}
+/* 360 px: tighter columns, the chip row stays on one line, steppers keep their 44 px */
+@media (max-width:370px){
+ .v1.lfx{--tk:48px}
+ .v1.lfx .lfrow,.v1.lfx .lfhd,.v1.lfx .lfdrop{column-gap:4px}
+ .v1.lfx .lfrow{padding:0 8px}
+ .v1.lfx .act .lfrow{grid-template-columns:38px minmax(0,1fr) minmax(0,1fr) var(--tk);padding:0 8px 0 4px}
+ .v1.lfx .lfrir .tq{display:none}
+ .v1.lfx .lfrir button{padding:0 5px;font-size:13px}
+ .v1.lfx .lfnn{font-size:20px;line-height:24px}
+}
+/* tighter stack so the first three rows clear the next-exercise row, and the thin accent in daylight */
+.v1.lfx .xlst{margin-top:0}
+.v1.lfx .xsec.cur{margin:0}
+.v1.lfx .lfhd{margin-top:12px}
+:root[data-mode="light"] .v1.lfx .lfseg .isc i{background:var(--acl)}
+:root[data-mode="light"] .v1.lfx .act .lfrow{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acl) 80%,transparent)}
+:root[data-mode="light"] .v1.lfx .act .lftk{border-color:var(--acl);color:var(--acl)}
+:root[data-mode="light"] .v1.lfx .lfpeek.pulse{animation-name:lfpulse}
 </style>
 </head>
 <body>
@@ -1338,7 +1457,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='2b842abce18ede9b88d14bbc343f8ff6360c9121';let verChecked=0;
+const BUILD='7bb75c46f55d6956459eccdf2af66bb031d4445b';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2372,7 +2491,7 @@ const IMGP=new Map();
 function preloadEx(ids){ids.forEach(id=>{if(exArt(id)){['-a','-b'].forEach(k=>{const u='img/ex/'+id+k+'.svg';if(!IMGP.has(u)){const i=new Image();i.src=u;IMGP.set(u,i)}});return}const im=exImg(id);if(!im)return;im.slice(0,2).forEach(u=>{if(typeof u==='string'&&/^https:\/\//.test(u)&&!IMGP.has(u)){const i=new Image();i.src=u;IMGP.set(u,i)}})})}
 function thumb(id,px,tap,eager){const art=exArt(id),im=art?null:exImg(id),inner=(art?(px<48?artMap(id):artUse(id+'-a')):im?`<img src="${esc(im[0])}"${eager?'':' loading="lazy"'} alt="">`:'')+`<span>${esc(exLetter(id))}</span>`;
  return tap?`<button class="xth" style="--s:${px}px" data-act="cues" data-ex="${esc(id)}" aria-label="Notes for ${esc(exName(id))}">${inner}</button>`:`<span class="xth" style="--s:${px}px">${inner}</span>`}
-document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.closest&&t.closest('.xth,.fb,.gi,.ld'))t.remove()},true);
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.closest&&t.closest('.xth,.fb,.gi,.ld,.lfa'))t.remove()},true);
 let NOTE_T=null;
 function noteAni(on){const x=document.querySelector('.xfr');clearInterval(NOTE_T);if(!x)return;x.classList.toggle('ani',on);
  if(x.classList.contains('art')){const b=document.querySelector('[data-act=noteAni]');if(b){b.textContent=on?'Auto flip: on':'Auto flip: off';b.setAttribute('aria-pressed',on)}return}
@@ -2680,36 +2799,47 @@ function workoutView(){
  }
  return headerV1('Workout',[['libOpen','Exercise library'],['pedOpen','Edit program'],['logOpen','Log food, weight or steps']])+`<div class="v1">${nav}<div class="week w2">${strip}</div>${body}${spRows.length?`<section class="vs plan"><div class="lbl">Sport</div>${spRows.join('')}</section>`:''}${chips}</div>`;
 }
+const stpIc=p=>`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${p?'<path d="M12 5v14M5 12h14"/>':'<path d="M5 12h14"/>'}</svg>`;
+/* The live workout shows one exercise at a time. Order = the day's exercises, then the ones added mid-session; open = the one on screen. */
+const liveList=wo=>{const day=dayOf(wo.dayId);return [...day.exercises,...(wo.extra||[]).map(x=>({ex:x.ex,sets:x.sets,reps:'',extra:true}))]};
+function liveOpenEx(wo,list){const o=UI.wOpen;if(o&&list.some(e=>effEx(wo,e.ex)===o))return o;const nx=nextSet();return nx?nx.ex:effEx(wo,list[list.length-1].ex)}
 function liveView(wo,lg){
  const day=dayOf(wo.dayId);
  preloadEx([...day.exercises,...(wo.extra||[])].map(e=>effEx(wo,e.ex)));
  const list=[...day.exercises,...(wo.extra||[]).map(x=>({ex:x.ex,sets:x.sets,reps:'',extra:true}))],stt=woStats(wo),nx=nextSet();
  const finEx=ex=>{const a=(wo.sets&&wo.sets[ex])||[];return a.length>0&&a.every(z=>z.done)};
  /* One exercise is open: the one you tapped, else the one with the next open set. Everything else is an icon row. */
- const open=UI.wOpen&&list.some(e=>effEx(wo,e.ex)===UI.wOpen)&&(!finEx(UI.wOpen)||UI.wOpenDone)?UI.wOpen:(nx?nx.ex:null);
- if(UI.wShown&&open&&UI.wShown!==open)setTimeout(()=>{const x=document.querySelector('.xsec.cur');if(!x)return;const t=x.getBoundingClientRect().top;if(t<60||t>innerHeight*.55)window.scrollTo(0,Math.max(0,t+window.scrollY-72))},0);
- UI.wShown=open;
+ const open=liveOpenEx(wo,list);
  const cards=list.map((e,n)=>{
   const ex=effEx(wo,e.ex),inf=exdb().exercises[ex]||{n:ex},sets=(wo.sets&&wo.sets[ex])||[],prev=prevFor(ex),u=unitOf(ex);
   const swapped=ex!==e.ex,eu=exU(ex),custom=String(ex).startsWith('custom_');
   const easy=prev&&prev.length&&prev.every(x=>x.rir===3);
-  if(ex!==open){const dn=sets.filter(z=>z.done).length;return `<button class="xr" data-act="wExp" data-ex="${esc(ex)}" aria-label="Open ${esc(inf.n)}, ${dn} of ${sets.length||e.sets} sets done">${xlead(ex,44,finEx(ex))}<span class="xn">${esc(inf.n)}</span><span class="xv">${dn} of ${sets.length||e.sets}</span>${ic('down',18)}</button>`}
-  return `<section class="xsec cur"><div class="rw xh"><button class="xlb" data-act="cues" data-ex="${esc(ex)}" aria-label="Notes for ${esc(inf.n)}">${xlead(ex,56)}</button><div class="sp"><div class="xn" data-act="cues" data-ex="${ex}">${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}${custom?' <span class="tag">Custom</span>':''}</div><div class="xm"><span>${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets, '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')}</span> <span class="xmb"><button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></span></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
+  if(ex!==open)return '';
+  const mus=(inf.p||[]).map(k=>((exdb().muscles||{})[k]||{name:k}).name).join(', '),im2=!exArt(ex)&&exImg(ex);
+  const pic=exArt(ex)?`<span class="f1">${artUse(ex+'-a')}</span><span class="f2">${artUse(ex+'-b')}</span>`:im2&&typeof im2[0]==='string'&&/^https:\/\//.test(im2[0])?`<span class="f0">${artMap(ex)}</span><span class="f1"><img src="${esc(im2[0])}" alt=""></span>${typeof im2[1]==='string'&&/^https:\/\//.test(im2[1])?`<span class="f2"><img src="${esc(im2[1])}" alt=""></span>`:''}`:artMap(ex);
+  return `<section class="xsec cur lfcard"><button class="lfart" data-act="cues" data-ex="${esc(ex)}" aria-label="Notes and pictures for ${esc(inf.n)}"><span class="lfa">${pic}</span>${mus?`<span class="lfm">${esc(mus)}</span>`:''}</button>
+  <div class="rw lfnm"><div class="sp"><h2 class="lfnn">${esc(inf.n)}${swapped?' <span class="tag">swapped</span>':''}${custom?' <span class="tag">Custom</span>':''}</h2><div class="xm"><span>${e.extra?(sets.length||e.sets)+' sets':e.sets+' sets, '+esc(e.reps)+' '+(u==='REPS'?'reps':u==='SEC'?'seconds':'meters')}</span> <span class="xmb"><button class="rst" data-act="restSet" data-ex="${ex}" aria-label="Rest time">${ic('clock',13)}${mmss(restFor(ex))}</button> <button class="rst ${eu!==wU()?'alt':''}" data-act="exUnit" data-ex="${ex}" aria-label="Weight unit for this exercise">${eu}</button></span></div>${easy?'<div class="hint">Last time every set had 3+ left: add weight.</div>':''}</div>
   <div class="xl"><button class="lnk" data-act="cues" data-ex="${ex}">Notes</button><button class="lnk" data-act="swap" data-slot="${e.ex}">Swap</button></div></div>
-  <div class="set h"><div style="text-align:center">SET</div><div style="text-align:center">LAST</div><div style="text-align:center">${eu.toUpperCase()}</div><div style="text-align:center">${u}</div><div></div></div>
-  ${sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0');return `<div class="swr" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="set ${s.done?'dn':''}"><div class="sn">${i+1}${s.done&&setIsPR(ex,sets,i)?'<b class="prc">PR</b>':''}</div><div class="pv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</div>
-  <input data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.w?fwU(s.w,eu):''}" placeholder="${hw}" aria-label="Weight set ${i+1}">
-  <input data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${s.r?s.r:''}" placeholder="${hr}" aria-label="${u} set ${i+1}">
-  <button class="chk ${s.done?'on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="${s.done?`Set ${i+1} done, tap to undo`:`Tick set ${i+1}`}">${ic('check',20)}</button></div></div>
-  ${s.done&&u==='REPS'?`<div class="sx"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}" aria-label="Add a lighter drop set after this set">+ Drop set</button></div>`:''}
-  ${(s.drops||[]).map((d,j)=>`<div class="set drop"><div class="sn">drop</div><div></div><input data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')}
+  <div class="lfhd"><span>SET</span><span>LAST</span><span>${eu.toUpperCase()}</span><span>${u}</span><span></span></div>
+  ${(()=>{const ai=sets.findIndex(z=>!z.done);return sets.map((s,i)=>{const pv=prev&&(prev[i]||prev[prev.length-1]),ps=sets.slice(0,i).reverse().find(z=>z.w||z.r),hw=ps&&ps.w?fwU(ps.w,eu):(pv&&pv.w?fwU(pv.w,eu):'0'),hr=ps&&ps.r?ps.r:(pv?pv.r:'0'),act=i===ai,ro=s.done&&u==='REPS'&&UI.rirOpen&&UI.rirOpen.ex===ex&&UI.rirOpen.i===i&&UI.rirOpen.until>Date.now(),
+  wv=s.w?fwU(s.w,eu):'',rv=s.r?s.r:'',nl=v=>{const n=String(v).length;return n>=5?' x5':n===4?' x4':''},rl=((RIR.find(q=>q[0]===s.rir)||[])[1])||'Reps left';
+  const stp=(k,lbl)=>`<span class="lfst"><button data-act="stp" data-ex="${ex}" data-i="${i}" data-k="${k}" data-d="1" aria-label="More ${lbl}, set ${i+1}">${stpIc(1)}</button><button data-act="stp" data-ex="${ex}" data-i="${i}" data-k="${k}" data-d="-1" aria-label="Less ${lbl}, set ${i+1}">${stpIc(0)}</button></span>`;
+  return `<div class="swr lfr${act?' act':''}${s.done?' dn':''}${ro?' ropen':''}" data-ex="${ex}" data-i="${i}"><div class="sdel">Delete</div><div class="lfrow"><div class="lfn1"><b>${i+1}</b>${s.done&&setIsPR(ex,sets,i)?'<b class="prc">PR</b>':''}</div><span class="lfpv">${pv?(pv.w?fwU(pv.w,eu)+' x ':'')+pv.r:'-'}</span>
+  <div class="lfc lfw"><input class="lfi${nl(wv||hw)}" data-f="w" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${wv}" placeholder="${hw}" aria-label="Weight set ${i+1}">${act?`<span class="lfu">${eu}</span>${stp('w','weight')}`:''}</div>
+  <div class="lfc lfq"><input class="lfi${nl(rv||hr)}" data-f="r" data-ex="${ex}" data-i="${i}" inputmode="decimal" value="${rv}" placeholder="${hr}" aria-label="${u} set ${i+1}">${act?`<span class="lfu">${u==='REPS'?'reps':u==='SEC'?'sec':'m'}</span>${stp('r',u==='REPS'?'reps':u==='SEC'?'seconds':'meters')}`:''}${s.done&&u==='REPS'&&!ro?`<button class="lftag" data-act="rirOpen" data-ex="${ex}" data-i="${i}" aria-label="Reps left, ${rl}. Tap to change">${rl}</button>`:''}</div>
+  <button class="chk lftk${s.done?' on':''}" data-act="chk" data-ex="${ex}" data-i="${i}" aria-pressed="${!!s.done}" aria-label="${s.done?`Set ${i+1} done, tap to undo`:`Tick set ${i+1}`}">${ic('check',28)}</button></div></div>
+  ${ro?`<div class="lfrir"><span class="xs mut">Reps left${tq('rir')}</span>${RIR.map(([v,l])=>`<button class="${s.rir===v?'on':''} ${v===0?'f':''}" data-act="rir" data-ex="${ex}" data-i="${i}" data-v="${v}">${l}</button>`).join('')}<button class="dp" data-act="dropAdd" data-ex="${ex}" data-i="${i}" aria-label="Add a lighter drop set after this set">+ Drop set</button></div>`:''}
+  ${(s.drops||[]).map((d,j)=>`<div class="lfdrop"><div class="lfdl">drop</div><input class="lfi" data-f="dw" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.w?fwU(d.w,eu):''}" placeholder="0" aria-label="Drop weight"><input class="lfi" data-f="dr" data-ex="${ex}" data-i="${i}" data-j="${j}" inputmode="decimal" value="${d.r?d.r:''}" placeholder="0" aria-label="Drop reps"><button class="x" data-act="dropRm" data-ex="${ex}" data-i="${i}" data-j="${j}" aria-label="Remove drop">${ic('x',18)}</button></div>`).join('')}`}).join('')})()}
   <div class="xa"><button class="lnk" data-act="addSet" data-ex="${ex}">+ Add set</button><button class="lnk" data-act="hist" data-ex="${ex}" aria-label="History and PRs for ${esc(inf.n)}">${ic('hist',16)}History</button>${sets.length>1?`<button class="lnk" data-act="rmSet" data-ex="${ex}" aria-label="Remove last set">Remove set</button>`:''}${e.extra?`<button class="lnk" data-act="exDel" data-ex="${e.ex}">Remove exercise</button>`:''}</div></section>`}).join('');
  const long=Date.now()-new Date(wo.startedAt)>3*3600000;
  const wlen=dayMinutes(day,wo),over=wlen>sessMax(),rn=lringNow(wo);
- return headerV1('Workout',[['termLesson','How a workout works',' data-id="workout-screen"'],['wCancel','Discard workout'],['soundTog','Timer sound: '+(LS.get('forma.sound',1)===0?'off':'on')],['shakeTog','Shake to finish a set: '+(LS.get('forma.shake',1)===0?'off':'on')]])+`<div class="v1 live"><section class="lhero lh"><div class="lt"><h2 class="pt">${esc(day.name)}</h2><button class="lnk" data-act="wFinish">Finish</button></div>
- <div class="lln"><button class="tm" data-act="wStarted" aria-label="Change start time"><span id="elab">${rn.rest?'Rest ':''}</span><b id="el">${rn.t}</b></button><span class="mut">, ${nx?`${stt.done} of ${stt.all} sets`:`all ${stt.all} sets done`}</span></div>${over?`<div class="xs amb">About ${wlen} min, over your ${sessMax()} min</div>`:''}</section>
- ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}<div class="xlst">${cards}</div><button class="lnk addx" data-act="exAdd">+ Add exercise</button></div><div style="height:calc(168px + env(safe-area-inset-bottom))"></div>
- <div id="setdone"><div><button class="btn" data-act="setDone">${ic('check',22)} ${(()=>{const n=nextSet();return n?'Set done: '+esc((exdb().exercises[n.ex]||{}).n||'')+' '+(n.i+1)+'/'+n.n:'All sets done'})()}</button></div></div>`;
+ const curIx=Math.max(0,list.findIndex(e=>effEx(wo,e.ex)===open)),nxe=list[curIx+1]&&effEx(wo,list[curIx+1].ex);
+ const peek=nxe?(()=>{const a=(wo.sets&&wo.sets[nxe])||[],left=a.filter(z=>!z.done).length;return `<button class="lfpeek${UI.peekPulse===open?' pulse':''}${finEx(open)?' fin':''}" data-act="wExp" data-ex="${esc(nxe)}" aria-label="Next exercise, ${esc(exName(nxe))}">${xlead(nxe,40,finEx(nxe))}<span class="lfpn"><span class="xs mut">Next, swipe left</span><b>${esc(exName(nxe))}</b></span><span class="lfpv2">${left?left+(left===1?' set':' sets'):'Done'}</span>${ic('right',18)}</button>`})():`<button class="lfpeek${UI.peekPulse===open?' pulse':''}${finEx(open)?' fin':''}" data-act="exAdd" aria-label="Add an exercise"><span class="ld" style="--s:40px"><span>${ic('plus',20)}</span></span><span class="lfpn"><span class="xs mut">Last exercise</span><b>Add exercise</b></span>${ic('right',18)}</button>`;
+ const seg=list.map((e,n)=>{const ex=effEx(wo,e.ex),dn=finEx(ex);return `<button class="${dn?'isd':''} ${ex===open?'isc':''}" data-act="wExp" data-ex="${esc(ex)}" aria-label="Exercise ${n+1} of ${list.length}, ${esc(exName(ex))}${dn?', done':''}"${ex===open?' aria-current="true"':''}><i></i></button>`}).join('');
+ return headerV1('Workout',[['exAdd','Add exercise'],['termLesson','How a workout works',' data-id="workout-screen"'],['wCancel','Discard workout'],['soundTog','Timer sound: '+(LS.get('forma.sound',1)===0?'off':'on')],['shakeTog','Shake to finish a set: '+(LS.get('forma.shake',1)===0?'off':'on')]])+`<div class="v1 live lfx"${UI.wDir?` data-dir="${UI.wDir}"`:''}><section class="lhero lh lfh"><div class="lt"><div class="lftt"><span class="lfn">${esc(day.name)}</span><button class="tm" data-act="wStarted" aria-label="Change start time"><span id="elab">${rn.rest?'Rest ':''}</span><b id="el">${rn.t}</b></button></div><button class="lnk" data-act="wFinish">Finish</button></div>
+ <div class="lfseg" role="group" aria-label="Exercises">${seg}</div>
+ <div class="lfcap xs"><span>Exercise ${curIx+1} of ${list.length}</span><span>${nx?`${stt.done} of ${stt.all} sets`:`All ${stt.all} sets done`}</span></div>${over?`<div class="xs amb">About ${wlen} min, over your ${sessMax()} min</div>`:''}</section>
+ ${finStale(wo)?finBanner(wo):''}${long&&!finStale(wo)?`<div class="card warn" style="margin-top:10px"><b class="sm">Still training?</b><div class="xs mut" style="margin:2px 0 8px">Started at ${clock(wo.startedAt)}${wo.lastAt?', last set at '+clock(wo.lastAt):''}.</div><button class="btn sm" data-act="wFinish">Finish it now</button></div>`:''}<div class="xlst">${cards}</div></div>${peek}`;
 }
 /* workout times and totals */
 const hhmm=iso=>{const d=new Date(iso);return pad(d.getHours())+':'+pad(d.getMinutes())};
@@ -2750,6 +2880,11 @@ function startWorkout(id){
  day.exercises.forEach(e=>{sets[e.ex]=Array.from({length:e.sets},()=>({w:0,r:0,done:false}))});
  mutate(logP(today()),{k:'wStart',dayId:id,t:new Date().toISOString(),sets},{delay:300});
 }
+/* After a tick the rest band slides up: scroll so the row to do next is never under it. */
+function lfReveal(){requestAnimationFrame(()=>{let a=document.querySelector('.lfr.act');if(!a)return;const rows=[...document.querySelectorAll('.lfr')],nx=rows[rows.indexOf(a)+1];if(nx)a=nx;const tb=document.querySelector('nav.tabs'),rs=$('#rest'),pk=document.querySelector('.lfpeek'),top=Math.min(...[tb,pk,rs&&!rs.hidden?rs:null].filter(e=>e&&e.offsetHeight).map(e=>e.getBoundingClientRect().top)),b=a.getBoundingClientRect().bottom;if(b>top-8)window.scrollBy({top:b-top+12})})}
+let rirT=null;
+/* The Reps left chips stay open for 10 s under the set just ticked, then fold into a small tag under that set's reps (tap the tag to open them again). */
+function rirTimer(){clearTimeout(rirT);const o=UI.rirOpen;if(!o)return;rirT=setTimeout(function f(){if(UI.rirOpen!==o)return;if((SW&&SW.on)||window.PGDRAG){rirT=setTimeout(f,400);return}UI.rirOpen=null;softRender()},Math.max(0,o.until-Date.now())+30)}
 function tickSet(ex,i,how){
   const T=woDate();let on=false;const snap=clone((((logOf(T).workout||{}).sets||{})[ex])||[]);
   editSets(ex,s=>{const x=s[i];x.done=!x.done;on=x.done;
@@ -2763,8 +2898,8 @@ function tickSet(ex,i,how){
     const nx=s[i+1];if(nx&&!nx.done){if(!nx.w)nx.w=x.w;if(!nx.r)nx.r=x.r}
    }
   },{delay:2000,t:new Date().toISOString(),quiet:true});
-  if(on){UI.curEx=ex;const all=(((logOf(T).workout||{}).sets||{})[ex]||[]).every(z=>z.done);setFeedback(all,how);startRest(restFor(ex),(exdb().exercises[ex]||{}).n);UI.rest.undo={ex,before:snap};updateRest();
-   try{const ss=((logOf(T).workout||{}).sets||{})[ex]||[];if(setIsPR(ex,ss,i))toast0('New PR: '+exName(ex)+' '+setTxt(ss[i],exU(ex)))}catch(e){}}else{UI.rest=null;}render();return on}
+  if(on){UI.curEx=ex;UI.wOpen=ex;UI.wOpenDone=true;if(unitOf(ex)==='REPS'){UI.rirOpen={ex,i,until:Date.now()+10000};rirTimer()}const all=(((logOf(T).workout||{}).sets||{})[ex]||[]).every(z=>z.done);setFeedback(all,how);if(all){UI.peekPulse=ex;exDoneMoment(ex)}startRest(restFor(ex),(exdb().exercises[ex]||{}).n);UI.rest.undo={ex,before:snap};updateRest();
+   try{const ss=((logOf(T).workout||{}).sets||{})[ex]||[];if(setIsPR(ex,ss,i))toast0('New PR: '+exName(ex)+' '+setTxt(ss[i],exU(ex)))}catch(e){}}else{UI.rest=null;if(UI.rirOpen&&UI.rirOpen.ex===ex&&UI.rirOpen.i===i)UI.rirOpen=null}render();UI.peekPulse=null;if(on)lfReveal();return on}
 /* Feedback when a set is ticked (tap, Set done or shake): a short two-note ding and a buzz for a set, a rising
    four-note fanfare and a longer buzz when that was the exercise's last set. Both differ from the rest-over chime. */
 function setSound(){if(LS.get('forma.sound',1)===0)return;const c=actx();if(!c)return;tone(c,784,0,.12,.7,'sine');tone(c,1175,.1,.2,.7,'sine')}
@@ -2816,7 +2951,7 @@ function usePick(id){
  const T=woDate(),wo=logOf(T).workout;if(!wo)return;
  if(PICK.mode==='add')mutate(logP(T),{k:'wExtra',ex:id,n:3},{delay:1000});
  else{const from=effEx(wo,PICK.slot);mutate(logP(T),{k:'wSwap',slot:PICK.slot,alt:id,moved:true,from,to:id},{delay:1000})}
- closeSheet()}
+ UI.wOpen=id;UI.curEx=id;window.scrollTo(0,0);closeSheet();render()}
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.pf&&PED)pedField(e.target);if(e.target.dataset&&e.target.dataset.pmap&&PIMP)PIMP.map[e.target.dataset.pmap]=e.target.value});
 let shT=null;document.addEventListener('input',e=>{if(e.target.id==='sh_title'&&PSH){PSH.title=e.target.value;clearTimeout(shT);shT=setTimeout(shareRefresh,350)}});
 document.addEventListener('input',e=>{if(e.target.id==='gym_q'){const q=e.target.value;if($('#gym'))GYMS.q=q;else INT.gymQ=q;const el=$('#gym_tiles');if(el)el.innerHTML=gymTilesHTML(gymSel(),q);return}
@@ -2829,7 +2964,7 @@ function delSet(ex,i){const before=clone(((logOf(woDate()).workout||{}).sets||{}
  const gone=before[i];
  editSets(ex,s=>{s.splice(i,1)},{delay:1500});
  toastUndo('Set '+(i+1)+' deleted.',()=>{editSets(ex,s=>{s.splice(Math.min(i,s.length),0,clone(gone))},{delay:1500})})}
-document.addEventListener('touchstart',e=>{const w=e.target.closest&&e.target.closest('.swr');if(!w||e.touches.length!==1){SW=null;return}const t=e.touches[0];SW={w,row:w.querySelector('.set'),x:t.clientX,y:t.clientY,dx:0,on:false,width:w.offsetWidth}},{passive:true});
+document.addEventListener('touchstart',e=>{const w=e.target.closest&&e.target.closest('.swr');if(!w||e.touches.length!==1){SW=null;return}const t=e.touches[0];SW={w,row:w.querySelector('.lfrow,.set'),x:t.clientX,y:t.clientY,dx:0,on:false,width:w.offsetWidth}},{passive:true});
 document.addEventListener('touchmove',e=>{if(!SW)return;const t=e.touches[0],dx=t.clientX-SW.x,dy=t.clientY-SW.y;
  if(!SW.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){SW=null;return}if(dx<-12&&Math.abs(dx)>Math.abs(dy)*1.5){SW.on=true;SW.w.classList.add('sw');if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}else return}
  e.preventDefault();SW.dx=Math.min(0,Math.max(-SW.width,dx));SW.row.style.transition='none';SW.row.style.transform='translateX('+SW.dx+'px)'},{passive:false});
@@ -2840,10 +2975,11 @@ document.addEventListener('touchend',()=>swEnd(false));document.addEventListener
 let sdTimer=null;
 function doneNext(how){
  const nx=nextSet();if(!nx){toast0('All sets are done. Tap Finish.');return}
- if(!tickSet(nx.ex,nx.i,how))return;
- /* A set only ticks the row and starts the rest bar (which carries Undo). The full-screen moment is for an exercise's last set. */
- if(nx.i+1!==nx.n)return;
- const x=((logOf(woDate()).workout||{}).sets||{})[nx.ex][nx.i],nm=(exdb().exercises[nx.ex]||{}).n||nx.ex;
+ tickSet(nx.ex,nx.i,how);
+}
+/* The exercise's last set is ticked: a full-screen check for a moment, and the next-exercise row pulses once. */
+function exDoneMoment(ex){
+ const nm=(exdb().exercises[ex]||{}).n||ex;
  let el=$('#sdone');if(el)el.remove();el=document.createElement('div');el.id='sdone';el.setAttribute('role','region');el.setAttribute('aria-label','Exercise complete');
  el.innerHTML=`<div class="sd-in"><div class="sd-ck">${ic('check',56)}</div><div class="sd-t">Exercise complete</div><div class="sd-s">${esc(nm)}</div><div class="xs" style="color:var(--mut);margin-top:14px">Tap anywhere to close</div></div>`;
  el.addEventListener('click',()=>el.remove());
@@ -2874,7 +3010,7 @@ function workoutDone(name,st,secs,planned){
  setTimeout(()=>{if(!el.isConnected)return;countUp($('#wd_s'),st.done,700,v=>Math.round(v));countUp($('#wd_v'),kg2u(st.vol),1100,v=>Math.round(v).toLocaleString('en-US'));
   countUp($('#wd_t'),secs,1100,v=>{const m=Math.floor(v/60);return m>=60?Math.floor(m/60)+'h '+String(m%60).padStart(2,'0'):m+':'+String(Math.floor(v%60)).padStart(2,'0')})},1250);
 }
-function undoDone(){const u=UI.rest&&UI.rest.undo;if(!u)return;editSets(u.ex,s=>{s.length=0;u.before.forEach(z=>s.push(z))},{delay:1500});UI.rest=null;updateRest();const el=$('#sdone');if(el)el.remove();render();toast0('Set unticked.')}
+function undoDone(){const u=UI.rest&&UI.rest.undo;if(!u)return;editSets(u.ex,s=>{s.length=0;u.before.forEach(z=>s.push(z))},{delay:1500});UI.rest=null;UI.rirOpen=null;updateRest();const el=$('#sdone');if(el)el.remove();render();toast0('Set unticked.')}
 /* Shake: 4 strong jolts within a second, only during a live workout with the app on screen. */
 const SHK={peaks:[],last:0,cool:0};
 function onMotion(e){
@@ -2976,15 +3112,22 @@ function restSeenWhileAway(){const e=LS.get('forma.restEnded',null);if(!e||docum
 {const s=LS.get('forma.restT',null);if(s&&s.end>Date.now()-15000)UI.rest=s}
 let restSaved='';
 function saveRest(){const k=UI.rest?UI.rest.end+'|'+UI.rest.total:'';if(k===restSaved)return;restSaved=k;if(UI.rest&&UI.rest.end>Date.now())swPost({k:'rest',end:UI.rest.end,name:UI.rest.name});else swPost({k:'restCancel'});if(UI.rest)LS.set('forma.restT',{end:UI.rest.end,total:UI.rest.total,name:UI.rest.name});else LS.del('forma.restT')}
+/* The line under the rest countdown: what comes after this rest. */
+function restNext(){const r=UI.rest,wo=logOf(woDate()).workout;if(!r)return '';if(!wo||wo.finishedAt)return r.name||'Rest';
+ const nx=nextSet();if(!nx)return 'All sets done';const day=program().days.find(d=>d.id===wo.dayId);if(!day)return r.name||'Rest';
+ if(!(r.undo&&r.undo.ex===nx.ex))return 'Next: '+exName(nx.ex);
+ const order=[...day.exercises.map(e=>effEx(wo,e.ex)),...(wo.extra||[]).map(x=>effEx(wo,x.ex))],k=order.indexOf(nx.ex),left=((wo.sets||{})[nx.ex]||[]).filter(z=>!z.done).length;let then=null;
+ for(let j=1;j<order.length&&!then;j++){const e2=order[(k+j)%order.length];if(((wo.sets||{})[e2]||[]).some(z=>!z.done))then=e2}
+ return 'Next: set '+(nx.i+1)+(left===1&&then?', then '+exName(then):'')}
 function startRest(sec=120,name){UI.rest={end:Date.now()+sec*1000,total:sec,name:name||''};askNotify();updateRest()}
 function updateRest(){
  const el=$('#rest'),r=UI.rest;
  const live=UI.tab==='workout'&&r&&hasAcct();
  if(!live||Date.now()>=r.end){if(r&&Date.now()>=r.end){UI.rest=null;restDone(r,live)}el.hidden=true;el.innerHTML='';return}
  const left=(r.end-Date.now())/1000;
- if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div class="rtm"><b id="rt">0:00</b><div class="xs mut">${esc(r.name||'Rest')}</div></div><button class="rb2" data-act="rest15m">-15</button><button class="rb2" data-act="rest30">+30</button><button class="rb2" data-act="restSkip">Skip</button><button class="rb2 rundo lnk" data-act="sdUndo" hidden>Undo</button><div class="bar"><i id="rb" style="width:100%"></i></div></div></div>`}
+ if(el.hidden){el.hidden=false;el.innerHTML=`<div><div class="in"><div class="rtm"><b id="rt">0:00</b><div class="xs mut" id="rn"></div></div><button class="rb2" data-act="rest15m">-15</button><button class="rb2" data-act="rest30">+30</button><button class="rb2" data-act="restSkip">Skip</button><button class="rb2 rundo lnk" data-act="sdUndo" hidden>Undo</button><div class="bar"><i id="rb" style="width:100%"></i></div></div></div>`}
  const ub=el.querySelector('.rundo');if(ub)ub.hidden=!r.undo;
- if(el.offsetHeight)document.documentElement.style.setProperty('--rh',el.offsetHeight+'px');$('#rt').textContent=mmss(left);$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
+ if(el.offsetHeight)document.documentElement.style.setProperty('--rh',el.offsetHeight+'px');$('#rt').textContent=mmss(left);$('#rn').textContent=restNext();$('#rb').style.width=Math.min(100,left/r.total*100)+'%';
  const sec=Math.ceil(left);if(sec<=3&&sec>=1&&r.lastTick!==sec){r.lastTick=sec;restTick()}
 }
 setInterval(syncWake,5000);document.addEventListener('visibilitychange',()=>{wakeLock=null;syncWake()});
@@ -3757,7 +3900,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.17.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.18.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -3853,14 +3996,15 @@ function pagerMode(fromHeader){
   if(tab==='food'&&cur==='log')return 'date';
   return 'sub'}
  if(tab==='today')return 'date';
- if(tab==='workout'){const wo=logOf(woDate()).workout;return wo&&!wo.finishedAt?null:'week'}
+ if(tab==='workout'){const wo=logOf(woDate()).workout;return wo&&!wo.finishedAt?(liveList(wo).length>1?'ex':null):'week'}
  return null}
 /* the page one step away (dir +1 is the next page, the one a left swipe brings in), or null at the end of the line */
 function pagePeek(mode,dir){
- const sv={date:UI.date,sub:UI.sub,wWk:UI.wWk,wSel:UI.wSel,wDay:UI.wDay};let html=null,ok=true;
+ const sv={date:UI.date,sub:UI.sub,wWk:UI.wWk,wSel:UI.wSel,wDay:UI.wDay,wOpen:UI.wOpen};let html=null,ok=true;
  try{
   if(mode==='date'){const nd=addDays(UI.date,dir);if((UI.tab==='food'||UI.tab==='today')&&nd>today())ok=false;else UI.date=nd}
   else if(mode==='week')UI.wWk+=dir;
+  else if(mode==='ex'){const wo=logOf(woDate()).workout,ord=liveList(wo).map(e=>effEx(wo,e.ex)),j=ord.indexOf(liveOpenEx(wo,liveList(wo)))+dir;if(j<0||j>=ord.length)ok=false;else UI.wOpen=ord[j]}
   else{const subs=SUBS_OF[UI.tab],i=subs.findIndex(x=>x[0]===subOf(UI.tab,subs)),j=i+dir;if(j<0||j>=subs.length)ok=false;else UI.sub=Object.assign({},UI.sub,{[UI.tab]:subs[j][0]})}
   if(ok){const d=document.createElement('div');d.innerHTML={today:todayView,food:foodView,workout:workoutView,activity:activityView,progress:progressView}[UI.tab]();const p=d.querySelector(':scope > .v1');html=p?p.outerHTML:null}
  }catch(e){html=null}
@@ -3878,6 +4022,7 @@ function pgUlOff(g){if(g.ul){g.ul.remove();g.ul=null}if(g.seg)g.seg.classList.re
 function pagerCommit(mode,dir){
  if(mode==='date'){UI.date=addDays(UI.date,dir);loadDay(UI.date)}
  else if(mode==='week'){UI.wWk+=dir;loadDays(weekDates(addDays(today(),7*UI.wWk)))}
+ else if(mode==='ex'){const wo=logOf(woDate()).workout,ord=liveList(wo).map(e=>effEx(wo,e.ex)),j=ord.indexOf(liveOpenEx(wo,liveList(wo)))+dir;if(j>=0&&j<ord.length){UI.wOpen=ord[j];UI.curEx=ord[j]}window.scrollTo(0,0)}
  else{const subs=SUBS_OF[UI.tab],i=subs.findIndex(x=>x[0]===subOf(UI.tab,subs));setSub(UI.tab,subs[i+dir][0]);window.scrollTo(0,0)}
  PG=null;window.PGDRAG=false;render()}
 function pagerEnd(commit,dir){
@@ -3948,9 +4093,9 @@ const TOUR_STEPS={
   {id:'start',full:1,target:()=>document.querySelector('[data-act=wStart]')||document.querySelector('.fab'),title:'Start a workout',text:'Start workout begins the timer and opens the first exercise, one at a time, for you to tick off.'},
   {id:'lib',full:1,target:'header details.more summary',title:'Library and program',text:'The three-dot menu opens the exercise library, with pictures and how-to notes, and Edit program, where you change days, sets, reps and rest.'}],
  live:[
-  {id:'bar',target:'.lhero',title:'Timer and Finish',text:'The line shows the time since you started, and the rest countdown while you rest. Tap the time to change when you started. Finish ends the workout, and Pulzo finishes a forgotten one for you.'},
-  {id:'sets',target:'.swr',title:'Log a set',text:'Type weight and reps then tick the circle, and LAST shows what you did last time.'},
-  {id:'done',target:'#setdone',title:'Set done',text:'This ticks the next set for you and starts your rest timer.'},
+  {id:'bar',target:'.lhero',title:'Timer and Finish',text:'The line shows the time since you started, and the rest countdown while you rest. Tap the time to change when you started. The strip has one bar per exercise and fills as you finish each. Finish ends the workout, and Pulzo finishes a forgotten one for you.'},
+  {id:'sets',target:'.lfr.act',title:'Log a set',text:'The outlined row is your next set. Type the weight and reps or tap plus and minus, then tick the big circle. LAST shows what you did last time. Shaking your phone ticks it too.'},
+  {id:'next',target:'.lfpeek',title:'Next exercise',text:'Swipe left, or tap this row, to move on. Swipe right goes back. The rest timer sits above it after each set, with Undo.'},
   {id:'hist',target:'[data-act=hist]',title:'History and PRs',text:'The clock opens this exercise\'s history with your PRs, a chart and every session.'}],
  activity:[
   {id:'seg',target:'.psub',title:'Steps, Calendar, Sport',text:'Tap one, or swipe left and right to switch.'},
@@ -3997,7 +4142,7 @@ const HELP3={
  today:['The ring is the calories you have left today. Protein, carbs and fat show what is left under each.','Today\'s plan lists what to do. Each row has one link that opens the right place.','The round button logs anything: type 2 eggs and rice, steps 8200, or a sport.'],
  food:['Your day, one meal per row. Tap a food to edit it, or + to add to that meal.','The bars show what is left of your range. Tap the number to switch between eaten and left.','Insights has your calorie chart and what you burn.'],
  workout:['Pick a day in the week strip to see its plan.','Start workout opens the first exercise. Tick each set as you finish it.','The three-dot menu has the exercise library and Edit program.'],
- live:['Type weight and reps, then tick the circle. Last shows what you did before.','Set done ticks the next set and starts your rest timer. Undo is on the rest bar.','Finish saves the workout. Pulzo also finishes a forgotten one for you.'],
+ live:['Type weight and reps, or tap plus and minus, then tick the big circle. Last shows what you did before.','Ticking starts your rest timer. Undo is on the rest bar, and shaking your phone ticks the next set.','Swipe left for the next exercise, right to go back. Finish saves it, or Pulzo finishes it for you.'],
  activity:['Steps, Calendar and Sport are tabs. Swipe left and right to switch.','Steps come from the Pulzo Steps app, or from what you type.','The round button logs steps or a sport.'],
  progress:['Overview is your weight line, with four tiles under it.','Photos holds your progress photos. Body has body fat and measurements.','A tile that says Add is waiting for its first entry.']};
 function helpScreen(){let s=UI.tab;if(s==='workout'){const wo=logOf(woDate()).workout;if(wo&&!wo.finishedAt)s='live'}return s}
@@ -5005,7 +5150,7 @@ document.addEventListener('click',async e=>{
   case 'wUnmark':mutate(logP(D.d),{k:'wClear'});break;
   case 'wCancel':openSheet(discardSheet());break;
   case 'cues':openSheet(notesSheet(D.ex,D.sets?{sets:D.sets,reps:D.reps}:null));break;
-  case 'wExp':{const wo=logOf(woDate()).workout,a=wo&&wo.sets&&wo.sets[D.ex]||[];UI.wOpen=D.ex;UI.wOpenDone=a.length>0&&a.every(z=>z.done);UI.curEx=D.ex;render();break}
+  case 'wExp':{const wo=logOf(woDate()).workout,a=wo&&wo.sets&&wo.sets[D.ex]||[],ord=wo?liveList(wo).map(e=>effEx(wo,e.ex)):[],from=wo?ord.indexOf(liveOpenEx(wo,liveList(wo))):-1,to=ord.indexOf(D.ex);UI.wOpen=D.ex;UI.wOpenDone=a.length>0&&a.every(z=>z.done);UI.curEx=D.ex;UI.wDir=to>from?1:to<from?-1:0;window.scrollTo(0,0);render();UI.wDir=0;break}
 
   case 'mealSave':openSheet(mealSaveSheet(+D.m));break;
   case 'mealSaveGo':{const m=+D.m,its=food(UI.date).items.filter(i=>mealNo(i)===m);if(!its.length)break;const name=($('#sm_name').value||'').trim()||'Meal '+m+' '+fmtShort(UI.date);
@@ -5078,6 +5223,9 @@ document.addEventListener('click',async e=>{
   case 'restSet':{const cur=restFor(D.ex),nx=REST_PRESETS.find(v=>v>cur)||REST_PRESETS[0],t=LS.get('forma.restWo',null),m=t&&t.d===T&&t.m?t.m:{};m[D.ex]=nx;LS.set('forma.restWo',{d:T,m});render();break}
   case 'soundTog':{const on=LS.get('forma.sound',1)!==0;LS.set('forma.sound',on?0:1);if(t.classList.contains('swt')){t.classList.toggle('on',!on);t.setAttribute('aria-checked',String(!on))}else t.textContent=t.classList.contains('mi')?'Timer sound: '+(on?'off':'on'):on?'Muted':'Sound';if(!on)beep();break}
   case 'rest15m':if(UI.rest){UI.rest.end-=15000;updateRest()}break;
+  case 'rirOpen':UI.rirOpen={ex:D.ex,i:+D.i,until:Date.now()+10000};rirTimer();render();break;
+  case 'stp':{const sel=`input[data-f="${D.k}"][data-ex="${D.ex}"][data-i="${D.i}"]`,inp=document.querySelector(sel);if(!inp)break;const dir=+D.d,u=unitOf(D.ex),w=D.k==='w',ex0=(exdb().exercises||{})[D.ex]||{},st=w?(num(ex0.step)||(exU(D.ex)==='lb'?5:2.5)):(u==='SEC'?5:u==='M'?10:1);
+   const v=Math.max(0,Math.round((num(inp.value||inp.placeholder)+dir*st)*100)/100);inp.value=String(v);inp.className=inp.className.replace(/ x[45]/g,'')+(String(v).length>=5?' x5':String(v).length===4?' x4':'');inp.dispatchEvent(new Event('input',{bubbles:true}));break}
   case 'rir':editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const v=+D.v;if(x.rir===v)delete x.rir;else x.rir=v},{delay:1500});render();break;
   case 'dropAdd':{let w0=0;editSets(D.ex,s=>{const x=s[+D.i];if(!x)return;const base=(x.drops&&x.drops.length?x.drops[x.drops.length-1].w:x.w)||0;w0=base>=20?Math.round(base*.8/2.5)*2.5:Math.round(base*.8);(x.drops=x.drops||[]).push({w:w0,r:0})},{delay:1500});UI.rest=null;updateRest();render();break}
   case 'dropRm':editSets(D.ex,s=>{const x=s[+D.i];if(!x||!x.drops)return;x.drops.splice(+D.j,1);if(!x.drops.length)delete x.drops},{delay:1500});render();break;
