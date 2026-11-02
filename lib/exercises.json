@@ -180,7 +180,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "incline_db_press": {
       "n": "Incline dumbbell press",
@@ -254,7 +255,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "seated_db_shoulder_press": {
       "n": "Seated dumbbell shoulder press",
@@ -342,7 +344,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "lateral_raise": {
       "n": "Dumbbell lateral raise",
@@ -383,7 +386,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "rope_pushdown": {
       "n": "Rope triceps pushdown",
@@ -454,7 +458,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "cable_crunch": {
       "n": "Cable crunch",
@@ -508,7 +513,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crunch/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crunch/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "pull_up": {
       "n": "Pull-up",
@@ -583,7 +589,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pullups/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pullups/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "barbell_row": {
       "n": "Barbell row",
@@ -655,7 +662,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "face_pull": {
       "n": "Face pull",
@@ -728,7 +736,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "barbell_curl": {
       "n": "Barbell curl",
@@ -798,7 +807,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "ab_wheel": {
       "n": "Ab wheel rollout",
@@ -872,7 +882,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Ab_Roller/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Ab_Roller/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "dead_hang": {
       "n": "Dead hang",
@@ -1049,7 +1060,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "squat": {
       "n": "Back squat",
@@ -1124,7 +1136,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "leg_press": {
       "n": "Leg press",
@@ -1212,7 +1225,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "bulgarian_split_squat": {
       "n": "Bulgarian split squat",
@@ -1288,7 +1302,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Squat_with_Dumbbells/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Squat_with_Dumbbells/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "leg_extension": {
       "n": "Leg extension",
@@ -1366,7 +1381,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "standing_calf_raise": {
       "n": "Standing calf raise",
@@ -1416,7 +1432,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "incline_bb_press": {
       "n": "Incline barbell press",
@@ -1502,7 +1519,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "chest_supported_row": {
       "n": "Chest-supported row",
@@ -1575,7 +1593,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "cable_fly": {
       "n": "Cable fly",
@@ -1648,7 +1667,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crossover/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "plate_pinch": {
       "n": "Plate pinch",
@@ -1690,7 +1710,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plate_Pinch/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plate_Pinch/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "single_arm_pulldown": {
       "n": "Single-arm lat pulldown",
@@ -1759,7 +1780,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One_Arm_Lat_Pulldown/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One_Arm_Lat_Pulldown/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "dips": {
       "n": "Dips",
@@ -1831,7 +1853,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dips_-_Triceps_Version/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dips_-_Triceps_Version/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "hanging_leg_raise": {
       "n": "Hanging leg raise",
@@ -1906,7 +1929,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "overhead_press": {
       "n": "Standing overhead press",
@@ -1981,7 +2005,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Military_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Military_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "rear_delt_fly": {
       "n": "Rear delt fly",
@@ -2023,7 +2048,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Flyes/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Flyes/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "incline_db_curl": {
       "n": "Incline dumbbell curl",
@@ -2096,7 +2122,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "overhead_triceps_extension": {
       "n": "Overhead rope triceps extension",
@@ -2149,7 +2176,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Rope_Overhead_Triceps_Extension/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "hammer_curl": {
       "n": "Hammer curl",
@@ -2204,7 +2232,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "wrist_curl_combo": {
       "n": "Wrist curl + reverse wrist curl",
@@ -2272,7 +2301,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "broad_jump": {
       "n": "Standing broad jump",
@@ -2327,7 +2357,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Long_Jump/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Long_Jump/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "romanian_deadlift": {
       "n": "Romanian deadlift",
@@ -2403,7 +2434,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "nordic_curl": {
       "n": "Nordic curl",
@@ -2457,7 +2489,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Natural_Glute_Ham_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Natural_Glute_Ham_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "lying_leg_curl": {
       "n": "Lying leg curl",
@@ -2524,7 +2557,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "hip_thrust": {
       "n": "Barbell hip thrust",
@@ -2596,7 +2630,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "cable_woodchop": {
       "n": "Cable woodchop",
@@ -2668,7 +2703,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Cable_Wood_Chop/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Cable_Wood_Chop/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "db_bench_press": {
       "n": "Dumbbell bench press",
@@ -2736,7 +2772,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "machine_chest_press": {
       "n": "Machine chest press",
@@ -2764,7 +2801,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bench_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Bench_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "push_up_weighted": {
       "n": "Weighted push-up",
@@ -2873,7 +2911,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Shoulder_Military_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Machine_Shoulder_Military_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "arnold_press": {
       "n": "Arnold press",
@@ -2900,7 +2939,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arnold_Dumbbell_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Arnold_Dumbbell_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "cable_lateral_raise": {
       "n": "Cable lateral raise",
@@ -2939,7 +2979,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Seated_Lateral_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Seated_Lateral_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "machine_lateral_raise": {
       "n": "Machine lateral raise",
@@ -2989,7 +3030,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Barbell_Row/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Upright_Barbell_Row/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "bar_pushdown": {
       "n": "Straight-bar pushdown",
@@ -3013,7 +3055,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "machine_crunch": {
       "n": "Machine crunch",
@@ -3146,7 +3189,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "assisted_pull_up": {
       "n": "Assisted pull-up",
@@ -3235,7 +3279,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Rows/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Rows/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "reverse_pec_deck": {
       "n": "Reverse pec deck",
@@ -3312,7 +3357,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "db_curl": {
       "n": "Dumbbell curl",
@@ -3339,7 +3385,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bicep_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bicep_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "cable_curl": {
       "n": "Cable curl",
@@ -3365,7 +3412,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Biceps_Cable_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Biceps_Cable_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "preacher_curl": {
       "n": "Preacher curl",
@@ -3390,7 +3438,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "ez_preacher_curl": {
       "n": "EZ-bar preacher curl",
@@ -3687,7 +3736,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Barbell_Squat/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Barbell_Squat/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "goblet_squat": {
       "n": "Goblet squat",
@@ -3714,7 +3764,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "walking_lunge": {
       "n": "Walking lunge",
@@ -3745,7 +3796,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "reverse_lunge": {
       "n": "Reverse lunge",
@@ -3772,7 +3824,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Rear_Lunge/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Rear_Lunge/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "step_up": {
       "n": "Step-up",
@@ -3802,7 +3855,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Step_Ups/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Step_Ups/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "sissy_squat": {
       "n": "Sissy squat",
@@ -3894,7 +3948,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "leg_press_calf_raise": {
       "n": "Leg press calf raise",
@@ -3968,7 +4023,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Iso_Row/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Iso_Row/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "pec_deck": {
       "n": "Pec deck",
@@ -3994,7 +4050,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butterfly/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butterfly/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "db_fly": {
       "n": "Dumbbell fly",
@@ -4183,7 +4240,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Knee_Hip_Raise_On_Parallel_Bars/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Knee_Hip_Raise_On_Parallel_Bars/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "reverse_crunch": {
       "n": "Reverse crunch",
@@ -4315,7 +4373,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Skullcrusher/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/EZ-Bar_Skullcrusher/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "db_overhead_extension": {
       "n": "Dumbbell overhead extension",
@@ -4670,7 +4729,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "barbell_glute_bridge": {
       "n": "Barbell glute bridge",
@@ -4756,7 +4816,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pallof_Press/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pallof_Press/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "side_plank": {
       "n": "Side plank",
@@ -4870,7 +4931,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pushups/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "pike_push_up": {
       "n": "Pike push-up",
@@ -5004,7 +5066,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butt_Lift_Bridge/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butt_Lift_Bridge/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "bench_dip": {
       "n": "Bench dip",
@@ -5162,7 +5225,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Hammer_Curls/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Hammer_Curls/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "lat_pulldown_close": {
       "n": "Close-grip lat pulldown",
@@ -6198,7 +6262,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shrug/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shrug/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "db_front_raise": {
       "n": "Dumbbell front raise",
@@ -6344,7 +6409,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "sumo_deadlift": {
       "n": "Sumo deadlift",
@@ -6843,7 +6909,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "plank": {
       "n": "Plank",
@@ -6872,7 +6939,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "dead_bug": {
       "n": "Dead bug",
@@ -6977,7 +7045,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunches/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunches/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "hollow_hold": {
       "n": "Hollow hold",
@@ -11178,7 +11247,8 @@
       "img": [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hack_Squat/0.jpg",
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hack_Squat/1.jpg"
-      ]
+      ],
+      "art": true
     },
     "reverse_hack_squat": {
       "n": "Reverse hack squat",

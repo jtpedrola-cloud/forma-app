@@ -683,6 +683,17 @@ svg rect.bh{cursor:pointer;fill:transparent}svg rect.bh:focus-visible{outline:2p
 .v1 .pr .pn,.v1 .stl,.v1 .gv~.lbl{text-wrap:balance}
 .v1 .sec .svm{padding:0}
 .xfr .fb{aspect-ratio:3/2}
+/* Exercise art (handoff 050): our own figures, img/ex/*.svg drawn with <use>. Every colour but the coral comes from the theme through these variables. */
+.xart{--eb:color-mix(in srgb,var(--txt) 14%,var(--inset));--ef:color-mix(in srgb,var(--txt) 9%,var(--inset));--el:color-mix(in srgb,var(--txt) 34%,var(--inset));--ep:color-mix(in srgb,var(--txt) 5%,var(--inset));--eq:color-mix(in srgb,var(--txt) 15%,var(--inset));--e2:color-mix(in srgb,var(--txt) 24%,var(--inset));--et:color-mix(in srgb,var(--txt) 9%,var(--inset));--ebar:color-mix(in srgb,var(--txt) 34%,var(--inset));--eh:color-mix(in srgb,var(--txt) 52%,var(--inset));display:block;background:var(--inset);pointer-events:none}
+.xth .xart:not(.xm){transform:scale(1.3);transform-origin:50% 62%}
+.xth .xart,.ld .xart,.xfr.art .fb .xart{position:absolute;inset:0;width:100%;height:100%}
+.xfr.art .fb{aspect-ratio:1/1}
+.xfr.art.ani .fb{aspect-ratio:4/3}
+.xfr.art.ani figure{grid-area:1/1}.xfr.art.ani figcaption{display:none}
+.xfr.art.ani figure:nth-child(2){animation:xaB 2.4s ease-in-out infinite}
+@keyframes xaB{0%,40%{opacity:0}50%,90%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.xfr.art.ani{grid-template-columns:1fr 1fr}.xfr.art.ani figure{grid-area:auto}.xfr.art.ani figure:nth-child(2){animation:none}.xfr.art.ani figcaption{display:block}.xfr.art.ani .fb{aspect-ratio:1/1}}
+.xdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF6B4A;margin-right:6px}.xdot.s{background:color-mix(in srgb,#FF6B4A 45%,var(--inset));margin-left:10px}
 .v1 .g22~.stl{text-wrap:pretty}
 /* ===== Design v2 rollout (handoff 021, version 0.11.0): every other screen follows the same rules ===== */
 /* 1. Live workout: the title and the elapsed time are the hero, each exercise is a section, set rows are the only boxes */
@@ -1275,7 +1286,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='a6b4625a5d3f0347bef2ca3ddddc9ed7a55e72d0';let verChecked=0;
+const BUILD='ab0cddbc534b42d874800f3b0c7fc93738b39716';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2293,22 +2304,31 @@ function musclesOf(day){
 }
 /* Exercise pictures (data/exercises.json img:[start,end], hosted elsewhere, never copied into the repo) and session length. */
 const exImg=id=>{const e=(exdb().exercises||{})[id],a=e&&e.img;return Array.isArray(a)&&typeof a[0]==='string'&&/^https:\/\//.test(a[0])?a:null};
+/* Our own figures (data/exercises.json art:true, files img/ex/<id>-a.svg, -b.svg and map/<id>.svg) win over the photo. */
+const exArt=id=>{const e=(exdb().exercises||{})[id];return !!(e&&e.art===true&&/^[\w-]+$/.test(String(id)))};
+const artUse=f=>`<svg class="xart" aria-hidden="true" focusable="false"><use href="img/ex/${f}.svg#f" width="100%" height="100%"/></svg>`;
+/* The body map is one shared drawing (map/_base.svg); each muscle in it is coloured by a variable, set here from the exercise's own p and s. */
+const artMap=id=>{const e=(exdb().exercises||{})[id]||{},ok=k=>/^[a-z_]+$/.test(k),p=(e.p||[]).filter(ok),v=p.map(k=>'--m-'+k+':#FF6B4A').concat((e.s||[]).filter(k=>ok(k)&&!p.includes(k)).map(k=>'--m-'+k+':color-mix(in srgb,#FF6B4A 45%,var(--eb))'));return `<svg class="xart xm" aria-hidden="true" focusable="false"><use href="img/ex/map/_base.svg#b" width="100%" height="100%" style="${v.join(';')}"/></svg>`};
 const exLetter=id=>(String(exName(id)||'?').trim().charAt(0)||'?').toUpperCase();
 /* Both pictures of an exercise (start, end) are fetched as soon as a row or card shows, so opening Notes never waits. */
 const IMGP=new Map();
-function preloadEx(ids){ids.forEach(id=>{const im=exImg(id);if(!im)return;im.slice(0,2).forEach(u=>{if(typeof u==='string'&&/^https:\/\//.test(u)&&!IMGP.has(u)){const i=new Image();i.src=u;IMGP.set(u,i)}})})}
-function thumb(id,px,tap,eager){const im=exImg(id),inner=(im?`<img src="${esc(im[0])}"${eager?'':' loading="lazy"'} alt="">`:'')+`<span>${esc(exLetter(id))}</span>`;
+function preloadEx(ids){ids.forEach(id=>{if(exArt(id)){['-a','-b'].forEach(k=>{const u='img/ex/'+id+k+'.svg';if(!IMGP.has(u)){const i=new Image();i.src=u;IMGP.set(u,i)}});return}const im=exImg(id);if(!im)return;im.slice(0,2).forEach(u=>{if(typeof u==='string'&&/^https:\/\//.test(u)&&!IMGP.has(u)){const i=new Image();i.src=u;IMGP.set(u,i)}})})}
+function thumb(id,px,tap,eager){const art=exArt(id),im=art?null:exImg(id),inner=(art?(px<48?artMap(id):artUse(id+'-a')):im?`<img src="${esc(im[0])}"${eager?'':' loading="lazy"'} alt="">`:'')+`<span>${esc(exLetter(id))}</span>`;
  return tap?`<button class="xth" style="--s:${px}px" data-act="cues" data-ex="${esc(id)}" aria-label="Notes for ${esc(exName(id))}">${inner}</button>`:`<span class="xth" style="--s:${px}px">${inner}</span>`}
 document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.closest&&t.closest('.xth,.fb,.gi,.ld'))t.remove()},true);
 let NOTE_T=null;
-function noteAni(on){const x=document.querySelector('.xfr');clearInterval(NOTE_T);if(!x)return;x.classList.toggle('ani',on);x.classList.remove('full');const f=x.querySelectorAll('figure');f.forEach((q,i)=>q.classList.toggle('off',on&&i===1));
+function noteAni(on){const x=document.querySelector('.xfr');clearInterval(NOTE_T);if(!x)return;x.classList.toggle('ani',on);
+ if(x.classList.contains('art')){const b=document.querySelector('[data-act=noteAni]');if(b){b.textContent=on?'Auto flip: on':'Auto flip: off';b.setAttribute('aria-pressed',on)}return}
+ x.classList.remove('full');const f=x.querySelectorAll('figure');f.forEach((q,i)=>q.classList.toggle('off',on&&i===1));
  const b=document.querySelector('[data-act=noteAni]');if(b){b.textContent=on?'Auto flip: on':'Auto flip: off';b.setAttribute('aria-pressed',on)}
  if(on){let k=0;NOTE_T=setInterval(()=>{const y=document.querySelector('.xfr.ani');if(!y){clearInterval(NOTE_T);return}k^=1;y.querySelectorAll('figure').forEach((q,i)=>q.classList.toggle('off',i!==k))},400)}}
-function notesSheet(ex,pl){const inf=exdb().exercises[ex]||{n:ex},im=exImg(ex);preloadEx([ex]);
+function notesSheet(ex,pl){const inf=exdb().exercises[ex]||{n:ex},art=exArt(ex),im=art?null:exImg(ex);preloadEx([ex]);
+ const mn=k=>esc(((exdb().muscles||{})[k]||{name:k}).name),
+  artBlock=art?`<div class="xfr art ani">${[['a','Start'],['b','End']].map(([k,l])=>`<figure><div class="fb">${artUse(ex+'-'+k)}</div><figcaption>${l}</figcaption></figure>`).join('')}</div><div class="rw nfo"><span class="xs mut sp"><i class="xdot"></i>${(inf.p||[]).map(mn).join(', ')}${(inf.s||[]).length?`<i class="xdot s"></i>${inf.s.map(mn).join(', ')}`:''}</span><button class="lnk mut" data-act="noteAni" aria-pressed="true">Auto flip: on</button></div>`:'';
  const pv=prevFor(ex),kv=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`,u=unitOf(ex),ut=u==='SEC'?' s':u==='M'?' m':'',
   facts=(pl&&pl.sets?kv('Plan',esc(pl.sets)+' sets of '+esc(pl.reps||'')):'')+(pv?kv('Last time',(pv[0].w?esc(fwU(pv[0].w,exU(ex)))+' '+esc(exU(ex))+' x ':'')+pv[0].r+ut):'');
  const fr=(i,l)=>`<figure><div class="fb">${im&&typeof im[i]==='string'&&/^https:\/\//.test(im[i])?`<img src="${esc(im[i])}" alt="${l} position" data-act="noteFull">`:''}<span>${esc(exLetter(ex))}</span></div><figcaption>${l}</figcaption></figure>`;
- return `<h2>${esc(inf.n)}</h2><div class="xs mut" style="margin:-6px 0 10px">${esc(exMeta(ex))}</div>${facts?`<div class="xfacts">${facts}</div>`:''}${im?`<div class="xfr">${fr(0,'Start')}${fr(1,'End')}</div><div class="rw nfo"><span class="xs mut sp">Tap a picture to see them larger.</span><button class="lnk mut" data-act="noteAni" aria-pressed="false">Auto flip: off</button></div>`:''}<ul class="cues">${(inf.c&&inf.c.length?inf.c:['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul><button class="btn ghost full" style="margin-top:12px" data-act="hist" data-ex="${esc(ex)}">${ic('hist',18)} History and PRs</button>`}
+ return `<h2>${esc(inf.n)}</h2><div class="xs mut" style="margin:-6px 0 10px">${esc(exMeta(ex))}</div>${facts?`<div class="xfacts">${facts}</div>`:''}${artBlock}${im?`<div class="xfr">${fr(0,'Start')}${fr(1,'End')}</div><div class="rw nfo"><span class="xs mut sp">Tap a picture to see them larger.</span><button class="lnk mut" data-act="noteAni" aria-pressed="false">Auto flip: off</button></div>`:''}<ul class="cues">${(inf.c&&inf.c.length?inf.c:['No notes for this one.']).map(c=>`<li>${esc(c)}</li>`).join('')}</ul><button class="btn ghost full" style="margin-top:12px" data-act="hist" data-ex="${esc(ex)}">${ic('hist',18)} History and PRs</button>`}
 /* ---------- Exercise library: full screen from the Workout header, search + muscle + equipment filters, rows added 60 at a time ---------- */
 const EQ_GROUPS=['Barbell','Dumbbell','Cable','Machine','Bodyweight','Other'];
 const EQ_RX={Barbell:/barbell|ez bar|landmine|rack/i,Dumbbell:/dumbbell/i,Cable:/cable/i,Machine:/machine|leg press|ghd|hyperextension/i,Bodyweight:/^(none|mat\b|bar\b|dip bars|box|step\b|bench or chair|sliders|captain)/i};
@@ -2548,8 +2568,8 @@ function dayMuscles(day,n){const c={},g={};day.exercises.forEach(e=>((exdb().exe
 /* 44 px circle: the picture, or the first muscle's two letters; a finished exercise is a filled check. */
 function xlead(id,px,done){
  if(done)return `<span class="ld ok" style="--s:${px}px">${ic('check',22)}</span>`;
- const im=exImg(id);
- return `<span class="ld" style="--s:${px}px"><span>${musMark(((exdb().exercises[id]||{}).p||[])[0])[0]}</span>${im?`<img src="${esc(im[0])}" loading="lazy" alt="">`:''}</span>`}
+ const art=exArt(id),im=art?null:exImg(id);
+ return `<span class="ld" style="--s:${px}px"><span>${musMark(((exdb().exercises[id]||{}).p||[])[0])[0]}</span>${art?artMap(id):im?`<img src="${esc(im[0])}" loading="lazy" alt="">`:''}</span>`}
 function lastDone(id,before){
  const days=Object.keys(DB.files).filter(p=>p.startsWith('data/log/')).map(p=>p.slice(9,19)).filter(d=>d<before).sort().reverse();
  for(const d of days){const l=view(logP(d)),w=l&&l.workout;if(w&&w.finishedAt&&w.dayId===id)return d}
@@ -3678,7 +3698,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('look','Appearance',look)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.14.2${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.15.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
