@@ -717,6 +717,7 @@ svg rect.bh{cursor:pointer;fill:transparent}svg rect.bh:focus-visible{outline:2p
 #sheet .cp{margin:0 0 8px}
 #sheet .sbtn{position:sticky;bottom:0;margin-top:16px;box-shadow:0 12px 0 12px var(--card)}
 #sheet .ph2{min-height:56px;gap:16px;border-top:0}
+#sheet .copick{margin-bottom:8px}
 #sheet .ph2>svg:first-child{color:var(--mut);flex:none}
 #sheet .ph2>svg:last-child{color:var(--faint);flex:none}
 .v1 .pr>*{line-height:24px}
@@ -1476,7 +1477,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='82f2a0ad38255bd866e38f9cd493740fed4a0ce6';let verChecked=0;
+const BUILD='c02a2e38db32ecfc8c6234390dd695c4fa1a76b1';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1916,7 +1917,7 @@ function render(){
  }
  {const wo=profile()&&logOf(woDate()).workout;document.body.classList.toggle('live',!!(UI.tab==='workout'&&wo&&!wo.finishedAt));
   if(UI.tab==='workout'&&wo&&!wo.finishedAt&&!HIST.warm){HIST.warm=true;loadAllLogs().then(()=>softRender())}}
- root.innerHTML=h+tabbar()+'<input type="file" id="mp_in" accept="image/*" hidden><input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
+ root.innerHTML=h+tabbar()+'<input type="file" id="mp_in" accept="image/*" hidden><input type="file" id="mp_cam" accept="image/*" capture="environment" hidden><input type="file" id="snap_in" accept="image/*" hidden><input type="file" id="snap_cam" accept="image/*" capture="environment" hidden>';
  {const nv=document.querySelector('nav.tabs');if(nv)document.documentElement.style.setProperty('--tabh',nv.offsetHeight+'px')}
  renderSheet();updateRest();foodSticky();a11yFix();
  if(sc)window.scrollTo(0,sc);
@@ -4010,7 +4011,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.2${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4629,11 +4630,13 @@ let cmdText='',cmdHi=-1;const CMD={bad:{},res:null,line:'',date:'',acts:[],wkg:8
 let cmdHOpen=false,logDayOpen=false;
 const snapPref=()=>LS.get('forma.snapPref','cam');
 const photoRow=(act,icn,l,sub)=>`<button class="item ph2" data-act="${act}">${ic(icn,20)}<div class="sp"><div class="n">${l}</div>${sub?`<div class="xs mut">${sub}</div>`:''}</div>${ic('right',18)}</button>`;
-/* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
-const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
+/* Two ways to add a photo, always both, camera first (ask 214): Take photo is an input with capture="environment", so Android opens
+   the camera straight away; Choose from gallery has no capture. Every meal photo (Snap, a meal's photo, Coach) uses this pair. */
+const photoRows=(cam,gal)=>cam+gal;
+const photoPickSheet=(t,cam,gal)=>`<h2>${t}</h2>${photoRows(photoRow(cam,'camera','Take photo'),photoRow(gal,'image','Choose from gallery'))}`;
 function snapChoiceSheet(){
  if(!aiReady()){const A=FormaCopy.add,key=personalMode()||DEMO;return `<h2>${A.snapNoTitle}</h2>${aiOffShort()?`<div class="sm mut" id="ai_off" style="margin:-4px 0 12px">${esc(aiOffShort())}</div>`:''}${key?`<button class="btn full sbtn" data-act="snapSettings">${A.setUpAi}</button>`:''}<button class="btn${key?' ghost':''} full sbtn" data-act="snapSearch">${A.snapSearch}</button>`}
- return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
+ return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
  const chip=(act,icn,l,x='',sub='')=>`<button data-act="${act}"${x}>${ic(icn,20)}<span>${l}${sub}</span></button>`;
@@ -4955,7 +4958,7 @@ function snapSave(){
 document.addEventListener('input',e=>{if(e.target.id==='snap_note')SNAP.note=e.target.value});
 document.addEventListener('change',e=>{
  const t=e.target;
- if(t.id==='mp_in'){const f=t.files&&t.files[0];t.value='';if(f)mealPhotoSet(f);return}
+ if(t.id==='mp_in'||t.id==='mp_cam'){const f=t.files&&t.files[0];t.value='';if(f)mealPhotoSet(f);return}
  if(t.id==='snap_in'||t.id==='snap_cam'){const f=t.files&&t.files[0];t.value='';if(f)isSimple()?journalSnap(f):snapStart(f);return}
  if(t.dataset&&t.dataset.hid!==undefined){const L=habitList().map(h=>h.id===t.dataset.hid?{id:h.id,label:t.value.trim()||h.label}:h);habSave(L);return}
 });
@@ -5069,7 +5072,7 @@ function coThreadHtml(){const c=CO(),th=coThread(),ai=aiReady();let lastPend=-1;
 function coDraw(){const el=$('#co_th');if(!el)return;el.innerHTML=coThreadHtml();const sh=$('#sheet');if(sh)sh.scrollTop=sh.scrollHeight}
 function coachSheet(){const c=CO();
  return `<h2 class="hh">${c.title}</h2><div class="xs mut" style="margin:-6px 0 4px">${fmtLong(today())}</div><div id="co_th" class="cth">${coThreadHtml()}</div>
- <div class="cob"><div class="cmdbar"><input id="co_in" value="${esc(COACH.draft)}" placeholder="${c.ph}" enterkeyhint="send" autocomplete="off" autocapitalize="sentences" aria-label="Message to Coach"><button class="cmdhist" data-act="coCam" aria-label="Send a photo of a meal">${ic('camera',20)}</button>${coSR()?`<button class="cmdhist${COACH.listening?' on':''}" id="co_mic" data-act="coMic" aria-label="Speak" aria-pressed="${COACH.listening}">${ic('mic',20)}</button>`:''}<button class="cmdgo" data-act="coGo" aria-label="Send">${ic('send',20)}</button></div></div><input type="file" id="co_file" accept="image/*" hidden>`}
+ <div class="cob"><div id="co_pick" class="copick" hidden>${photoRow('coPhCam','camera','Take photo')}${photoRow('coPhGal','image','Choose from gallery')}</div><div class="cmdbar"><input id="co_in" value="${esc(COACH.draft)}" placeholder="${c.ph}" enterkeyhint="send" autocomplete="off" autocapitalize="sentences" aria-label="Message to Coach"><button class="cmdhist" data-act="coCam" aria-label="Send a photo of a meal" aria-expanded="false" aria-controls="co_pick">${ic('camera',20)}</button>${coSR()?`<button class="cmdhist${COACH.listening?' on':''}" id="co_mic" data-act="coMic" aria-label="Speak" aria-pressed="${COACH.listening}">${ic('mic',20)}</button>`:''}<button class="cmdgo" data-act="coGo" aria-label="Send">${ic('send',20)}</button></div></div><input type="file" id="co_file" accept="image/*" hidden><input type="file" id="co_cam" accept="image/*" capture="environment" hidden>`}
 function coOpen(){coPrune();openSheet(coachSheet(),coachSheet);const sh=$('#sheet');if(sh)sh.scrollTop=sh.scrollHeight}
 function coMicDraw(){const b=$('#co_mic');if(b){b.classList.toggle('on',COACH.listening);b.setAttribute('aria-pressed',COACH.listening)}}
 function coMicToggle(){const SR=coSR();if(!SR)return;
@@ -5089,7 +5092,7 @@ function coLog(i){const th=coThread(),m=th[i];if(!m||!m.meal||m.meal.logged)retu
  M.logged=no;coSave(th);render();coDraw()}
 document.addEventListener('input',e=>{if(e.target.id==='co_in')COACH.draft=e.target.value});
 document.addEventListener('keydown',e=>{if(e.target.id==='co_in'&&e.key==='Enter'){e.preventDefault();coSendDraft()}});
-document.addEventListener('change',async e=>{const t=e.target;if(t.id!=='co_file')return;const f=t.files&&t.files[0];t.value='';if(!f)return;
+document.addEventListener('change',async e=>{const t=e.target;if(t.id!=='co_file'&&t.id!=='co_cam')return;const f=t.files&&t.files[0];t.value='';if(!f)return;
  let photo;try{photo=await shrinkImage(f)}catch(x){toast('Could not read that photo.');return}
  const el=$('#co_in');coSend(el?el.value:COACH.draft,photo)});
 
@@ -5140,7 +5143,8 @@ document.addEventListener('click',async e=>{
   case 'mySave':mySave();break;
   case 'recDel':case 'myfDel':if(!t.dataset.sure){t.dataset.sure='1';t.textContent='Tap again';break}
    mutate(a==='recDel'?P_REC:P_MYF,{k:a,id:D.id},{quiet:true});adView('manage');break;
-  case 'mealPhoto':{MP.m=+D.m;const el=$('#mp_in');if(el)el.click();break}
+  case 'mealPhoto':MP.m=+D.m;openSheet(photoPickSheet('Photo for this meal','mpCam','mpGal'));break;
+  case 'mpCam':case 'mpGal':{const el=$(a==='mpCam'?'#mp_cam':'#mp_in');closeSheet();if(el)el.click();break}
   case 'snapSearch':closeSheet();addOpen(snapMealNo(UI.date),{keep:true});break;
   case 'cmdGo':cmdRun();break;
   case 'logOpen':cmdHOpen=false;logDayOpen=false;UI.logAway=false;if(UI.tab!=='today'&&UI.tab!=='food')UI.date=today();openSheet(logSheet(),logSheet);break;
@@ -5194,13 +5198,14 @@ document.addEventListener('click',async e=>{
    setSub('progress','weight');render();const el=$(k==='bf'?'#p_bf':'#p_meas');if(el)el.scrollIntoView({block:'start'});else window.scrollTo(0,0);break}
   case 'coachOpen':coOpen();break;
   case 'coGo':coSendDraft();break;
-  case 'coCam':{const f=$('#co_file');if(f)f.click();break}
+  case 'coCam':{const r=$('#co_pick'),b=$('[data-act=coCam]');if(r){r.hidden=!r.hidden;if(b)b.setAttribute('aria-expanded',String(!r.hidden))}break}
+  case 'coPhCam':case 'coPhGal':{const f=$(a==='coPhCam'?'#co_cam':'#co_file'),r=$('#co_pick');if(r)r.hidden=true;if(f)f.click();break}
   case 'coMic':coMicToggle();break;
   case 'coLog':coLog(+D.i);break;
   case 'coChip':coSend(D.q);break;
   case 'coRetry':{const L=COACH.last;if(L&&!COACH.busy){const th=coThread();if(th.length&&th[th.length-1].k==='bot'&&!th[th.length-1].meal){th.pop();coSave(th)}coRespond(L.text,L.photo,L.id)}break}
   case 'coSettings':closeSheet();openSheet(settingsSheet());setTimeout(()=>{const el=$('#set_advanced');if(el)el.scrollIntoView({block:'start'})},60);break;
-  case 'snapGo':{if(!aiReady()){openSheet(snapChoiceSheet());break}const cam=snapPref()!=='gal',el=$(cam?'#snap_cam':'#snap_in');closeSheet();if(el)el.click();break}
+  case 'snapGo':openSheet(snapChoiceSheet());break;
   case 'snapMul':{const it=SNAP.items[+D.j];if(it){it.m=+D.m;snapDraw()}break}
   case 'snapFix':SNAP.showFix=!SNAP.showFix;snapDraw();if(SNAP.showFix){const n=$('#snap_note');if(n)n.focus()}break;
   case 'snapAsk':snapAsk();break;
