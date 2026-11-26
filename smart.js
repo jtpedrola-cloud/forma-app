@@ -139,6 +139,64 @@
     const r = Math.min(hi, Math.max(minR + 1, lo));
     return { w: wMax, r, reason: 'same', text: `Try ${fmt(wMax)} kg x ${r}` };
   }
-  const api = { nextLoad, bmr, maint, weekFormula, smart, nextTarget, extraKcal, verdict, verdictText };
+  /* Pace flag (handoff 067). Pure. Compares the last 14-day weight trend with the 14 days before and with the goal.
+     in: { weights:[{d,kg}], logged:[dates with food logged], today, goalRate (kg a week, positive loses), weightKg?, dietStart?, unit? }
+     out: { state: 'none'|'collecting'|'fast'|'stall'|'patchy'|'on pace'|'slow', change (kcal a day: +150, -150 or 0),
+            rate14, ratePrev14, rate21 (kg a week, negative = losing), shift: 'faster'|'slower'|'steady'|null, loggedDays21, weighIns21, dietWeeks, text }
+     Fast: losing more than 1.5 x goal or over 1% of bodyweight a week -> add about 150 kcal. Stall: under a third of the
+     goal over 21 days and the last 14 -> steps up or 150 kcal down (diet break at maintenance after 12+ weeks), but only
+     with good logging (15 of 21 days, 6 weigh-ins); otherwise say the logging is too patchy. Loss goals only. */
+  function pace(o) {
+    const a = o || {}, g = Number(a.goalRate) || 0, T = dayN(a.today);
+    const kgU = a.unit === 'lb' ? 2.20462 : 1, u = a.unit === 'lb' ? 'lb' : 'kg';
+    const wt = (n) => (Math.round(Math.abs(n) * kgU * 10) / 10).toFixed(1) + ' ' + u;
+    const pts = (a.weights || []).filter((x) => x && x.kg != null).map((x) => ({ ago: T - dayN(x.d), y: x.kg })).filter((p) => p.ago >= 0);
+    const rateIn = (from, to, minSpan) => {
+      const w = pts.filter((p) => p.ago >= from && p.ago < to).map((p) => ({ x: -p.ago, y: p.y }));
+      if (w.length < 4) return null;
+      const xs = w.map((p) => p.x), span = Math.max(...xs) - Math.min(...xs);
+      if (span < minSpan) return null;
+      const n = w.length, mx = xs.reduce((s, v) => s + v, 0) / n, my = w.reduce((s, p) => s + p.y, 0) / n;
+      const sxx = w.reduce((s, p) => s + (p.x - mx) ** 2, 0), sxy = w.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0);
+      return sxx ? (sxy / sxx) * 7 : null;
+    };
+    const r14 = rateIn(0, 14, 7), rp = rateIn(14, 28, 7), r21 = rateIn(0, 21, 14);
+    const logged21 = new Set((a.logged || []).filter((d) => { const ago = T - dayN(d); return ago >= 1 && ago <= 21; })).size;
+    const weighIns21 = pts.filter((p) => p.ago < 21).length;
+    const dietWeeks = a.dietStart ? Math.max(0, Math.floor((T - dayN(a.dietStart)) / 7)) : null;
+    const latest = pts.length ? pts.reduce((m, p) => (p.ago < m.ago ? p : m)).y : null;
+    const bw = Number(a.weightKg) || latest;
+    const round = (v) => (v == null ? null : Math.round(v * 100) / 100);
+    const out = { state: 'none', change: 0, rate14: round(r14), ratePrev14: round(rp), rate21: round(r21), shift: null, loggedDays21: logged21, weighIns21, dietWeeks, text: '' };
+    if (g <= 0.05) return out;
+    if (r14 == null) { out.state = 'collecting'; out.text = 'Not enough weigh-ins in the last two weeks to judge the pace (needs 4 over at least a week).'; return out; }
+    const loss = -r14;
+    if (rp != null) { const d = loss - -rp; out.shift = d > 0.25 ? 'faster' : d < -0.25 ? 'slower' : 'steady'; }
+    const vs = out.shift && out.shift !== 'steady' ? ` That is ${out.shift} than the two weeks before (${rp <= 0 ? 'losing' : 'gaining'} ${wt(rp)} a week).` : '';
+    const now = `${loss >= 0 ? 'Losing' : 'Gaining'} ${wt(r14)} a week over the last two weeks against a goal of ${wt(g)}`;
+    if (loss > 1.5 * g || (bw && loss > 0.01 * bw)) {
+      out.state = 'fast'; out.change = 150;
+      out.text = `${now}: too fast, so slow down and add about 150 kcal a day.${vs}`;
+      return out;
+    }
+    if (loss < g / 3 && (r21 == null || -r21 < g / 3)) {
+      if (r21 != null && logged21 >= 15 && weighIns21 >= 6) {
+        out.state = 'stall'; out.change = -150;
+        out.text = `${now}: stalled for three weeks. Add about 2,000 steps a day or eat about 150 kcal less` +
+          (dietWeeks != null && dietWeeks >= 12 ? `, or, after ${dietWeeks} weeks of dieting, take one week at maintenance.` : '.') + vs;
+      } else if (r21 != null) {
+        out.state = 'patchy';
+        out.text = `${now}, but logging is too patchy to call a stall (${logged21} of 21 days logged, ${weighIns21} weigh-ins). Log food at least 5 days a week and weigh in most mornings first.${vs}`;
+      } else {
+        out.state = 'slow';
+        out.text = `${now}: slow, but not three weeks of weigh-ins yet, so no change.${vs}`;
+      }
+      return out;
+    }
+    out.state = loss >= g - 0.25 ? 'on pace' : 'slow';
+    out.text = `${now}: ${out.state === 'on pace' ? 'on pace, no change' : 'a little slow, no change yet'}.${vs}`;
+    return out;
+  }
+  const api = { nextLoad, bmr, maint, weekFormula, smart, nextTarget, extraKcal, verdict, verdictText, pace };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FormaSmart = api;
 })(this);
