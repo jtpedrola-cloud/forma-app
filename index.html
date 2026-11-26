@@ -364,9 +364,21 @@ details.ngym{margin-top:12px;border-top:1.5px solid var(--line)}details.ngym sum
 @keyframes snsweep{to{transform:translateX(100%)}}
 .srw{padding:10px 0;border-top:1.5px solid var(--line)}.srw:first-of-type{border-top:0}
 .srt{display:flex;align-items:center;gap:8px}.srt .n{font-weight:600;word-break:break-word}.srk{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end}.srk b{font-weight:600}
-.smul{display:flex;gap:8px;margin-top:8px}.smul button{flex:1;min-height:44px;border-radius:12px;background:var(--inset);color:var(--mut);font-weight:600;font-size:14px;border:1.5px solid transparent}.smul button.on{color:var(--txt);border-color:var(--acc)}
 .sk{height:14px;border-radius:7px;background:linear-gradient(100deg,var(--line) 30%,var(--faint) 50%,var(--line) 70%);background-size:200% 100%;animation:phsk 1.3s linear infinite}.sk.w1{width:55%}.sk.w2{width:30%;margin-top:8px;height:10px}
 .snl{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:6px}.snl .lnk{min-height:44px}
+/* Portion picker and dish parts (070) */
+.pam{display:inline-flex;align-items:center;gap:4px;min-height:44px;margin:-8px 0 -8px -8px;padding:0 8px;border-radius:12px;color:var(--mut);font-size:14px;background:none}
+.pam svg{transition:transform .15s}.pam[aria-expanded="true"]{color:var(--txt)}.pam[aria-expanded="true"] svg{transform:rotate(180deg)}
+.ppk{margin-top:8px;padding:12px;border-radius:16px;background:var(--inset)}
+.pch{display:flex;gap:8px}.pch button{flex:1;min-height:52px;border-radius:12px;background:var(--card);border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px}
+.pch button b{font-size:14px;font-weight:600;color:var(--txt)}.pch button span{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}.pch button.on{border-color:var(--acc)}
+.psl{display:flex;align-items:center;gap:12px;margin-top:8px}.psl .prg{flex:1;height:44px}
+.pqb{display:flex;align-items:baseline;gap:4px;flex:none}.pqb .pq{width:64px;min-height:44px;padding:0 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}.pqb span{color:var(--mut);font-size:14px}
+.sdish>.srt .n{font-weight:700}.sparts{margin:4px 0 0 12px;padding-left:12px;border-left:2px solid var(--line)}.sparts .srw{padding:8px 0}
+.fpt{display:flex;align-items:center;gap:4px;width:100%;min-height:44px;margin-top:-8px;padding:0;color:var(--mut);font-size:13px;text-align:left;background:none}
+.fpt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fpt.tl,.fpl.tl{padding-left:68px}.fpt[aria-expanded="true"] svg{transform:rotate(180deg)}
+.fpl{padding-bottom:8px}.fpr{display:flex;gap:12px;align-items:baseline;padding:4px 0;font-size:14px}.fpr .sp{min-width:0}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr .r{color:var(--mut);font-variant-numeric:tabular-nums}
+.v1 .item.fi.hp{border-bottom:0}
 #sheet #snap_cta{position:sticky;bottom:0;background:var(--card);box-shadow:0 12px 0 12px var(--card);margin-top:12px}
 @media (prefers-reduced-motion:reduce){.snp.rd::after,.sk{animation:none}}
 .lch button.wide,.lch button[data-w]{grid-column:1/-1}
@@ -1477,7 +1489,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='142c34f3bf8bb4e683b1b8061506f7b83c3c14c2';let verChecked=0;
+const BUILD='1cbd46a2040e7b22a1a20d11a07eaa517adda823';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -2265,6 +2277,11 @@ function ckApply(){
 const FOOD_GLYPHS=[['egg',/\b(?:egg|omelet|omelette|itlog|tortang|scrambled)/],['gMeat',/\b(?:chicken|chickenjoy|pork|beef|corned|adobo|sisig|lechon|bacon|sausage|longganisa|tocino|hotdog|ham|steak|meat|turkey|lamb|burger|liempo|tapa|bbq|barbecue|ribs|wings|nugget|patty|meatball)/],['gFish',/\b(?:fish|tuna|salmon|bangus|tilapia|sardine|shrimp|hipon|squid|crab|seafood|tinapa|galunggong|sushi)/],['gDrink',/\b(?:coffee|tea|milk tea|juice|soda|cola|coke|water|shake|smoothie|beer|wine|latte|cappuccino|milo|gatorade|pocari|sprite|iced|drink|kape|whey)/],['gDairy',/\b(?:milk|cheese|yogurt|yoghurt|cream|butter)/],['gSweet',/\b(?:cake|cookie|chocolate|candy|ice cream|donut|doughnut|brownie|dessert|pie|halo-halo|halo halo|flan|biscuit|cupcake|muffin|pastry|sugar)/],['gFruit',/\b(?:banana|apple|mango|orange|grape|berry|berries|papaya|pineapple|watermelon|melon|fruit|avocado|kiwi|pear|peach|lemon|calamansi)/],['gVeg',/\b(?:salad|vegetable|veggie|broccoli|spinach|kangkong|cabbage|carrot|lettuce|cucumber|tomato|ampalaya|pinakbet|chopsuey|chop suey|eggplant|talong|beans|okra|squash|kalabasa|pechay|greens)/],['gBowl',/\b(?:rice|kanin|sinangag|bread|toast|pandesal|oat|noodle|pasta|spaghetti|pancit|sandwich|wrap|tortilla|cereal|granola|cracker|bun|bagel|congee|lugaw|champorado|waffle|pancake|fries|potato|corn)/]];
 function foodGlyph(name){const n=String(name||'').toLowerCase();let best=null,at=1e9;for(const[g,re]of FOOD_GLYPHS){const m=re.exec(n);if(m&&m.index<at){at=m.index;best=g}}return best}
 function foodTile(i){if(i.photo)return `<span class="th3">${pimg(i.photo,`alt=""`)}</span>`;const g=foodGlyph(i.name);return g?`<span class="th3">${ic(g,26)}</span>`:''}
+/* A food row in the log. A dish with parts (handoff 070) shows once, with a line under it that opens its parts. */
+const PARTS_OPEN={};
+function fiRow(i,tl){const pts=Array.isArray(i.parts)&&i.parts.length?i.parts:null,op=pts&&PARTS_OPEN[i.id];
+ return `<button class="item fi${tl&&!i.photo&&!foodGlyph(i.name)?' nt':''}${pts?' hp':''}" data-act="foodEdit" data-id="${esc(i.id)}">${foodTile(i)}<span class="sp"><span class="n">${esc(i.name)}</span></span><span class="r">${fmtN(num(i.kcal))}</span></button>`
+ +(pts?`<button class="fpt${tl?' tl':''}" data-act="partsTog" data-id="${esc(i.id)}" aria-expanded="${!!op}"><span>${op?'Hide parts':pts.map(p=>p.name).join(', ')}</span>${ic('down',14)}</button>${op?`<div class="fpl${tl?' tl':''}">${pts.map(p=>`<div class="fpr"><span class="sp">${esc(p.name)}<small>${esc(p.amount||'')}</small></span><span class="r">${fmtN(num(p.kcal))}</span></div>`).join('')}</div>`:''}`:'')}
 function foodView(){
  if(isSimple())return eatView();
  const fs=subOf('food',FOOD_SUBS),fh=headerV1('Food',[['savedOpen','Saved meals']],subSeg('food',FOOD_SUBS));
@@ -2277,7 +2294,7 @@ function foodView(){
   const l='Meal '+k,its=items.filter(i=>mealNo(i)===k),mt=mealTot(d,k),open=UI.open[k]!==false;
   const tl=its.some(i=>i.photo||foodGlyph(i.name));
   return `<details class="mls${tl?' tl':''}" data-m="${k}" ${open?'open':''}><summary><span class="pi">${k}</span><span class="t">${l}</span><span class="mk2">${fmtN(mt.kcal)} kcal, ${rnd(mt.protein)} g protein</span><span class="cv">${ic('down',16)}</span></summary>
-  ${its.map(i=>`<button class="item fi${tl&&!i.photo&&!foodGlyph(i.name)?' nt':''}" data-act="foodEdit" data-id="${esc(i.id)}">${foodTile(i)}<span class="sp"><span class="n">${esc(i.name)}</span></span><span class="r">${fmtN(num(i.kcal))}</span></button>`).join('')}<div class="mend"><div class="mact"><button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button><button class="lnk mut l0 svm" data-act="mealPhoto" data-m="${k}">${its.some(i=>i.photo)?'Change photo':'Add photo'}</button></div><button class="ib" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button></div></details>`}).join('');
+  ${its.map(i=>fiRow(i,tl)).join('')}<div class="mend"><div class="mact"><button class="lnk mut l0 svm" data-act="mealSave" data-m="${k}">Save meal</button><button class="lnk mut l0 svm" data-act="mealPhoto" data-m="${k}">${its.some(i=>i.photo)?'Change photo':'Add photo'}</button></div><button class="ib" data-act="foodAdd" data-m="${k}" aria-label="Add to ${l}">${ic('plus',20)}</button></div></details>`}).join('');
  const rem=T.kcal-t.kcal,mv=(v,g)=>isCons?rnd(v)+'/'+g:rnd(g-v),skv=kcalVerdict(t.kcal,T.kcal),sIn=k=>rangeState(k,t[k],T).in,sChip=(c,l,k,g)=>`<span class="chip ${c}">${l} ${mv(t[k],g)}</span>`;
  const strip=`<button class="fst" id="fst" hidden data-act="fstTop" aria-label="Back to the totals"><div><b>${fmtN(big)}</b>${skv.in?'<span>In range</span>':`<span class="mut">${isCons?skv.l+' '+skv.v:rem<0?'Over':'cal left'}</span>`}${sChip('p','P','protein',T.protein)}${sChip('c','C','carbs',T.carbs)}${sChip('f','F','fat',T.fat)}</div></button>`;
  return fh+strip+`<div class="v1"><div class="dnav2 fdn"><span class="dd">${d===today()?'Today, ':''}${fmtShort(d)}</span><button class="ib s" data-act="dnav" data-n="-1" aria-label="Previous day">${ic('left',20)}</button><button class="ib s" data-act="dnav" data-n="1" aria-label="Next day"${d===today()?' disabled':''}>${ic('right',20)}</button></div>
@@ -2493,15 +2510,26 @@ let MP={m:0};
 async function mealPhotoSet(file){const d=UI.date,its=food(d).items.filter(i=>mealNo(i)===MP.m),it=its[0];if(!it)return;
  let u;try{u=await shrinkImage(file)}catch(x){toast('Could not read that photo.');return}
  const p='data/photos/'+d+'/'+it.id+'.jpg';DB.photos[p]=u.split(',')[1];PHOTOS[p]=u;mutate(foodP(d),{k:'foodUpd',item:Object.assign({},it,{photo:p})});toast0('Photo added to Meal '+MP.m+'.')}
-function foodSheet(item){
+/* Edit food keeps a portion row (FE) so the slider rescales all four numbers; a dish edits its parts instead of the four fields. */
+const FE={id:null,row:null,name:null};
+const feTot=r=>'Total '+fmtN(pV(r,'kcal'))+' kcal, '+pV(r,'protein')+' g protein, '+pV(r,'carbs')+' g carbs, '+pV(r,'fat')+' g fat';
+function feSync(){const r=FE.row;if(!r)return;
+ if(r.parts){const el=$('#fe_tot');if(el)el.textContent=feTot(r);return}
+ const a=$('#f_amount');if(a)a.value=pAmtOut(r);['kcal','protein','carbs','fat'].forEach(k=>{const x=$('#f_'+k);if(x)x.value=pV(r,k)})}
+function feDraw(){const it=food(UI.date).items.find(i=>i.id===FE.id);const nm=$('#f_name');if(nm)FE.name=nm.value;if(!it)return;const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(foodSheet(it,true));const s2=$('#sheet');if(s2)s2.scrollTop=y}
+document.addEventListener('input',e=>{const t=e.target,r=FE.row;if(!r||r.parts||!t.id)return;const m=/^f_(kcal|protein|carbs|fat)$/.exec(t.id);
+ if(m&&UI.sheet&&UI.sheet.indexOf('id="f_name"')>=0){r.b[m[1]]=num(t.value)*r.b.q/r.q}});
+function foodSheet(item,keep){
  const i=item,cur=mealNo(i),ms=mealList(UI.date);if(!ms.includes(cur))ms.push(cur);
+ if(!keep||FE.id!==i.id){FE.id=i.id;FE.name=null;FE.row=num(i.kcal)>0||(i.parts&&i.parts.length)?pRow(i):null;PK.open=null}
+ const R=FE.row,dish=R&&R.parts&&R.parts.length;
  return `<h2 class="hh">Edit food${hqBtn('addfood')}</h2>
  <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${ms.map(k=>`<button data-act="pickMeal" data-m="${k}" class="${cur===k?'on':''}">${k}</button>`).join('')}</div></div>
  ${i.photo?`<div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${esc(i.photo)}" src="${esc(photoURL(i.photo))}" alt="" data-act="phView"><div class="row"><button class="btn ghost sm" id="f_phrm" data-act="phRemove">Remove photo</button></div></div>`:''}
- <div class="fld"><label for="f_name">Name</label><input id="f_name" value="${esc(i.name)}" placeholder="Chicken adobo"></div>
- <div class="fld"><label for="f_amount">Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice"></div>
+ <div class="fld"><label for="f_name">Name</label><input id="f_name" value="${esc(FE.name!=null?FE.name:i.name)}" placeholder="Chicken adobo"></div>
+ ${dish?`<div class="fld"><label>Parts</label>${R.parts.map((p,j)=>pRowHTML('e.'+j,p,'feDrop')).join('')}<div class="xs mut" id="fe_tot" style="margin-top:8px">${esc(feTot(R))}</div></div>`:`<div class="fld"><label for="f_amount">Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice">${R?pPicker('e',R):''}</div>
  <div class="g2"><div class="fld"><label for="f_kcal">Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label for="f_protein">Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
- <div class="fld"><label for="f_carbs">Carbs (g)</label><input id="f_carbs" inputmode="decimal" value="${esc(i.carbs)}"></div><div class="fld"><label for="f_fat">Fat (g)</label><input id="f_fat" inputmode="decimal" value="${esc(i.fat)}"></div></div>
+ <div class="fld"><label for="f_carbs">Carbs (g)</label><input id="f_carbs" inputmode="decimal" value="${esc(i.carbs)}"></div><div class="fld"><label for="f_fat">Fat (g)</label><input id="f_fat" inputmode="decimal" value="${esc(i.fat)}"></div></div>`}
  <div class="row" style="margin-top:6px"><button class="btn red" data-act="foodDel" data-id="${esc(i.id)}">Delete</button><button class="btn sp" data-act="foodSave" data-id="${esc(i.id)}">Save</button></div>`}
 
 document.addEventListener('input',e=>{const t=e.target;
@@ -4011,7 +4039,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.2${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.3${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4882,11 +4910,54 @@ function snapMealNo(d){
  return window.FormaCmd?FormaCmd.mealNumber({lastMealNo:its.length?Math.max(...its.map(mealNo)):0,lastMealAt:d===today()?(lastT||null):null,now:Date.now()}):(its.length?Math.max(...its.map(mealNo))+1:1);
 }
 const snapDraw=()=>{if(UI.sheet&&UI.sheetFn===snapSheet)openSheet(snapSheet(),snapSheet)};
-/* "200 g" at 1.5x is "300 g"; an amount with no leading number ("a bowl") gets the multiplier after it. */
-function snapAmt(a,m){a=String(a||'');if(m===1)return a;const x=/^(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(a);
- if(x)return String(+(num(x[1])*m).toFixed(1)).replace(/\.0$/,'')+(x[2]?' '+x[2]:'');return (a?a+', ':'')+m+'x'}
-const snapV=(it,k)=>rnd(num(it[k])*(it.m||1));
-const snapTot=items=>items.reduce((a,i)=>{a.k+=snapV(i,'kcal');a.p+=snapV(i,'protein');a.c+=snapV(i,'carbs');a.f+=snapV(i,'fat');return a},{k:0,p:0,c:0,f:0});
+/* ---------- Portion picker (handoff 070, ask 216): a slider in grams, ml or pieces with Small / Regular / Large chips; kcal and
+   protein follow live while dragging; the number can be typed. A row is { name, q, u, b:{q,kcal,protein,carbs,fat}, sizes?, parts? }:
+   its numbers scale from the base b by q / b.q, and a dish with parts is the sum of its parts (ask 215). Keys: "s0" snap row 0,
+   "s0.1" its part 1, "e" the food being edited, "e.1" its part 1. ---------- */
+function pAmt(a){a=String(a||'').trim();const x=/^(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(a);
+ if(x)return {q:num(x[1].replace(',','.')),u:(x[2]||'serving').trim()};return {q:1,u:a.replace(/^(a|an|one)\s+/i,'')||'serving'}}
+function pRow(it){const pa=num(it.qty)>0&&it.unit?{q:num(it.qty),u:String(it.unit)}:pAmt(it.amount),q=pa.q>0?pa.q:1;
+ const r={name:it.name,amt:it.amount||'',u:pa.u,q,b:{q,kcal:num(it.kcal),protein:num(it.protein),carbs:num(it.carbs),fat:num(it.fat)},sizes:it.sizes||null};
+ if(Array.isArray(it.parts)&&it.parts.length)r.parts=it.parts.map(pRow);return r}
+const pW=r=>/^(g|ml)$/i.test(r.u);
+const pV=(r,k)=>r.parts?r.parts.reduce((a,p)=>a+pV(p,k),0):rnd(r.b[k]*r.q/r.b.q);
+const pFq=(r,q)=>pW(r)?String(rnd(q)):fq(q);
+const pUn=(r,q)=>pW(r)||/^(pc|pcs)$/i.test(r.u)?r.u:plural(q,r.u);
+const pAmtOut=r=>r.parts?(r.amt||''):r.q===r.b.q&&r.amt?r.amt:pFq(r,r.q)+' '+pUn(r,r.q);
+const pTot=rows=>rows.reduce((a,r)=>{a.k+=pV(r,'kcal');a.p+=pV(r,'protein');a.c+=pV(r,'carbs');a.f+=pV(r,'fat');return a},{k:0,p:0,c:0,f:0});
+const pItem=r=>({name:r.name,amount:pAmtOut(r),kcal:pV(r,'kcal'),protein:pV(r,'protein'),carbs:pV(r,'carbs'),fat:pV(r,'fat')});
+/* A saved item from a row: a dish keeps its parts, its own numbers are their sum. */
+const pSave=r=>{const o=pItem(r);if(r.parts&&r.parts.length)o.parts=r.parts.map(pItem);return o};
+/* Friendly sizes: grams to 5, 10 or 25, pieces to halves. Regular is the AI's amount; Small 0.6x and Large 1.5x unless the food list knows them. */
+function pNice(r,v){if(pW(r))return v<50?Math.max(5,Math.round(v/5)*5):v<200?Math.round(v/10)*10:Math.round(v/25)*25;return Math.max(.5,Math.round(v*2)/2)}
+function pChips(r){const R=r.b.q,s=r.sizes||{},w=pW(r);
+ return [['Small',w&&s.small?s.small:pNice(r,R*.6)],['Regular',w&&s.medium?s.medium:R],['Large',w&&s.large?s.large:pNice(r,R*1.5)]]}
+function pRange(r){const R=r.b.q,w=pW(r),st=w?(R<60?1:5):(R<2?.25:.5),mx=Math.max(R*3,pChips(r)[2][1]*1.4);return {st,min:st,max:w?Math.ceil(mx/st)*st:Math.ceil(mx*2)/2}}
+const PK={};
+function pFind(k){const m=/^([se])(\d*)(?:\.(\d+))?$/.exec(k||'');if(!m)return null;
+ const top=m[1]==='s'?SNAP.items[+m[2]]:FE.row;if(!top)return null;return m[3]==null?top:(top.parts||[])[+m[3]]||null}
+/* The amount line opens the picker; one open at a time (PK.open). */
+function pPicker(k,r){const rg=pRange(r),on=v=>Math.abs(r.q-v)<1e-6;
+ return `<div class="ppk" data-pk="${k}"><div class="pch" role="group" aria-label="Size of ${esc(r.name)}">${pChips(r).map(([l,v])=>`<button data-act="pChip" data-k="${k}" data-q="${v}" class="${on(v)?'on':''}" aria-pressed="${on(v)}"><b>${l}</b><span>${pFq(r,v)} ${esc(pUn(r,v))}</span></button>`).join('')}</div>
+ <div class="psl"><input type="range" class="prg" data-k="${k}" min="${rg.min}" max="${rg.max}" step="${rg.st}" value="${r.q}" aria-label="Amount of ${esc(r.name)}"><label class="pqb"><input class="pq" data-k="${k}" inputmode="decimal" value="${pFq(r,r.q)}" aria-label="Exact amount of ${esc(r.name)}"><span>${esc(r.u)}</span></label></div></div>`}
+/* One food row: name, amount button (opens the picker), kcal and protein, remove. A dish: its total, then its parts indented. */
+function pRowHTML(k,r,drop){const open=PK.open===k&&!r.parts;
+ const head=`<div class="srt"><div class="sp"><div class="n">${esc(r.name)}</div>${r.parts?`<div class="xs mut">${r.parts.length} parts</div>`:`<button class="pam" data-act="pOpen" data-k="${k}" aria-expanded="${open}"><span data-pv="a">${esc(pAmtOut(r))}</span>${ic('down',14)}</button>`}</div><div class="srk"><b><span data-pv="k">${pV(r,'kcal')}</span> kcal</b><span class="xs mut">P <span data-pv="p">${pV(r,'protein')}</span> g</span></div><button class="ib" data-act="${drop}" data-k="${k}" aria-label="Remove ${esc(r.name)}">${ic('x',18)}</button></div>`;
+ return `<div class="srw${r.parts?' sdish':''}" data-pr="${k}">${head}${open?pPicker(k,r):''}${r.parts?`<div class="sparts">${r.parts.map((p,i)=>pRowHTML(k+'.'+i,p,drop)).join('')}</div>`:''}</div>`}
+/* Live update while dragging: every visible row's numbers, the chips, and the sheet's own total. No redraw, so the drag never breaks. */
+function pSync(){document.querySelectorAll('#sheet [data-pr]').forEach(el=>{const r=pFind(el.dataset.pr);if(!r)return;
+  const set=(v,t)=>{const s=el.querySelector(':scope>.srt [data-pv="'+v+'"]');if(s)s.textContent=t};set('k',pV(r,'kcal'));set('p',pV(r,'protein'));set('a',pAmtOut(r))});
+ document.querySelectorAll('#sheet .ppk').forEach(el=>{const r=pFind(el.dataset.pk);if(!r)return;el.querySelectorAll('.pch button').forEach(b=>{const on=Math.abs(r.q-num(b.dataset.q))<1e-6;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)})});
+ if(UI.sheetFn===snapSheet){const b=document.querySelector('#snap_cta [data-act=snapSave]');if(b){const c=SN(),n=SNAP.items.length;b.textContent=cf(n===1?c.log1:c.logN,{n,kcal:fmtN(pTot(SNAP.items).k)})}}
+ else if(FE.row)feSync()}
+function pSet(k,q,from){const r=pFind(k);if(!r||!(q>0))return;r.q=Math.min(q,99999);const box=document.querySelector('#sheet .ppk[data-pk="'+k+'"]');
+ if(box){const rg=box.querySelector('.prg'),qi=box.querySelector('.pq');if(rg&&from!=='range'){if(+rg.max<r.q)rg.max=pNice(r,r.q*1.3);rg.value=r.q}if(qi&&from!=='typed')qi.value=pFq(r,r.q)}pSync()}
+document.addEventListener('input',e=>{const t=e.target;if(!t.classList)return;
+ if(t.classList.contains('prg'))pSet(t.dataset.k,num(t.value),'range');else if(t.classList.contains('pq'))pSet(t.dataset.k,num(String(t.value).replace(',','.')),'typed')});
+/* Remove a row or a part; the last part going removes the dish. */
+function pDrop(rows,k){const m=/^[se](\d*)(?:\.(\d+))?$/.exec(k);if(!m)return;
+ if(m[2]==null){if(m[1]!=='')rows.splice(+m[1],1);return}
+ const top=m[1]===''?FE.row:rows[+m[1]];if(!top||!top.parts)return;top.parts.splice(+m[2],1);if(!top.parts.length&&m[1]!=='')rows.splice(+m[1],1)}
 /* What fixes each failure: a key (none or wrong), another go (network, busy, limits), or the search sheet (refused, no credit, nothing to retry). */
 function snapFixFor(e){const c=e&&e.code;
  if(c==='nokey'||c==='badkey'||c==='forbidden')return aiServer()?'search':'key';
@@ -4903,13 +4974,10 @@ async function snapStart(file){
 async function snapAsk(){
  const my=++SNAP.seq;SNAP.status='reading';SNAP.err='';SNAP.raw='';snapDraw();
  try{const r=await aiMeal({imageBase64:SNAP.photo,note:SNAP.note.trim()||undefined,today:SNAP.date});
-  if(my!==SNAP.seq)return;SNAP.items=r.items.map(i=>Object.assign({},i,{m:1}));SNAP.notes=r.assumptions;SNAP.status='done'}
+  if(my!==SNAP.seq)return;SNAP.items=r.items.map(pRow);PK.open=SNAP.items.length===1&&!SNAP.items[0].parts?'s0':null;SNAP.notes=r.assumptions;SNAP.status='done'}
  catch(e){if(my!==SNAP.seq)return;SNAP.status='error';SNAP.err=aiErr(e);SNAP.fix=snapFixFor(e);SNAP.raw=''}
  snapDraw();
 }
-function snapRow(j,it){const m=it.m||1;
- return `<div class="srw"><div class="srt"><div class="sp"><div class="n">${esc(it.name)}</div><div class="xs mut">${esc(snapAmt(it.amount,m))}</div></div><div class="srk"><b>${snapV(it,'kcal')} kcal</b><span class="xs mut">P ${snapV(it,'protein')} g</span></div><button class="ib" data-act="snapDrop" data-j="${j}" aria-label="Remove ${esc(it.name)}">${ic('x',18)}</button></div>
- <div class="smul" role="group" aria-label="Amount of ${esc(it.name)}">${[0.5,1,1.5,2].map(x=>`<button data-act="snapMul" data-j="${j}" data-m="${x}" class="${m===x?'on':''}" aria-pressed="${m===x}">${x}x</button>`).join('')}</div></div>`}
 function snapSheet(){
  const S=SNAP,c=SN(),rd=S.status==='reading';
  const img=S.photo?`<div class="snp${rd?' rd':''}"><img src="${esc(S.photo)}" alt="Your meal"${rd?'':' data-act="phView"'}></div>`:'';
@@ -4918,8 +4986,8 @@ function snapSheet(){
  else if(S.status==='error'){const fx=S.fix,lab=fx==='key'?c.addKey:fx==='search'?c.bySearch:c.retry,act=fx==='key'?'snapSettings':fx==='search'?'snapHand':'snapAsk';
   body=`<div class="s15" style="margin:14px 0 12px">${esc(S.err)}</div><button class="btn full" data-act="${act}">${lab}</button>`}
  else{
-  const tot=snapTot(S.items),n=S.items.length;
-  body=`${n?S.items.map((it,j)=>snapRow(j,it)).join(''):`<div class="empty" style="padding:14px 0">${c.empty}</div>`}
+  const tot=pTot(S.items),n=S.items.length;
+  body=`${n?S.items.map((r,j)=>pRowHTML('s'+j,r,'snapDrop')).join(''):`<div class="empty" style="padding:14px 0">${c.empty}</div>`}
   ${S.notes.length?`<div class="xs mut" style="margin-top:10px">${esc(cf(c.assumed,{text:S.notes.slice(0,2).join(' ')}))}</div>`:''}
   <div class="snl"><button class="lnk" data-act="snapCam">${c.retake}</button><button class="lnk" data-act="snapGal">${c.gallery}</button><button class="lnk" data-act="snapFix" aria-expanded="${S.showFix}">${c.fix}</button></div>
   ${S.showFix?`<div class="row" style="gap:8px;margin-top:6px"><input id="snap_note" value="${esc(S.note)}" placeholder="${c.fixPh}" autocomplete="off" aria-label="Correction" style="flex:1;min-width:0"><button class="btn ghost sm" data-act="snapAsk">${c.fixGo}</button></div>`:''}
@@ -4949,7 +5017,7 @@ function snapSave(){
  const t=new Date().toISOString();let n=0;
  ringKeep();
  S.items.forEach((it,j)=>{
-  const m=it.m||1,item={id:uid(),meal:S.meal,name:it.name,amount:snapAmt(it.amount,m),kcal:snapV(it,'kcal'),protein:snapV(it,'protein'),carbs:snapV(it,'carbs'),fat:snapV(it,'fat'),by:'app',t};
+  const item=Object.assign({id:uid(),meal:S.meal},pSave(it),{by:'app',t});
   if(j===0&&S.photo){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=S.photo.split(',')[1];item.photo=p}
   mutate(foodP(d),{k:'foodAdd',item},{quiet:true});n++;
  });
@@ -5086,7 +5154,7 @@ function coMicToggle(){const SR=coSR();if(!SR)return;
 function coLog(i){const th=coThread(),m=th[i];if(!m||!m.meal||m.meal.logged)return;
  const M=m.meal,d=M.date,no=snapMealNo(d),t=new Date().toISOString(),full=COACH.full[M.src];
  ringKeep();
- M.items.forEach((it,j)=>{const item={id:uid(),meal:no,name:it.name,amount:it.amount||'',kcal:rnd(it.kcal),protein:rnd(it.protein),carbs:rnd(it.carbs),fat:rnd(it.fat),by:'app',t};
+ M.items.forEach((it,j)=>{const item=Object.assign({id:uid(),meal:no},pSave(pRow(it)),{by:'app',t});
   if(j===0&&full){const p='data/photos/'+d+'/'+item.id+'.jpg';DB.photos[p]=full.split(',')[1];item.photo=p}
   mutate(foodP(d),{k:'foodAdd',item},{quiet:true})});
  M.logged=no;coSave(th);render();coDraw()}
@@ -5206,11 +5274,14 @@ document.addEventListener('click',async e=>{
   case 'coRetry':{const L=COACH.last;if(L&&!COACH.busy){const th=coThread();if(th.length&&th[th.length-1].k==='bot'&&!th[th.length-1].meal){th.pop();coSave(th)}coRespond(L.text,L.photo,L.id)}break}
   case 'coSettings':closeSheet();openSheet(settingsSheet());setTimeout(()=>{const el=$('#set_advanced');if(el)el.scrollIntoView({block:'start'})},60);break;
   case 'snapGo':openSheet(snapChoiceSheet());break;
-  case 'snapMul':{const it=SNAP.items[+D.j];if(it){it.m=+D.m;snapDraw()}break}
+  case 'pOpen':{PK.open=PK.open===D.k?null:D.k;if(UI.sheetFn===snapSheet)snapDraw();else feDraw();break}
+  case 'pChip':pSet(D.k,num(D.q));break;
+  case 'partsTog':PARTS_OPEN[D.id]=!PARTS_OPEN[D.id];render();break;
+  case 'feDrop':{if(FE.row&&FE.row.parts&&FE.row.parts.length===1){const dd=UI.date,it=food(dd).items.find(i=>i.id===FE.id),keep=it&&clone(it);mutate(foodP(dd),{k:'foodDel',id:FE.id});FE.row=null;closeSheet();if(keep)toastUndo('Deleted '+keep.name+'.',()=>{mutate(foodP(dd),{k:'foodAdd',item:keep})});break}pDrop(null,D.k);PK.open=null;feDraw();break}
   case 'snapFix':SNAP.showFix=!SNAP.showFix;snapDraw();if(SNAP.showFix){const n=$('#snap_note');if(n)n.focus()}break;
   case 'snapAsk':snapAsk();break;
   case 'snapCancel':SNAP.seq++;closeSheet();break;
-  case 'snapDrop':SNAP.items.splice(+D.j,1);snapDraw();break;
+  case 'snapDrop':pDrop(SNAP.items,D.k);PK.open=null;snapDraw();break;
   case 'snapSave':snapSave();break;
   case 'snapSettings':SNAP.seq++;closeSheet();openSheet(settingsSheet());setTimeout(()=>{const el=$('#ai_key')||$('#set_advanced');if(el)el.scrollIntoView({block:'center'})},60);break;
   case 'snapHand':{SNAP.seq++;const m=SNAP.meal,ph=SNAP.photo;closeSheet();foodPhoto=null;addOpen(m,{photo:ph||''});break}
@@ -5353,6 +5424,8 @@ document.addEventListener('click',async e=>{
   case 'foodSave':{
    document.querySelectorAll('#sheet .ferr').forEach(e=>e.remove());
    const name=$('#f_name').value.trim();if(!name){ferr('f_name','Give the food a name first.');return}
+   const old0=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
+   if(old0&&FE.row&&FE.row.parts&&FE.id===D.id){const item=Object.assign({},old0,pSave(FE.row),{name,amount:old0.amount||''});if(foodPhoto==='remove')delete item.photo;foodPhoto=null;FE.row=null;mutate(foodP(UI.date),{k:'foodUpd',item});closeSheet();break}
    const g=id=>Math.round(num($('#f_'+id).value));
    for(const [id,l] of [['kcal','Calories'],['protein','Protein'],['carbs','Carbs'],['fat','Fat']]){const x=num($('#f_'+id).value),mx=id==='kcal'?5000:500;if(x<0){ferr('f_'+id,l+' cannot be below 0.');return}if(x>mx){ferr('f_'+id,l+' is at most '+fmtN(mx)+(id==='kcal'?' per item.':' g per item.'));return}}
    const old=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
