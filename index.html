@@ -369,16 +369,15 @@ details.ngym{margin-top:12px;border-top:1.5px solid var(--line)}details.ngym sum
 /* Portion picker and dish parts (070) */
 .pam{display:inline-flex;align-items:center;gap:4px;min-height:44px;margin:-8px 0 -8px -8px;padding:0 8px;border-radius:12px;color:var(--mut);font-size:14px;background:none}
 .pam svg{transition:transform .15s}.pam[aria-expanded="true"]{color:var(--txt)}.pam[aria-expanded="true"] svg{transform:rotate(180deg)}
-.ppk{margin-top:8px;padding:12px;border-radius:16px;background:var(--inset)}
-.pch{display:flex;gap:8px}.pch button{flex:1;min-height:52px;border-radius:12px;background:var(--card);border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px}
+.ppk{margin-top:8px;padding:0 0 4px}
+.pch{display:flex;gap:8px}.pch button{flex:1;min-height:52px;border-radius:12px;background:var(--card2);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px}
 .pch button b{font-size:14px;font-weight:600;color:var(--txt)}.pch button span{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}.pch button.on{border-color:var(--acc)}
 .psl{display:flex;align-items:center;gap:12px;margin-top:8px}.psl .prg{flex:1;height:44px}
 .pqb{display:flex;align-items:baseline;gap:4px;flex:none}.pqb .pq{width:64px;min-height:44px;padding:0 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}.pqb span{color:var(--mut);font-size:14px}
 .sdish>.srt .n{font-weight:700}.sparts{margin:4px 0 0 12px;padding-left:12px;border-left:2px solid var(--line)}.sparts .srw{padding:8px 0}
 .fpt{display:flex;align-items:center;gap:4px;width:100%;min-height:44px;margin-top:-8px;padding:0;color:var(--mut);font-size:13px;text-align:left;background:none}
-.fpt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fpt.tl,.fpl.tl{padding-left:68px}.fpt[aria-expanded="true"] svg{transform:rotate(180deg)}
+.fpt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fpt,.fpl{padding-left:48px}.fpt.tl,.fpl.tl{padding-left:116px}.fpt[aria-expanded="true"] svg{transform:rotate(180deg)}
 .fpl{padding-bottom:8px}.fpr{display:flex;gap:12px;align-items:baseline;padding:4px 0;font-size:14px}.fpr .sp{min-width:0}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr .r{color:var(--mut);font-variant-numeric:tabular-nums}
-.v1 .item.fi.hp{border-bottom:0}
 #sheet #snap_cta{position:sticky;bottom:0;background:var(--card);box-shadow:0 12px 0 12px var(--card);margin-top:12px}
 @media (prefers-reduced-motion:reduce){.snp.rd::after,.sk{animation:none}}
 .lch button.wide,.lch button[data-w]{grid-column:1/-1}
@@ -1489,7 +1488,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='1cbd46a2040e7b22a1a20d11a07eaa517adda823';let verChecked=0;
+const BUILD='fea1e8884894de48ecd75a970e27f31f30a78f18';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
