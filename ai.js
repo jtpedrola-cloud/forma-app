@@ -7,8 +7,13 @@
  *       -> Promise<{ items, assumptions, used, limit }>   signed-in path through the ai-meal Edge Function (no key on the phone)
  *   FormaAI.ask({ key, model, question, context?, history?, fetch? })
  *       -> Promise<{ text }>   Coach: a short answer (three sentences at most). context is a plain-text note of his numbers and plan,
- *          built by the app; history is the last few turns [{ role:'user'|'assistant', text }]. Personal mode only (his own key).
+ *          built by the app; history is the last few turns [{ role:'user'|'assistant', text }]. Personal key path.
+ *   FormaAI.askServer({ post, question, context?, history? }) -> Promise<{ text, used, limit }>   same answer through ai-coach
  *   FormaAI.test({ key, model })  -> Promise<{ ok:true, text }>   one tiny request, to check the key
+ *   FormaAI.testServer({ post })  -> Promise<{ ok:true, text, used, limit }>   the same check through ai-coach (mode ping)
+ *       Server calls: post(body, signal) -> Promise<{ status, data }> comes from the app (FormaBackend supabase callFn, bound
+ *       to the function name). Errors carry the server's own words; codes add auth, budget (monthly ceiling, 402) and
+ *       daily_cap (429, with .used and .limit).
  *   FormaAI.bodyFat / FormaAI.review                              stubs, throw "not built yet"
  *
  *   model: "haiku" | "sonnet" (or a full model id). imageBase64: JPEG, raw base64 or a data: URL, under 5 MB.
@@ -17,7 +22,8 @@
  *   Errors are FormaAI.AIError with .code (nokey, badkey, forbidden, limit, credit, busy, network, timeout, toolarge,
  *   refused, cutoff, parse, request) and a plain-words .message; .raw holds the model text when it could not be parsed.
  *   The key is only ever sent in the x-api-key header to api.anthropic.com and is never logged or put in a URL.
- *   Raw HTTP on purpose: this is a no-build browser page. The public app moves this behind a server (DECISIONS.md).
+ *   Raw HTTP on purpose: this is a no-build browser page. Testers use the server path (v0.19.0, DECISIONS.md); the key path
+ *   stays as an Advanced option.
  */
 (function () {
   'use strict';
@@ -232,13 +238,47 @@
     return { ok: true, text: r.text, model: r.model };
   }
 
-  /* Signed-in path: the app calls the ai-meal Edge Function with the user's own token, so no key is on the phone and the
-   * server counts 5 reads a day per person. o.post(body, signal) -> Promise<{ status, data }> is supplied by the app
-   * (FormaBackend supabase callFn). The function answers { items, assumptions, used, limit } or { error, code } and its
-   * own words are shown as they come (429 daily cap, 402 budget). Same item shape as meal(), plus used and limit. */
+  /* Server path: the app calls an Edge Function (ai-meal or ai-coach) with the user's own token, so no key is on the
+   * phone and the server counts the daily caps. o.post(body, signal) -> Promise<{ status, data }> is supplied by the app.
+   * The function answers its JSON or { error, code, used?, limit? } and its own words are shown as they come. */
+  var SERVER_FALLBACK = {
+    401: 'Your sign-in ended. Open Settings and sign in again.',
+    402: 'AI budget used up for this month.',
+    429: 'You have used your AI for today. Try again tomorrow.'
+  };
+  async function serverCall(post, body, ms, capMsg) {
+    if (typeof post !== 'function') throw AIError('nokey', 'Sign in first.');
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms || 45000) : null;
+    var res;
+    try {
+      res = await post(body, ctl ? ctl.signal : undefined);
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw AIError('timeout', 'The AI took too long. Try again.');
+      if (e && e.status === 401) throw AIError('auth', SERVER_FALLBACK[401]);
+      throw AIError('network', 'No connection. Check your internet and try again.');
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+    var st = res && res.status, d = (res && res.data) || {};
+    if (!(st >= 200 && st < 300)) {
+      var msg = typeof d.error === 'string' && d.error ? d.error : st !== 401 && typeof d.message === 'string' && d.message ? d.message : '';
+      var code = d.code && typeof d.code === 'string' ? d.code : st === 401 ? 'auth' : st === 429 ? 'limit' : st === 402 ? 'budget' : st >= 500 ? 'busy' : 'request';
+      if (code === 'daily_cap') code = 'limit';
+      if (!msg) msg = st === 429 && capMsg ? capMsg : SERVER_FALLBACK[st] || 'The AI could not do that (' + st + '). Try again.';
+      var err = AIError(code, msg);
+      err.status = st;
+      if (typeof d.used === 'number') err.used = d.used;
+      if (typeof d.limit === 'number') err.limit = d.limit;
+      throw err;
+    }
+    return d;
+  }
+  var count = function (d) { return { used: typeof d.used === 'number' ? d.used : null, limit: typeof d.limit === 'number' ? d.limit : null }; };
+
   async function mealServer(o) {
     if (!o || (!o.imageBase64 && !(o.text && String(o.text).trim()))) throw AIError('request', 'Nothing to read. Send a photo or some text.');
-    if (typeof o.post !== 'function') throw AIError('nokey', 'Sign in first.');
+    if (!o || typeof o.post !== 'function') throw AIError('nokey', 'Sign in first.');
     var body = { units: o.units === 'lb' ? 'lb' : 'kg' };
     if (o.imageBase64) {
       var b64 = cleanB64(o.imageBase64);
@@ -248,27 +288,7 @@
     if (o.text && String(o.text).trim()) body.text = String(o.text).trim();
     if (o.note) body.note = String(o.note);
     if (o.recent && o.recent.length) body.recent = o.recent.slice(0, 20);
-    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 45000) : null;
-    var res;
-    try {
-      res = await o.post(body, ctl ? ctl.signal : undefined);
-    } catch (e) {
-      if (e && e.name === 'AbortError') throw AIError('timeout', 'The AI took too long. Try again.');
-      if (e && e.status === 401) throw AIError('auth', 'Your sign-in ended. Open Settings and sign in again.');
-      throw AIError('network', 'No connection. Check your internet and try again.');
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-    var st = res && res.status, d = (res && res.data) || {};
-    if (!(st >= 200 && st < 300)) {
-      var msg = typeof d.error === 'string' && d.error ? d.error : st !== 401 && typeof d.message === 'string' && d.message ? d.message : '';
-      var code = d.code && typeof d.code === 'string' ? d.code : st === 401 ? 'auth' : st === 429 ? 'limit' : st === 402 ? 'budget' : st >= 500 ? 'busy' : 'request';
-      if (!msg) msg = st === 401 ? 'Your sign-in ended. Open Settings and sign in again.' : st === 429 ? 'You have used your AI meal reads for today. Add it by hand or try tomorrow.' : st === 402 ? 'AI budget used up for this month.' : 'The AI could not read that (' + st + '). Try again.';
-      var err = AIError(code, msg);
-      err.status = st;
-      throw err;
-    }
+    var d = await serverCall(o.post, body, 45000, 'You have used your AI meal reads for today. Add it by hand or try tomorrow.');
     var items = [];
     (Array.isArray(d.items) ? d.items : []).forEach(function (it) {
       if (!it || typeof it !== 'object') return;
@@ -282,7 +302,23 @@
       items.push(row);
     });
     var notes = (Array.isArray(d.assumptions) ? d.assumptions : []).map(function (x) { return String(x == null ? '' : x).trim(); }).filter(Boolean).slice(0, 8);
-    return { items: items, assumptions: notes, used: typeof d.used === 'number' ? d.used : null, limit: typeof d.limit === 'number' ? d.limit : null };
+    return Object.assign({ items: items, assumptions: notes }, count(d));
+  }
+
+  async function askServer(o) {
+    if (!o || !o.question || !String(o.question).trim()) throw AIError('request', 'Nothing to ask.');
+    var hist = (o.history || []).filter(function (h) { return h && h.text && (h.role === 'user' || h.role === 'assistant'); }).slice(-6)
+      .map(function (h) { return { role: h.role, text: String(h.text).slice(0, 600) }; });
+    var d = await serverCall(o.post, { mode: 'ask', question: String(o.question).trim().slice(0, 1500), context: o.context ? String(o.context).slice(0, 3000) : undefined, history: hist },
+      45000, 'You have used your Coach questions for today. Questions about your numbers still work.');
+    var text = String(d.text == null ? '' : d.text).replace(/\u2014/g, ',').trim();
+    if (!text) throw AIError('parse', 'The AI sent back an empty answer. Try again.');
+    return Object.assign({ text: text }, count(d));
+  }
+
+  async function testServer(o) {
+    var d = await serverCall(o && o.post, { mode: 'ping' }, 30000);
+    return Object.assign({ ok: true, text: String(d.text || '') }, count(d));
   }
 
   function notBuilt() { throw new Error('not built yet'); }
@@ -291,7 +327,9 @@
     meal: meal,
     mealServer: mealServer,
     ask: ask,
+    askServer: askServer,
     test: test,
+    testServer: testServer,
     bodyFat: notBuilt,
     review: notBuilt,
     parseMeal: parseMeal,
@@ -299,7 +337,7 @@
     AIError: AIError,
     MODELS: MODELS,
     SYSTEM: SYSTEM,
-    version: 1
+    version: 2
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.FormaAI = api;

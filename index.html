@@ -1448,6 +1448,7 @@ body{font-variant-numeric:tabular-nums}
 <script src="plan.js"></script>
 <script src="copy.js"></script>
 <script src="cmd.js"></script>
+<script src="config.js"></script>
 <script src="ai.js"></script>
 <script src="backend.js"></script>
 <script src="tour.js"></script>
@@ -1475,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='804dee3af09e436fb0ea426b134287df64ce4aa5';let verChecked=0;
+const BUILD='f6ce2058c2027f7b9ae1b873cf301977bbc889d3';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1538,13 +1539,15 @@ let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:
 if(!DEMO&&cfg&&cfg.repo==='jtpedrola-cloud/forma'){cfg.repo='lazy-zee/pulzo';LS.set('forma.cfg',cfg)} // repo moved November 26, 2026
 let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});DB.photos=DB.photos||{};
 if(!DB.files)DB={files:{},pend:{},tree:{}};
-/* ---------- Accounts (Supabase). SB_DEFAULT is filled in at launch (the anon key is public by design); Settings > Account can override it.
+/* ---------- Accounts (Supabase). SB_DEFAULT comes from app/config.js, written by scripts/setup-ai.ps1 (the URL and anon key are public by
+   design; empty until setup, then AI says "not switched on yet"). Settings > Account > Server (advanced) can override it.
    Signed in means every read and write goes through the Supabase adapter (app/backend.js); signed out keeps GitHub or the demo as before.
    Each account caches its files under its own key, so personal mode and account data never mix on one phone. ---------- */
-const SB_DEFAULT={url:'',anonKey:''};
+const PCFG=(typeof window!=='undefined'&&window.PULZO_CONFIG)||{};
+const SB_DEFAULT={url:String(PCFG.supabaseUrl||'').trim(),anonKey:String(PCFG.anonKey||'').trim()};
 const sbCfg=()=>{const o=LS.get('forma.sb',{})||{};return {url:String(o.url||SB_DEFAULT.url||'').trim(),anonKey:String(o.anonKey||SB_DEFAULT.anonKey||'').trim(),libBase:'lib/'}};
 const sbOn=()=>{const c=sbCfg();return !!(c.url&&c.anonKey)};
-const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false,used:null,usedDay:'',limit:5};
+const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false,used:null,usedDay:'',limit:5,ai:null,aiSent:'',aiMsg:'',coUsed:null,coDay:'',coLimit:30};
 const dbKey=()=>SBS.user?'forma.db.sb.'+SBS.user.id:'forma.db';
 const hasAcct=()=>!!(SBS.user||cfg.token);
 const mDay=()=>new Date(Date.now()+8*36e5).toISOString().slice(0,10);
@@ -3937,7 +3940,7 @@ function settingsSheet(){
 
  const personal=personalMode()?`<div class="snote" style="margin-top:0">Personal mode keeps your data in your own GitHub repo instead of an account.</div>
  <div class="fld"><label>Repository</label><input id="c_repo" value="${esc(cfg.repo)}" autocapitalize="off"></div><div class="kv"><span class="mut">Token</span><span>Saved on this phone</span></div><button class="srow" data-act="cfgSave"><span class="sp">Save repository</span></button>
- ${aiServer()?'':aiSettings()}
+ ${aiServer()?'':aiSignInCard()+aiSettings()}
  <details class="xs mut" style="margin-top:8px"><summary style="min-height:44px;display:flex;align-items:center;font-size:15px;color:var(--txt)">Phone step sync</summary><div class="sm">Pulzo Steps is a small Android app that sends your daily steps from Health Connect here every hour.</div>
  <ol class="xs mut" style="padding-left:18px;margin:8px 0"><li>Download and install it (allow Chrome to install unknown apps when asked).</li><li>Open it, tap Allow step access, and turn on both permissions.</li><li>Paste the same GitHub key you use here, then Save.</li></ol>
  <a class="btn full" style="text-decoration:none" href="downloads/forma-steps.apk" download>Download Pulzo Steps</a></details>`:'';
@@ -3958,7 +3961,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.18.2${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4366,7 +4369,10 @@ function sbSwitch(u){
  Object.keys(PHOTOS).forEach(k=>delete PHOTOS[k]);Object.keys(PHLOAD).forEach(k=>delete PHLOAD[k]);
  SBS.used=null;try{HIST.warm=false}catch(e){}
  return true}
-function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setTimeout(()=>{if(!sbSwitch(u)||!SBS.booted)return;
+function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setTimeout(()=>{
+  if(LS.get('forma.aiOnly',0)===1){if(!aiOnlyOn())return;const was=SBS.ai&&SBS.ai.id;SBS.ai=u?{id:u.id,email:u.email}:null;
+   if(u){SBS.aiSent='';SBS.aiMsg=''}if(was!==(SBS.ai&&SBS.ai.id)){aiReopenSettings();if(!UI.sheet)softRender();if(u)sbUsage()}return}
+  if(!sbSwitch(u)||!SBS.booted)return;
   SBS.sent='';SBS.msg='';if(UI.sheet&&UI.sheetFn===acctSheet)closeSheet();
   if(u){if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);sbEnter()}else render()},0)})}
 async function sbEnter(){render();await refresh(true);if(pendCount())flushSoon(200);tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
@@ -4375,7 +4381,10 @@ async function sbInit(){
  if(!sbOn()||!sbHint()){SBS.booted=true;return}
  try{
   const m=/error_description=([^&]+)/.exec(location.hash+'&'+location.search);if(m){SBS.msg=decodeURIComponent(m[1].replace(/\+/g,' '));try{history.replaceState(null,'',location.pathname)}catch(e){}}
-  sbWire();const u=await SB.auth.user();if(u){sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}
+  sbWire();let u=await SB.auth.user();
+  /* AI-only session (GitHub mode): keep the data in GitHub, only remember the account for AI calls. Without a GitHub token the flag is stale: drop that session. */
+  if(u&&LS.get('forma.aiOnly',0)===1){if(aiOnlyOn()){SBS.ai={id:u.id,email:u.email};sbUsage()}else if(!DEMO){try{await SB.auth.signOut()}catch(e){}LS.del('forma.aiOnly')}u=null}
+  if(u){sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}
  }catch(e){SBS.msg=e instanceof TypeError?'No connection to sign in right now.':String(e&&e.message||'Could not sign in.')}
  SBS.booted=true}
 async function sbSend(){
@@ -4383,7 +4392,7 @@ async function sbSend(){
  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){SBS.msg='Type your email address.';sbRedraw();return}
  if(!sbOn()){SBS.msg='Open Server (advanced) and add the server address and key first.';sbRedraw();return}
  SBS.busy=true;SBS.msg='';sbRedraw();
- try{sbWire();await SB.auth.signIn(email);SBS.sent=email}
+ try{LS.del('forma.aiOnly');SBS.ai=null;sbWire();await SB.auth.signIn(email);SBS.sent=email}
  catch(e){SBS.msg=e instanceof TypeError?'No connection. Try again when you are online.':e.status===429?'Too many tries. Wait a minute and try again.':String(e&&e.message||'Could not send the link.')}
  SBS.busy=false;sbRedraw()}
 function sbOut(){
@@ -4398,7 +4407,7 @@ function sbCfgSave(){
  if(k&&!/^[\w.-]{20,}$/.test(k)){toast('That does not look like the anon key.');return}
  if(k.split('.').length===3){try{const r=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')).replace(/^﻿/,'')).role;if(r==='service_role'){toast('That is the service role key. Never use it here. Paste the anon key.');return}}catch(e){}}
  LS.set('forma.sb',{url:u,anonKey:k});toast0('Server saved.');sbRedraw();if(!hasAcct())render()}
-async function sbUsage(){if(B.kind!=='supabase')return;try{const n=await B.aiUsage();SBS.used=n;SBS.usedDay=mDay();softRender()}catch(e){}}
+async function sbUsage(){if(!aiServer())return;try{const n=await SB.aiUsage();SBS.used=n;SBS.usedDay=mDay();softRender()}catch(e){}}
 let JSZ=null;
 function loadJSZip(){return JSZ||(JSZ=new Promise((res,rej)=>{if(window.JSZip)return res(window.JSZip);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
  s.onload=()=>res(window.JSZip);s.onerror=()=>{JSZ=null;rej(new Error('zip tool'))};document.head.appendChild(s)}))}
@@ -4523,7 +4532,7 @@ const photoRow=(act,icn,l,sub)=>`<button class="item ph2" data-act="${act}">${ic
 /* Two ways to add a photo: the phone camera (capture) or the gallery. The last choice is listed first. */
 const photoRows=(cam,gal)=>(snapPref()==='gal'?[gal,cam]:[cam,gal]).join('');
 function snapChoiceSheet(){
- if(!aiReady()){const A=FormaCopy.add,key=personalMode()||DEMO;return `<h2>${A.snapNoTitle}</h2>${key?`<button class="btn full sbtn" data-act="snapSettings">${A.setUpAi}</button>`:''}<button class="btn${key?' ghost':''} full sbtn" data-act="snapSearch">${A.snapSearch}</button>`}
+ if(!aiReady()){const A=FormaCopy.add,key=personalMode()||DEMO;return `<h2>${A.snapNoTitle}</h2>${aiOffShort()?`<div class="sm mut" id="ai_off" style="margin:-4px 0 12px">${esc(aiOffShort())}</div>`:''}${key?`<button class="btn full sbtn" data-act="snapSettings">${A.setUpAi}</button>`:''}<button class="btn${key?' ghost':''} full sbtn" data-act="snapSearch">${A.snapSearch}</button>`}
  return `<h2>Snap a meal</h2>${photoRows(photoRow('snapCam','camera','Take a photo'),photoRow('snapGal','image','Choose from gallery'))}${aiCounter()}`}
 function logSheet(){
  const h=LS.get('forma.cmdHist',[]).slice(0,10),nm=nextMealNo(UI.date);
@@ -4595,7 +4604,7 @@ function cmdSheet(){
 /* Ask AI: the whole line plus the foods already understood go to Claude; its rows join the preview (marked assumed) */
 async function cmdAI(){
  if(!CMD.res||CMD.busy)return;
- if(!aiReady()){CMD.aiErr=FormaCopy.add.cmdNoAi+(personalMode()?' '+FormaCopy.add.keyHint:'');openSheet(cmdSheet(),cmdSheet);return}
+ if(!aiReady()){CMD.aiErr=FormaCopy.add.cmdNoAi+(personalMode()?' '+(sbOn()?'To switch it on, sign in for AI or add a key in Settings, Advanced.':FormaCopy.add.keyHint):'');openSheet(cmdSheet(),cmdSheet);return}
  const my=++CMD.seq,known=[];CMD.busy=true;CMD.aiErr='';CMD.aiNotes=[];openSheet(cmdSheet(),cmdSheet);
  CMD.acts.forEach(a=>{if(a.k==='food')a.items.forEach(i=>known.push({name:i.name,amount:i.amount||'',kcal:rnd(i.kcal)}))});
  try{
@@ -4647,15 +4656,26 @@ document.addEventListener('keydown',e=>{
   cmdHi=e.key==='ArrowUp'?Math.min(h.length-1,cmdHi+1):cmdHi-1;e.target.value=cmdHi<0?'':h[cmdHi];cmdText=e.target.value}
 });
 
-/* ---------- AI (Claude): the key lives only in this phone's localStorage, calls go from this page straight to api.anthropic.com (app/ai.js) ---------- */
+/* ---------- AI (Claude). Server first (v0.19.0): signed in to a Pulzo account, every AI feature goes through our Edge Functions
+   (ai-meal, ai-coach) with the user's token, so no key is on the phone and the server keeps the daily caps and the monthly ceiling.
+   GitHub mode can "sign in for AI" only: the account's token is borrowed for AI calls, the data stays in GitHub (SBS.ai, forma.aiOnly).
+   Advanced: his own Claude key in this phone's localStorage, calls straight to api.anthropic.com (app/ai.js). ---------- */
 const aiKey=()=>{try{return localStorage.getItem('forma.aiKey')||''}catch(e){return ''}};
 const aiKeySet=k=>{try{if(k)localStorage.setItem('forma.aiKey',k);else localStorage.removeItem('forma.aiKey')}catch(e){}};
 const aiModel=()=>LS.get('forma.aiModel','haiku')==='sonnet'?'sonnet':'haiku';
 const AI={testing:false,err:'',msg:''};
 const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.slice(-6)};
 const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
-/* Signed in: the ai-meal function with the user's token, 5 reads a day counted on the server. Signed out: personal mode, the key on this phone. */
-const aiServer=()=>!!SBS.user&&B.kind==='supabase';
+/* Server AI: signed in (account), or signed in for AI only from GitHub mode. Otherwise the personal key on this phone. */
+const aiOnlyOn=()=>!DEMO&&!!cfg.token&&LS.get('forma.aiOnly',0)===1;
+const aiServer=()=>(!!SBS.user&&B.kind==='supabase')||(!!SBS.ai&&sbOn()&&aiOnlyOn());
+const aiFn=name=>(b,sig)=>SB.callFn(name,b,sig);
+/* One line for "AI is off": what is missing and how to turn it on. */
+function aiOffLine(){
+ if(!sbOn())return 'AI is not switched on yet. I can answer questions about your numbers, or add your own Claude key in Settings, Advanced.';
+ if(personalMode())return 'Sign in for AI in Settings, Advanced (your data stays in GitHub), or add your own Claude key there. I can still answer questions about your numbers.';
+ return CO().noAi}
+function aiOffShort(){if(!sbOn())return 'AI is not switched on yet. You can use your own Claude key instead.';if(personalMode())return 'Sign in for AI (your data stays in GitHub) or use your own Claude key.';return ''}
 const aiBad=()=>{const k=aiKey();return !!k&&LS.get('forma.aiBad','')===k.slice(-6)};
 const aiReady=()=>aiServer()||(!!aiKey()&&!aiBad()&&!!window.FormaAI);
 function recentNames(){const out=[],seen={};for(let i=0;i<=14&&out.length<20;i++){const f=cur(foodP(addDays(today(),-i)));((f&&f.items)||[]).slice().reverse().forEach(it=>{const k=String(it.name||'').toLowerCase();if(k&&!seen[k]&&out.length<20){seen[k]=1;out.push(String(it.name).slice(0,60))}})}return out}
@@ -4664,10 +4684,15 @@ async function aiMeal(o){
  const known=(o.known||[]).filter(k=>k&&k.name).map(k=>k.name+(k.amount?' ('+k.amount+')':''));
  const note=[o.note,known.length?'Already logged from this line, do not return them again: '+known.join('; ')+'.':''].filter(Boolean).join(' ')||undefined;
  try{
-  const r=await FormaAI.mealServer({post:(b,sig)=>B.callFn('ai-meal',b,sig),imageBase64:o.imageBase64,text:o.text,note,units:unitsNow(),recent:recentNames()});
+  const r=await FormaAI.mealServer({post:aiFn('ai-meal'),imageBase64:o.imageBase64,text:o.text,note,units:unitsNow(),recent:recentNames()});
   if(r.limit)SBS.limit=r.limit;if(r.used!=null){SBS.used=r.used;SBS.usedDay=mDay()}
   return r;
- }catch(e){if(e&&e.code==='limit'){SBS.used=SBS.limit;SBS.usedDay=mDay()}throw e}
+ }catch(e){if(e&&e.code==='limit'){if(e.limit)SBS.limit=e.limit;SBS.used=SBS.limit;SBS.usedDay=mDay()}throw e}
+}
+/* Coach through ai-coach: same short answer as the key path, own daily cap (30 by default). */
+async function aiCoach(o){
+ try{const r=await FormaAI.askServer(Object.assign({post:aiFn('ai-coach')},o));if(r.limit)SBS.coLimit=r.limit;if(r.used!=null){SBS.coUsed=r.used;SBS.coDay=mDay()}return r}
+ catch(e){if(e&&e.code==='limit'){if(e.limit)SBS.coLimit=e.limit;SBS.coUsed=SBS.coLimit;SBS.coDay=mDay()}throw e}
 }
 const aiLeft=()=>SBS.used!=null&&SBS.usedDay===mDay()?SBS.used:null;
 function aiCounter(){
@@ -4675,11 +4700,16 @@ function aiCounter(){
  const u=aiLeft(),L=SBS.limit,full=u!=null&&u>=L;
  return `<div class="xs ${full?'':'mut'}" id="ai_cnt" style="text-align:center;margin:10px 0 0;${full?'color:var(--warn)':''}">${u==null?L+' AI reads a day':u+' of '+L+' AI reads today'}</div>`}
 function aiSettings(){
- if(aiServer()){const u=aiLeft(),L=SBS.limit;
-  return `<div class="fld"><label>AI meal reading</label><div class="card" style="margin:0;padding:12px 14px">
- <div class="sm">Snap a meal and Ask AI are included with your account. No key needed.</div>
- <div class="sm" style="margin-top:8px"><b>${u==null?L+' reads a day':u+' of '+L+' AI reads used today'}</b></div>
- <div class="xs mut" style="margin-top:4px">The count resets every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div></div></div>`}
+ if(aiServer()){const u=aiLeft(),L=SBS.limit,cu=SBS.coUsed!=null&&SBS.coDay===mDay()?SBS.coUsed:null,CL=SBS.coLimit;
+  const st=AI.testing?['Testing...','var(--mut)']:AI.err?[AI.err,'var(--badtx)']:AI.msg?[AI.msg,'var(--ok)']:['',''];
+  return `<div class="fld"><label>AI</label><div class="card" style="margin:0;padding:12px 14px" id="ai_srv">
+ <div class="sm">${SBS.user?'Snap a meal, Ask AI and Coach are included with your account. No key needed.':'Signed in for AI as <b>'+esc(SBS.ai.email||'')+'</b>. Your data stays in GitHub. No key needed.'}</div>
+ <div class="sm" style="margin-top:8px"><b>${u==null?L+' meal reads a day':u+' of '+L+' AI meal reads used today'}</b></div>
+ <div class="sm" style="margin-top:2px"><b>${cu==null?CL+' Coach questions a day':cu+' of '+CL+' Coach questions used today'}</b></div>
+ <div class="xs mut" style="margin-top:4px">The counts reset every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div>
+ <button class="btn ghost full" style="margin-top:12px" data-act="aiTestServer" ${AI.testing?'disabled':''}>${AI.testing?'Testing...':'Test AI'}</button>
+ <div class="s15" id="ai_st" role="status" style="margin-top:8px;color:${st[1]};word-break:break-word">${esc(st[0])}</div>
+ ${SBS.user?'':'<button class="lnk" data-act="aiOut">Sign out of AI</button>'}</div></div>`}
  const k=aiKey(),m=aiModel(),c=FormaCopy.key;
  const st=AI.testing?[c.testing,'var(--mut)']:AI.err?[AI.err,'var(--badtx)']:!k?[c.none,'var(--mut)']:aiBad()?[c.bad,'var(--badtx)']:aiConnected()?[c.works,'var(--ok)']:[c.untested,'var(--mut)'];
  return `<div class="fld"><label>Claude key</label><div class="card" style="margin:0;padding:12px 14px">
@@ -4692,7 +4722,29 @@ function aiSettings(){
  <div class="s15" id="ai_st" role="status" style="margin-top:10px;color:${st[1]};word-break:break-word">${esc(st[0])}</div>
  ${k?`<button class="lnk" style="margin-top:4px" data-act="aiRemove">${c.remove}</button>`:''}
  <div class="xs mut" style="margin-top:8px">${c.private}</div></div></div>`}
-function aiReopenSettings(){if(UI.sheet&&UI.sheet.indexOf('id="ai_key"')>=0){const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(settingsSheet());const s2=$('#sheet');if(s2)s2.scrollTop=y}}
+/* GitHub mode: sign in to a Pulzo account for AI only (magic link). The data does not move. */
+function aiSignInCard(){
+ if(!sbOn())return `<div class="fld"><label>AI</label><div class="card" style="margin:0;padding:12px 14px" id="ai_in"><div class="sm">AI is not switched on yet. You can use your own Claude key below.</div></div></div>`;
+ const body=SBS.aiSent?`<div class="sm" style="margin-top:10px"><b>Check your email.</b> We sent a sign-in link to ${esc(SBS.aiSent)}. Open it on this phone. It can take a minute.</div><button class="lnk" data-act="aiInAgain">Use another email</button>`
+  :`<div class="fld" style="margin:10px 0 6px"><input id="ai_email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" placeholder="you@example.com" value="${esc(SBS.email)}" aria-label="Email for AI sign-in"></div>
+ <div class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:6px">${esc(SBS.aiMsg)}</div>
+ <button class="btn full" data-act="aiInSend" ${SBS.busy?'disabled':''}>${SBS.busy?'Sending...':'Email me a sign-in link'}</button>`;
+ return `<div class="fld"><label>AI</label><div class="card" style="margin:0;padding:12px 14px" id="ai_in"><div class="sm">Sign in for AI. No key needed. Your food and workouts stay in GitHub; only the AI uses your Pulzo account.</div>${body}</div></div>
+ <div class="snote">Or use your own Claude key:</div>`}
+async function aiInSend(){
+ const el=$('#ai_email'),email=el?el.value.trim():SBS.email;SBS.email=email;
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){SBS.aiMsg='Type your email address.';aiReopenSettings();return}
+ if(!sbOn()){SBS.aiMsg='AI is not switched on yet.';aiReopenSettings();return}
+ SBS.busy=true;SBS.aiMsg='';aiReopenSettings();
+ try{LS.set('forma.aiOnly',1);sbWire();await SB.auth.signIn(email);SBS.aiSent=email}
+ catch(e){SBS.aiMsg=e instanceof TypeError?'No connection. Try again when you are online.':e.status===429?'Too many tries. Wait a minute and try again.':String(e&&e.message||'Could not send the link.')}
+ SBS.busy=false;aiReopenSettings()}
+async function aiOut(){SBS.ai=null;SBS.used=null;SBS.coUsed=null;AI.msg='';AI.err='';try{await SB.auth.signOut()}catch(e){}LS.del('forma.aiOnly');aiReopenSettings();softRender();toast0('Signed out of AI. Your data is untouched.')}
+async function aiTestServer(){
+ if(AI.testing)return;AI.testing=true;AI.err='';AI.msg='';aiReopenSettings();
+ try{await FormaAI.testServer({post:aiFn('ai-coach')});AI.msg='AI works.'}catch(e){AI.err=aiErr(e)}
+ AI.testing=false;aiReopenSettings()}
+function aiReopenSettings(){if(UI.sheet&&(UI.sheet.indexOf('id="ai_key"')>=0||UI.sheet.indexOf('id="ai_srv"')>=0||UI.sheet.indexOf('id="ai_in"')>=0)){const sh=$('#sheet'),y=sh?sh.scrollTop:0;openSheet(settingsSheet());const s2=$('#sheet');if(s2)s2.scrollTop=y}}
 /* Test saves a pasted key first, so setup is: paste, pick a model, tap Test. "Works" or the plain reason. */
 async function aiTest(){
  if(AI.testing)return;
@@ -4800,7 +4852,7 @@ document.addEventListener('change',e=>{
 
 /* ---------- Coach: a chat sheet (handoff 054). What his own data can answer is answered at once, exactly, with no AI (templates in
    app/copy.js). Food (text or photo) is read with FormaAI.meal into an item table with a Log it button. Anything else goes to Claude
-   with a short note of today's numbers (FormaAI.ask, personal mode only). The day's thread lives in localStorage, per day, not synced. ---------- */
+   with a short note of today's numbers (ai-coach on the server, or FormaAI.ask with his own key). The day's thread lives in localStorage, per day, not synced. ---------- */
 const CO=()=>FormaCopy.coach;
 const COACH={draft:'',busy:false,listening:false,full:{},last:null,rec:null};
 const coKey=d=>'forma.coach.'+d;
@@ -4868,15 +4920,14 @@ function coHistory(){return coThread().filter(m=>m.text).slice(-7,-1).map(m=>({r
 async function coAnswer(text,photo,id){
  const c=CO();
  if(!photo){const d=await coData(text);if(d)return {k:'bot',text:d}}
- if(!aiReady())return {k:'bot',text:c.noAi,act:personalMode()||DEMO?'settings':''};
+ if(!aiReady())return {k:'bot',text:aiOffLine(),act:personalMode()||DEMO?'settings':''};
  const q=!photo&&coIsQ(text);
  if(!q){
   const r=await aiMeal({imageBase64:photo||undefined,text:text||undefined,today:today()});
   if(r.items.length)return {k:'bot',ai:1,meal:{items:r.items,notes:r.assumptions,date:today(),logged:0,src:id}};
   if(photo)return {k:'bot',text:c.noFood};
  }
- if(aiServer())return {k:'bot',text:c.aiOffAcct};
- const r=await FormaAI.ask({key:aiKey(),model:aiModel(),question:text,context:coContext(),history:coHistory()});
+ const r=aiServer()?await aiCoach({question:text,context:coContext(),history:coHistory()}):await FormaAI.ask({key:aiKey(),model:aiModel(),question:text,context:coContext(),history:coHistory()});
  return {k:'bot',ai:1,text:r.text}}
 async function coRespond(text,photo,id){
  COACH.busy=true;coDraw();let bot;
@@ -4902,7 +4953,7 @@ function coThreadHtml(){const c=CO(),th=coThread(),ai=aiReady();let lastPend=-1;
   if(m.k==='me')return `<div class="cm me">${m.ph?`<img class="cph" src="${esc(m.ph)}" alt="${c.photo}">`:''}${m.text?`<div class="cb">${esc(m.text)}</div>`:''}</div>`;
   if(m.meal)return `<div class="cm bt">${coMealHtml(m,i,lastPend)}</div>`;
   return `<div class="cm bt"><div class="ct">${m.ai?'<span class="cai">AI</span>':''}${esc(m.text||'')}${m.act==='settings'?`<div><button class="lnk" data-act="coSettings">${c.openSettings}</button></div>`:m.act==='retry'?`<div><button class="lnk" data-act="coRetry">${c.retry}</button></div>`:''}</div></div>`}).join('');
- if(!th.length)h=`<div class="s15 mut" style="margin:6px 0 12px">${ai?c.sub:esc(aiServer()?c.aiOffAcct:c.aiOff)}</div>${!ai&&(personalMode()||DEMO)?`<button class="lnk" data-act="coSettings" style="margin-bottom:12px">${c.openSettings}</button>`:''}<div class="cch">${c.chips.map(x=>`<button data-act="coChip" data-q="${esc(x[1])}">${x[0]}</button>`).join('')}</div>`;
+ if(!th.length)h=`<div class="s15 mut" style="margin:6px 0 12px">${ai?c.sub:esc(aiOffLine())}</div>${!ai&&(personalMode()||DEMO)?`<button class="lnk" data-act="coSettings" style="margin-bottom:12px">${c.openSettings}</button>`:''}<div class="cch">${c.chips.map(x=>`<button data-act="coChip" data-q="${esc(x[1])}">${x[0]}</button>`).join('')}</div>`;
  if(COACH.busy)h+=`<div class="cm bt" role="status" aria-label="${c.busy}"><div style="width:70%"><div class="sk" style="width:90%"></div><div class="sk w2" style="width:55%"></div></div></div>`;
  return h}
 function coDraw(){const el=$('#co_th');if(!el)return;el.innerHTML=coThreadHtml();const sh=$('#sheet');if(sh)sh.scrollTop=sh.scrollHeight}
@@ -5004,6 +5055,10 @@ document.addEventListener('click',async e=>{
   case 'leaveDemo':{const u=new URL(location.href);u.searchParams.delete('demo');location.href=u.toString();break}
   case 'cfgSave':{const r=$('#c_repo').value.trim();if(/^[\w.-]+\/[\w.-]+$/.test(r)){const go=()=>{cfg.repo=r;LS.set('forma.cfg',cfg);closeSheet();DB={files:{},pend:{},tree:{},photos:{}};persist();render();refresh(true)};if(pendCount()){askConfirm({title:'Switch repo?',body:'Some changes have not synced yet and will be lost.',yes:'Switch anyway',no:'Stay on this repo'},go);break}go()}else toast('The repo should look like owner/name.');break}
   case 'aiTest':aiTest();break;
+  case 'aiTestServer':aiTestServer();break;
+  case 'aiInSend':aiInSend();break;
+  case 'aiInAgain':SBS.aiSent='';SBS.aiMsg='';LS.del('forma.aiOnly');aiReopenSettings();break;
+  case 'aiOut':aiOut();break;
   case 'aiRemove':aiKeySet('');LS.del('forma.aiOk');LS.del('forma.aiBad');AI.err='';AI.msg='';aiReopenSettings();toast0('Key removed from this phone.');break;
   case 'aiModel':LS.set('forma.aiModel',D.m==='sonnet'?'sonnet':'haiku');aiReopenSettings();break;
   case 'snapPick':openSheet(snapChoiceSheet());break;
