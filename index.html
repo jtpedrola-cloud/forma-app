@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101114">
-<script>/* The app version: one place. The splash and Settings show it (ask 220). Bump it with CHANGELOG.md. */var APP_VER='0.20.4';</script>
+<script>/* The app version: one place. The splash and Settings show it (ask 220). Bump it with CHANGELOG.md. */var APP_VER='0.20.5';</script>
 <script>/* Pick the look before first paint so the page background and the splash follow it. applyTheme repeats this later. */(function(){try{var q=new URLSearchParams(location.search),g=function(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}},id=q.get("theme")||g("forma.look")||({daylight:"ivory",midnight:"midnight"})[g("forma.theme")]||"lime",md=q.get("mode")||g("forma.mode")||"dark",r=document.documentElement;if(["lime","ember","midnight","ivory"].indexOf(id)<0)id="lime";r.dataset.theme=id;r.dataset.mode=id==="ivory"||md==="light"?"light":"dark";var m=document.querySelector('meta[name="theme-color"]'),B={lime:["#101114","#f6f6f2"],ember:["#0b0b0d","#fbf6f3"],midnight:["#0c1020","#f3f5fb"],ivory:["#f6f5f0","#f6f5f0"]};if(m)m.setAttribute("content",B[id][r.dataset.mode==="light"?1:0])}catch(e){}})()</script>
 <style>
 /* Splash (0.17.1): the mark on the look's own background from the first paint, no fetch. Fades out once Today has drawn. */
 #splash{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;opacity:1;transition:opacity .2s ease-out}
 #splash svg{width:96px;height:96px;display:block}
 #splash.out{opacity:0;pointer-events:none}
-#splash .sver{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font:12px/1 system-ui,sans-serif;color:var(--faint);letter-spacing:.02em}
+#splash .sver{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font:12px/1 system-ui,sans-serif;color:var(--mut);letter-spacing:.02em}
 @media (prefers-reduced-motion:reduce){#splash{transition:none}}
 </style>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1498,7 +1498,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='e4fca4c7f42024bd4b79cf8dd3151641ee60d754';let verChecked=0;
+const BUILD='e470db559ba7c59cda0a686ea99810b5a54081f5';let verChecked=0;
 /* Ask 220: the check runs on open, on focus and on coming back to the foreground, even with a sheet open. A new version found
    while he is mid-edit (a sheet open, the rest timer running, the camera, or the cursor in a text box) waits as UPD and the
    one quiet reload happens the moment the screen is idle again (sheet closed, or every 3 seconds checked), so typed input is never lost.
