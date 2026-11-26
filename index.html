@@ -1475,7 +1475,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='3ba39d15296180180f6d321578b3548b08611dce';let verChecked=0;
+const BUILD='804dee3af09e436fb0ea426b134287df64ce4aa5';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1534,7 +1534,8 @@ IC.image='<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10
 const ic=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 
 /* ---------- state + cache ---------- */
-let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:'jtpedrola-cloud/forma'});
+let cfg=DEMO?{token:'demo',repo:'demo/forma'}:LS.get('forma.cfg',{token:'',repo:'lazy-zee/pulzo'});
+if(!DEMO&&cfg&&cfg.repo==='jtpedrola-cloud/forma'){cfg.repo='lazy-zee/pulzo';LS.set('forma.cfg',cfg)} // repo moved November 26, 2026
 let DB=DEMO?{files:{},pend:{},tree:{}}:LS.get('forma.db',{files:{},pend:{},tree:{}});DB.photos=DB.photos||{};
 if(!DB.files)DB={files:{},pend:{},tree:{}};
 /* ---------- Accounts (Supabase). SB_DEFAULT is filled in at launch (the anon key is public by design); Settings > Account can override it.
@@ -3852,7 +3853,7 @@ function intakeSaveKnown(){
 
 /* ---------- Setup + settings ---------- */
 function setupView(){
- const owner=esc((cfg.repo||'jtpedrola-cloud/forma').split('/')[0]);
+ const owner=esc((cfg.repo||'lazy-zee/pulzo').split('/')[0]);
  const ua=navigator.userAgent,dev=/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iPhone':'PC',d=new Date();
  const keyName=encodeURIComponent(`Pulzo ${dev} ${d.toISOString().slice(0,10)} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`);
  const keyUrl=`https://github.com/settings/personal-access-tokens/new?name=${keyName}&description=Pulzo+app+on+my+phone&target_name=${owner}&expires_in=366&contents=write`;
