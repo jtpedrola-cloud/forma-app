@@ -696,7 +696,14 @@
       auth: {
         async signIn(email) {
           var cl = await client(), c = C();
-          var r = await cl.auth.signInWithOtp({ email: email, options: { emailRedirectTo: c.redirectTo || (typeof location !== 'undefined' ? location.origin + location.pathname : undefined), shouldCreateUser: true } });
+          var r = await cl.auth.signInWithOtp({ email: email, options: { emailRedirectTo: c.redirectTo || (typeof location !== 'undefined' && !(typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ? location.origin + location.pathname : undefined), shouldCreateUser: true } });
+          if (r.error) throw new HttpErr(r.error.status || 400, r.error.message);
+          return true;
+        },
+        // the 6-digit code from the same email (works inside the iOS app, where a link cannot come back)
+        async verify(email, token) {
+          var cl = await client();
+          var r = await cl.auth.verifyOtp({ email: email, token: token, type: 'email' });
           if (r.error) throw new HttpErr(r.error.status || 400, r.error.message);
           return true;
         },
