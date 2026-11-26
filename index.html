@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='496f4e79ff074befd6b32bd8dcaf2c9ce5e68b8e';let verChecked=0;
+const BUILD='82f2a0ad38255bd866e38f9cd493740fed4a0ce6';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -3539,6 +3539,24 @@ function heroLine(pts,startW){
  return `<svg class="wl" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight from ${dl(a)} to ${dl(b)}, ${fw(mn)} to ${fw(mx)} ${wU()}. The line is the smoothed trend, the dashed line is your start weight."><text x="${L-8}" y="${(Y(mx)+4).toFixed(1)}" text-anchor="end" style="fill:var(--mut)">${fw(mx)}</text><text x="${L-8}" y="${(Y(mn)+4).toFixed(1)}" text-anchor="end" style="fill:var(--mut)">${fw(mn)}</text><line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" style="stroke:var(--faint)" stroke-width="1.5" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/><path d="${path}" fill="none" style="stroke:var(--acc)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/><circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.v).toFixed(1)}" r="4" style="fill:var(--acc)"/>${tx(L,'start',a)}${b-a>=4?tx(((X(mid))).toFixed(1),'middle',mid):''}${tx(W-R,'end',b)}</svg>`}
 /* em: with no data the value slot holds the tile's action ("Add", "Take first photo") instead of a dash or a zero. */
 const pvTile=(k,icn,val,lab,aria,act,em)=>`<button class="tile" data-act="${act||'pvTile'}" data-k="${k}" aria-label="${esc(aria)}">${ic(icn,24)}<span class="tx"><span class="tv${em?' ta':''}">${em||val}</span><span class="tlab">${lab}</span></span></button>`;
+/* Pace line (handoff 069): FormaSmart.pace, the same verdict the check-in and Axel use, as one plain line on Progress.
+   Simple mode has no food logging to judge, so every day counts as logged there and only weigh-ins gate a stall. */
+function paceLine(){
+ const pr=profile(),T=today(),simple=isSimple(),weights=[],logged=[];
+ for(let i=0;i<28;i++){const d=addDays(T,-i),w=logOf(d).weight;if(w!=null)weights.push({d,kg:w});
+  const f=view(foodP(d));if(simple||(f?(f.items||[]).length>0:!!(DB.tree&&DB.tree[foodP(d)])))logged.push(d)}
+ const p=FormaSmart.pace({weights,logged,today:T,goalRate:pr.goalRate!=null?pr.goalRate:0.7,weightKg:latestWeight(),dietStart:pr.startDate,unit:wU()});
+ if(p.state==='none')return '';
+ const r=p.rate14==null?'':fw(Math.abs(p.rate14),1)+' '+wU()+' a week';
+ const L={
+  collecting:['var(--mut)','Pace: weigh in a few more mornings this week to see if you are on track.'],
+  'on pace':['var(--ok)',simple?'On pace with your goal. Keep going.':'On pace: losing '+r+'. Keep going.'],
+  slow:['var(--mut)',simple?'A little slower than planned. No change yet, keep going.':'A little slow: losing '+r+'. No change yet, keep going.'],
+  fast:['var(--warn)',simple?'Losing faster than planned. Eat a little more each day.':'Losing faster than planned ('+r+'). Eat about 150 kcal more a day.'],
+  stall:['var(--warn)',simple?'Weight has not moved for three weeks. Walk a bit more or eat a little less.':'Weight has not moved for three weeks. Walk about 2,000 more steps a day or eat about 150 kcal less.'],
+  patchy:['var(--mut)',simple?'Too few weigh-ins to judge the pace. Weigh in most mornings.':'Too few logged days to judge the pace. Log food and weigh in most days.']}[p.state];
+ return L?`<div class="s15 pace" data-pace="${p.state}" style="margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--inset);border-left:3px solid ${L[0]}">${L[1]}</div>`:'';
+}
 function progOverview(o){
  const pr=profile(),bf=bodyFatNow(),wp=o.wp,ft=weightFit(wp),li=latestWeighIn(),gl=pr.goalRate||0,gab=Math.abs(gl);
  const ph=progPhotos(),ls=lrnList(),n=lrnCount(),mh=measHistory(),wa=mh.waist.length?mh.waist[mh.waist.length-1].v:null,u=mU();
@@ -3549,7 +3567,7 @@ function progOverview(o){
  else{
   line=sgn(+fw(delta))+fw(Math.abs(delta))+' '+wU()+' since start'+(ft.rate!=null?', '+sgn(+fw(ft.rate,1))+rateTxt+' '+wU()+' a week':'');
  }
- const hero=`<section class="vs pvh"><div class="rw"><div class="sp"><div class="lbl">Weight${li&&li.d!==today()?', '+fmtShort(li.d):''}</div>${li?`<div class="hv">${fw(li.w)}<small>${wU()}</small></div>`:''}</div><button class="lnk go" data-act="weightEdit">${li?'Log weight':'Weigh in'}</button></div><div class="s15 mut stl">${line}</div>${li&&ft.recent>=2?heroLine(wp.map(q=>({i:q.i,v:q.v})),pr.startWeight):''}</section>`;
+ const hero=`<section class="vs pvh"><div class="rw"><div class="sp"><div class="lbl">Weight${li&&li.d!==today()?', '+fmtShort(li.d):''}</div>${li?`<div class="hv">${fw(li.w)}<small>${wU()}</small></div>`:''}</div><button class="lnk go" data-act="weightEdit">${li?'Log weight':'Weigh in'}</button></div><div class="s15 mut stl">${line}</div>${li&&ft.recent>=2?heroLine(wp.map(q=>({i:q.i,v:q.v})),pr.startWeight):''}${paceLine()}</section>`;
  const tiles=`<div class="tiles">${pvTile('bf','scale',bf?bf.pct+'<small>%</small>':'','Body fat','Body fat'+(bf?', about '+bf.pct+' percent':', no estimate yet, add one')+'. Open Body.',null,bf?'':'Add')}${pvTile('photos','camera',String(ph.length),'Photos','Progress photos, '+ph.length+(ph.length===1?' session':' sessions')+'. Open Photos.'+(ph.length?'':' None yet, take the first.'),null,ph.length?'':'Take first photo')}${pvTile('meas','ruler',wa!=null?fmc(wa)+'<small>'+u+'</small>':'','Measurements','Measurements'+(wa!=null?', waist '+fmc(wa)+' '+u:', none yet, add')+'.',null,wa!=null?'':'Add')}${pvTile('learn','book',n&&ls.length?n+' of '+ls.length:'','Learn','Learn, '+(n&&ls.length?n+' of '+ls.length+' lessons done':'start the lessons'),null,n&&ls.length?'':'Start')}</div>`;
  const note=photoSkipSunday(today())?`<div class="pvn s15"><span class="sp">${OC().sunday.photoFirst}</span><button class="lnk go" data-act="pvTile" data-k="photos">Add</button></div>`:'';
  return hero+tiles+note+`<button class="lnk l0" data-act="ovHow">How this is calculated</button>`;
@@ -3586,7 +3604,7 @@ function progressView(){
  const wp=[];for(let i=0;i<30;i++){const d=addDays(T,-(29-i)),w=logOf(d).weight;if(w!=null)wp.push({i,v:w})}
  const now=wp.length?wp[wp.length-1].v:null,delta=now==null?0:now-pr.startWeight;
  const wcard=wp.length>=2?lineChart(wp.map(q=>({i:q.i,v:+fw(q.v)})),+fw(pr.startWeight)):`<div class="s15 mut">${wp.length?'One weigh-in so far. Log another to see a trend.':'No weight logged yet.'}</div>`;
- const weightCard=`<section class="vs ch"><div class="rw"><div class="lbl sp" style="margin:0">Weight, last 30 days</div><button class="lnk" data-act="weightEdit">Log weight</button></div><div class="rw"><div class="gv sp" style="font-size:28px">${now==null?'-':fw(now)}<small>${wU()}</small></div><div class="s15 mut">${now==null?'':(delta>0?'+':delta<0?'-':'')+fw(Math.abs(delta))+' since start'}</div></div>${wcard}</section>`;
+ const weightCard=`<section class="vs ch"><div class="rw"><div class="lbl sp" style="margin:0">Weight, last 30 days</div><button class="lnk" data-act="weightEdit">Log weight</button></div><div class="rw"><div class="gv sp" style="font-size:28px">${now==null?'-':fw(now)}<small>${wU()}</small></div><div class="s15 mut">${now==null?'':(delta>0?'+':delta<0?'-':'')+fw(Math.abs(delta))+' since start'}</div></div>${wcard}${isSimple()?paceLine():''}</section>`;
  const sub=subOf('progress',PROG_SUBS),hdr=headerV1('Progress',[['camOpen','Take progress photos']],subSeg('progress',PROG_SUBS)),W=x=>hdr+`<div class="v1">${x}</div>`;
  if(!MEAS_WARM){MEAS_WARM=true;loadAllLogs().then(()=>{if(UI.tab==='progress')softRender()})}
  if(sub==='photos')return W(photosCard());
@@ -3992,7 +4010,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.0${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.1${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
