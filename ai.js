@@ -2,7 +2,7 @@
  * the answer. The caller owns the key (the app keeps it in localStorage only). Browser: window.FormaAI. Node: module.exports.
  *
  *   FormaAI.meal({ key, model, imageBase64?, text?, note?, known?, profile?, today?, fetch? })
- *       -> Promise<{ items:[{ name, amount, kcal, protein, carbs, fat }], assumptions:[string] }>
+ *       -> Promise<{ items:[{ name, amount, kcal, protein, carbs, fat, qty?, unit?, sizes?, parts?:[same, no parts] }], assumptions:[string] }>
  *   FormaAI.mealServer({ post, imageBase64?, text?, note?, units, recent? })
  *       -> Promise<{ items, assumptions, used, limit }>   signed-in path through the ai-meal Edge Function (no key on the phone)
  *   FormaAI.ask({ key, model, question, context?, history?, fetch? })
@@ -53,6 +53,10 @@
     '{"items":[{"name":"Chicken adobo","amount":"200 g","kcal":420,"protein":38,"carbs":6,"fat":26}],"assumptions":["..."]}.\n' +
     'Rules:\n' +
     '- One item per food, not one per meal. name is short and plain. amount is a short phrase such as "200 g", "1 cup" or "2 pieces".\n' +
+    '- Toppings, sauces and add-ons that belong to ONE dish are parts of it: frozen yogurt with caramel sauce is one item "Frozen yogurt with caramel" with ' +
+    '"parts":[{"name":"Frozen yogurt","amount":"150 g","kcal":180,"protein":5,"carbs":32,"fat":4},{"name":"Caramel sauce","amount":"20 g","kcal":60,"protein":0,"carbs":15,"fat":0}] ' +
+    'and its own numbers are the sum of the parts. Separate foods on one plate (rice and adobo) stay separate items without parts.\n' +
+    '- If a brand or shop is visible or named, put it in brackets after the name: "Frozen yogurt with caramel (Seoul Krazy)". Never guess a brand.\n' +
     '- kcal, protein, carbs and fat are whole numbers (grams for the macros). kcal must be close to 4 x protein + 4 x carbs + 9 x fat.\n' +
     '- When no size is given use typical Filipino and fast-food portions (1 cup cooked rice is about 200 kcal and 45 g carbs; one Jollibee Chickenjoy thigh is about 320 kcal).\n' +
     '- From a photo, judge the portion by the plate, bowl, cup and hand size in view.\n' +
@@ -192,6 +196,32 @@
     return isFinite(n) && n > 0 ? Math.round(n) : 0;
   }
 
+  // One row of an answer: name, amount, four whole numbers, optional qty/unit/sizes for the portion slider and (top level
+  // only) parts. A dish with 2+ parts gets the sum of its parts (handoff 070). null for a row with no name or no numbers.
+  function mealRow(it, top) {
+    if (!it || typeof it !== 'object') return null;
+    var name = String(it.name == null ? '' : it.name).replace(/\s+/g, ' ').trim().slice(0, 80);
+    if (!name) return null;
+    var parts = top && Array.isArray(it.parts) ? it.parts.map(function (x) { return mealRow(x, false); }).filter(Boolean).slice(0, 8) : [];
+    var p = whole(it.protein), c = whole(it.carbs), f = whole(it.fat), k = whole(it.kcal);
+    if (parts.length >= 2) {
+      k = 0; p = 0; c = 0; f = 0;
+      parts.forEach(function (x) { k += x.kcal; p += x.protein; c += x.carbs; f += x.fat; });
+    }
+    if (!k) k = Math.round(4 * p + 4 * c + 9 * f);
+    if (!k && !p && !c && !f) return null;
+    var row = { name: name, amount: String(it.amount == null ? '' : it.amount).replace(/\s+/g, ' ').trim().slice(0, 60), kcal: k, protein: p, carbs: c, fat: f };
+    if (typeof it.qty === 'number' && isFinite(it.qty) && it.qty > 0 && typeof it.unit === 'string' && it.unit) { row.qty = it.qty; row.unit = it.unit.slice(0, 12); }
+    if (it.sizes && typeof it.sizes === 'object') {
+      var sz = {};
+      ['small', 'medium', 'large'].forEach(function (s) { var v = it.sizes[s]; if (typeof v === 'number' && v > 0) sz[s] = v; });
+      if (Object.keys(sz).length) row.sizes = sz;
+    }
+    if (it.estimated) row.estimated = true;
+    if (parts.length >= 2) row.parts = parts;
+    return row;
+  }
+
   // Defensive parse: fences, text around the JSON, a bare array, strings for numbers. Throws AIError('parse') with .raw.
   function parseMeal(text) {
     var raw = String(text == null ? '' : text);
@@ -204,16 +234,7 @@
       if (b >= 0 && y > b) { try { obj = { items: JSON.parse(s.slice(b, y + 1)) }; } catch (e) { obj = null; } }
     }
     if (!obj || !Array.isArray(obj.items)) throw AIError('parse', 'Could not read the answer from Claude.', raw);
-    var items = [];
-    obj.items.forEach(function (it) {
-      if (!it || typeof it !== 'object') return;
-      var name = String(it.name == null ? '' : it.name).replace(/\s+/g, ' ').trim().slice(0, 80);
-      if (!name) return;
-      var p = whole(it.protein), c = whole(it.carbs), f = whole(it.fat), k = whole(it.kcal);
-      if (!k) k = Math.round(4 * p + 4 * c + 9 * f);
-      if (!k && !p && !c && !f) return;
-      items.push({ name: name, amount: String(it.amount == null ? '' : it.amount).replace(/\s+/g, ' ').trim().slice(0, 60), kcal: k, protein: p, carbs: c, fat: f });
-    });
+    var items = obj.items.map(function (it) { return mealRow(it, true); }).filter(Boolean);
     var notes = (Array.isArray(obj.assumptions) ? obj.assumptions : []).map(function (x) { return String(x == null ? '' : x).trim(); }).filter(Boolean).slice(0, 6);
     if (obj.items.length && !items.length) throw AIError('parse', 'Could not read the foods in the answer from Claude.', raw);
     return { items: items, assumptions: notes };
@@ -289,18 +310,7 @@
     if (o.note) body.note = String(o.note);
     if (o.recent && o.recent.length) body.recent = o.recent.slice(0, 20);
     var d = await serverCall(o.post, body, 45000, 'You have used your AI meal reads for today. Add it by hand or try tomorrow.');
-    var items = [];
-    (Array.isArray(d.items) ? d.items : []).forEach(function (it) {
-      if (!it || typeof it !== 'object') return;
-      var name = String(it.name == null ? '' : it.name).replace(/\s+/g, ' ').trim().slice(0, 80);
-      if (!name) return;
-      var p = whole(it.protein), c = whole(it.carbs), f = whole(it.fat), k = whole(it.kcal);
-      if (!k) k = Math.round(4 * p + 4 * c + 9 * f);
-      if (!k && !p && !c && !f) return;
-      var row = { name: name, amount: String(it.amount == null ? '' : it.amount).replace(/\s+/g, ' ').trim().slice(0, 60), kcal: k, protein: p, carbs: c, fat: f };
-      if (it.estimated) row.estimated = true;
-      items.push(row);
-    });
+    var items = (Array.isArray(d.items) ? d.items : []).map(function (it) { return mealRow(it, true); }).filter(Boolean);
     var notes = (Array.isArray(d.assumptions) ? d.assumptions : []).map(function (x) { return String(x == null ? '' : x).trim(); }).filter(Boolean).slice(0, 8);
     return Object.assign({ items: items, assumptions: notes }, count(d));
   }
