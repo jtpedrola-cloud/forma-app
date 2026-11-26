@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='b1395dcc90fc6a1017f008a235839598932709f4';let verChecked=0;
+const BUILD='496f4e79ff074befd6b32bd8dcaf2c9ce5e68b8e';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -5515,8 +5515,9 @@ if(window.visualViewport){const kb=()=>{const v=visualViewport;document.document
   render();await refresh(true);programParam();if(/[?&]intake=1/.test(location.search))intakeOpen();else tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()});return}
  render();
  checkVersion();
- /* Signed in for AI from GitHub mode: the owner check may move this phone to server mode, so sync after it, not with the old token. */
- if(SBS.ai&&!SBS.srv&&LS.get('forma.srvNo','')!==SBS.ai.id)await sbP;
+ /* Signed in but the owner check has not answered yet: it may move this phone to server mode, so the first sync waits for it
+    (with its time limit) instead of running with the old token or the wrong account. The screen is already drawn. */
+ {const w=SBS.srv?null:(SBS.ai||SBS.user);if(w&&LS.get('forma.srvNo','')!==w.id)await sbP}
  if(hasAcct()){await refresh();if(pendCount())flushSoon(200);await programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
 })();
 </script>
