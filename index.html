@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='acee1ec3619caea8d0f1106d66037af3df7fb58b';let verChecked=0;
+const BUILD='b1395dcc90fc6a1017f008a235839598932709f4';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1547,9 +1547,11 @@ const PCFG=(typeof window!=='undefined'&&window.PULZO_CONFIG)||{};
 const SB_DEFAULT={url:String(PCFG.supabaseUrl||'').trim(),anonKey:String(PCFG.anonKey||'').trim()};
 const sbCfg=()=>{const o=LS.get('forma.sb',{})||{};return {url:String(o.url||SB_DEFAULT.url||'').trim(),anonKey:String(o.anonKey||SB_DEFAULT.anonKey||'').trim(),libBase:'lib/'}};
 const sbOn=()=>{const c=sbCfg();return !!(c.url&&c.anonKey)};
-const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false,used:null,usedDay:'',limit:5,ai:null,aiSent:'',aiMsg:'',coUsed:null,coDay:'',coLimit:30};
+const SBS={user:null,msg:'',sent:'',email:'',busy:false,booted:false,wired:false,used:null,usedDay:'',limit:5,ai:null,aiSent:'',aiMsg:'',coUsed:null,coDay:'',coLimit:30,srv:null,srvExp:false};
 const dbKey=()=>SBS.user?'forma.db.sb.'+SBS.user.id:'forma.db';
-const hasAcct=()=>!!(SBS.user||cfg.token);
+const hasAcct=()=>!!(SBS.user||SBS.srv||cfg.token);
+/* A promise that gives up after ms (a TypeError, so the app treats it like no connection). Nothing on the first screen waits on a server. */
+const withTO=(p,ms)=>new Promise((res,rej)=>{const t=setTimeout(()=>rej(new TypeError('timeout')),ms);Promise.resolve(p).then(v=>{clearTimeout(t);res(v)},e=>{clearTimeout(t);rej(e)})});
 const mDay=()=>new Date(Date.now()+8*36e5).toISOString().slice(0,10);
 let saveWarned=false;
 const persist=()=>{if(DEMO)return true;const ok=LS.set(dbKey(),DB);if(ok)saveWarned=false;else if(pendCount()&&!saveWarned){saveWarned=true;toast('Could not save on this phone. Stay online until it syncs.')}return ok};
@@ -1647,7 +1649,7 @@ const HttpErr=FormaBackend.HttpErr;
 const b64enc=s=>{const u=new TextEncoder().encode(s);let bin='';for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(bin)};
 const b64dec=s=>{const bin=atob(s.replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)};
 let KEEP=false;
-function setKeep(on){KEEP=on;GH.setKeepalive(on);SB.setKeepalive(on)}
+function setKeep(on){KEEP=on;GH.setKeepalive(on);SB.setKeepalive(on);SRV.setKeepalive(on)}
 async function gh(method,path,body,raw){
  const r=await fetch('https://api.github.com/repos/'+cfg.repo+path,{method,cache:'no-store',keepalive:KEEP&&!!body,
   headers:Object.assign({Authorization:'Bearer '+cfg.token,Accept:raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body?{'Content-Type':'application/json'}:{}),
@@ -1743,8 +1745,11 @@ const DEMOB={
 };
 const tick=()=>new Promise(r=>setTimeout(r,30));
 const SB=FormaBackend.create('supabase',sbCfg);
+/* Server mode (handoff 068): signed in by email as an owner, his GitHub data syncs through the gh-sync function. Same files,
+   same cache ('forma.db') and same pending queue as GitHub mode, so nothing waiting on the phone is lost in the switch. */
+const SRV=FormaBackend.create('server',()=>{const c=sbCfg();return {url:c.url,anonKey:c.anonKey,token:()=>withTO(SB.accessToken(),12000)}});
 let B=DEMO?DEMOB:GH;
-const useBackend=()=>{B=SBS.user?SB:(DEMO?DEMOB:GH)};
+const useBackend=()=>{B=SBS.user?SB:SBS.srv?SRV:(DEMO?DEMOB:GH)};
 if(DEMO)window.FORMA={DEMOB,DB,UI,flush:()=>flush(),refresh:()=>refresh(true)};
 
 /* ---------- sync engine ---------- */
@@ -1756,7 +1761,7 @@ function syncStrip(){
  if(!document.body)return;
  let el=document.getElementById('ostrip');const n=pendCount(),off=isOff();
  if(!off&&!(UI.sync==='error'&&n>0)){if(el)el.remove();document.body.classList.remove('offl');return}
- const w=n+' change'+(n===1?'':'s')+' waiting.',t=off?(n?'Offline. '+w:'Offline. Changes stay on this phone.'):'Sync failed. '+w;
+ const S=FormaCopy.sync,w=n+' change'+(n===1?'':'s'),t=FormaCopy.fill(off?(n?S.stripOff:S.stripOffNone):UI.syncAuth?S.stripSignIn:S.stripErr,{n:w});
  if(!el){el=document.createElement('div');el.id='ostrip';el.className='ostrip';el.setAttribute('role','status');document.body.appendChild(el)}
  if(el.textContent!==t)el.textContent=t;document.body.classList.add('offl');
 }
@@ -1764,14 +1769,18 @@ function syncStrip(){
 const toastSv=m=>toast0(isOff()?'Saved on this phone, will sync.':m);
 const isNet=e=>!(e instanceof HttpErr)&&!(e&&e.status);
 const pendCount=()=>Object.values(DB.pend).reduce((a,q)=>a+q.length,0)+Object.keys(DB.photos).length+delQ().length;
+/* Every sync error in plain words (handoff 068). errKind: net (no connection, timeout), auth (needs a sign-in), conflict
+   (409/422 after the merge tries), down (the server is not answering well). Only auth asks him to do something. */
+function errKind(e){if(isNet(e))return 'net';const s=e.status;if(s===401||s===403)return 'auth';if(s===409||s===422)return 'conflict';if(s===404&&B.kind==='github')return 'auth';return 'down'}
 function errText(e){
- if(isNet(e))return 'No connection. Your changes are saved on this phone and will sync when you are back online.';
- if(B.kind==='supabase'){if(e.status===401||e.status===403)return 'Your sign-in ended. Open Settings and sign in again.';if(e.status!==409&&e.status!==422)return 'The server said no ('+(e.status||e.message)+'). Tap the dot to retry.'}
- if(e.status===401||e.status===403)return 'GitHub rejected the token. Open settings and paste a new one.';
- if(e.status===404)return cfg.repo==='lazy-zee/pulzo'?'Your GitHub key cannot see lazy-zee/pulzo (the repo moved on November 26, 2026). Open Settings and make a new key.':'GitHub could not find the repo, or your key cannot see it. Open Settings and make a new key.';
- if(e.status===409||e.status===422)return 'Could not merge a change after 3 tries. Tap the dot to retry.';
- return 'GitHub said no ('+(e.status||e.message)+'). Tap the dot to retry.';
+ const S=FormaCopy.sync,k=errKind(e);
+ if(k==='net')return S.offline;
+ if(k==='conflict')return S.retry;
+ if(B.kind==='github'){if(k==='auth')return sbOn()?S.signInFirst:(e.status===404?S.noRepo:S.keyStopped);return S.cantReach}
+ return k==='auth'?S.signIn:S.cantReach;
 }
+/* Only a sign-in problem interrupts with a toast; everything else waits quietly in the strip and syncs later. */
+function syncFail(e){const k=errKind(e);lastErr=errText(e);UI.syncAuth=k==='auth';if(k==='auth'&&B.kind==='server')SBS.srvExp=true;setSync(k==='net'?'offline':'error',lastErr);if(k==='auth')toast(lastErr)}
 function flushSoon(ms){clearTimeout(flushT);if(!pendCount())return;setSync(navigator.onLine===false?'offline':'syncing');flushT=setTimeout(()=>flush(),ms)}
 let flushP=null;
 function flush(){
@@ -1785,9 +1794,9 @@ async function doFlush(){
  try{
   const perr=await flushPhotos();
   for(const p of Object.keys(DB.pend)){if(DB.pend[p].length)await writePath(p)}
-  if(perr){lastErr=errText(perr);setSync(isNet(perr)?'offline':'error',lastErr);if(!isNet(perr))toast(lastErr)}
-  else setSync('synced');
- }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
+  if(perr)syncFail(perr);
+  else{UI.syncAuth=false;if(B.kind==='server')srvSynced();setSync('synced')}
+ }catch(e){syncFail(e)}
  finally{flushing=false;flushP=null;if(again){again=false;flushSoon(300)}}
 }
 function commitMsg(p,ops){if(p===P_CHK)return 'app: weekly check-in';if(p===P_PROG)return 'app: edit program';if(p===P_MEALS)return 'app: saved meals';if(p==='data/recipes.json')return 'app: recipes';if(p==='data/myfoods.json')return 'app: my foods';if(p===P_EX)return 'app: new exercise '+ops.map(o=>o.id).join(', ');const m=p.match(/data\/(food|log)\/(.+)\.json/);const k=ops[0].k;const what=k.startsWith('food')?'food':k.startsWith('w')?'sets':k;return 'app: log '+what+' '+(m?m[2]:p)}
@@ -1812,10 +1821,10 @@ async function fetchFile(p,force){
  if(t==null){DB.files[p]={sha:null,base:null};return}
  DB.files[p]={sha,base:JSON.parse(t)};
 }
-let refreshing=false;
+let refreshing=false,refreshQ=false;
 async function refresh(force){
  if(!DEMO&&!hasAcct())return;
- if(refreshing)return;refreshing=true;setSync('syncing');
+ if(refreshing){if(force)refreshQ=true;return}refreshing=true;setSync('syncing');
  try{
   if(pendCount())await flush();
   const nt=await B.tree(),trunc=!!B.treeTruncated;
@@ -1825,10 +1834,11 @@ async function refresh(force){
   const d0=UI.date;want.push(foodP(d0),logP(d0));
   await Promise.all([...new Set(want)].filter(p=>DB.tree[p]).map(p=>fetchFile(p,force)));
   if(!trunc)Object.keys(DB.files).forEach(p=>{if(!DB.tree[p]&&DB.files[p].sha){DB.files[p]={sha:null,base:null}}});
-  persist();
+  persist();UI.syncAuth=false;if(B.kind==='server')srvSynced();
   if(!pendCount())setSync('synced');else flushSoon(200);
- }catch(e){lastErr=errText(e);setSync(isNet(e)?'offline':'error',lastErr);if(!isNet(e))toast(lastErr)}
+ }catch(e){syncFail(e)}
  refreshing=false;firstSync=true;try{autoFinishCheck()}catch(e){}softRender();if(B.kind==='supabase')sbUsage();
+ if(refreshQ){refreshQ=false;setTimeout(()=>refresh(true),0)}
 }
 async function loadDay(d){
  const ps=[foodP(d),logP(d)].filter(p=>DB.tree[p]&&!(DB.files[p]&&DB.files[p].sha===DB.tree[p]));
@@ -3940,11 +3950,11 @@ function settingsSheet(){
  const sw=(label,act,on,attr='')=>`<div class="sctl"><span class="sp">${label}</span><button class="swt${on?' on':''}" role="switch" aria-checked="${on}" aria-label="${esc(label)}" data-act="${act}"${attr}><i></i></button></div>`;
  const adv=aiServer()||personalMode()||DEMO;
  const anc=[['profile','Profile'],['look','Appearance'],['data','Targets and data'],['reminders','Reminders'],['units','Units'],['track','What you track'],['learn','Learn and tour'],['account','Account and backups']].concat(adv?[['advanced','Advanced']]:[]);
- const profileG=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
+ const profileG=`<div class="acr"><div class="sp"><b>${acctName()}</b><div class="xs mut">${acctLine()}</div></div>${SBS.user||(SBS.srv&&!SBS.srvExp)?'':'<button class="lnk" data-act="acctOpen">Sign in</button>'}</div>
  ${row('inOpen',pr&&pr.intake?OC().settings.redo:OC().settings.first)}${row('pedOpen','Edit program')}${row('gymOpen','My gym')}`;
  const learnG=`${row('learnOpen','Learn',lrnList().length?lrnCount()+' of '+lrnList().length+' lessons done':'')}${row('tourShow','Show the tour')}`;
  const account=`${row('shareOpen','Share a program')}${row('impOpen','Import a program')}
- <button class="srow" data-act="${SBS.user?'sbOut':'signout'}">Sign out</button>`;
+ <button class="srow" data-act="${SBS.user||SBS.srv?'sbOut':'signout'}">Sign out</button>`;
  const units=`${ctl('Weight in',`<div class="mods"><button data-act="unitsSet" data-u="kg" class="${imperial()?'':'on'}">kg</button><button data-act="unitsSet" data-u="lb" class="${imperial()?'on':''}">lb</button></div>`)}
  ${ctl('Height in',`<div class="mods"><button data-act="hUnitSet" data-u="cm" class="${hUnitNow()==='ft'?'':'on'}">cm</button><button data-act="hUnitSet" data-u="ft" class="${hUnitNow()==='ft'?'on':''}">ft</button></div>`)}
  ${ctl('Longest session, minutes',`<input id="s_smax" inputmode="numeric" value="${sessMax()}" aria-label="Longest session, minutes">`)}
@@ -3982,7 +3992,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.5${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.0${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4363,8 +4373,8 @@ function learnAfterTour(){if(!lrnNew()||LRNS().start)return;lrnSet('start','pend
 const acctKind=()=>B.kind||'demo';
 /* Personal mode: not signed in and using your own GitHub repo. Only here do the words Repository, Token, GitHub key and Claude key appear. */
 const personalMode=()=>!SBS.user&&acctKind()==='github';
-const acctName=()=>SBS.user?esc(SBS.user.email||'Pulzo account'):({github:'GitHub',supabase:'Pulzo account',demo:'Demo'})[acctKind()]||'GitHub';
-const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Pulzo account.':acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
+const acctName=()=>SBS.user?esc(SBS.user.email||'Pulzo account'):SBS.srv?esc(SBS.srv.email||'Pulzo account'):({github:'GitHub',supabase:'Pulzo account',demo:'Demo'})[acctKind()]||'GitHub';
+const acctLine=()=>SBS.user?'Signed in. Your data is saved in your Pulzo account.':SBS.srv?(SBS.srvExp?FormaCopy.sync.expired:FormaCopy.sync.acctLine):acctKind()==='demo'?'Demo mode. Nothing is saved anywhere.':'Your data lives in '+esc(cfg.repo)+', opened with your GitHub token.';
 /* Sign in with email (a magic link). supabase-js is loaded from cdnjs by the adapter only when this is used. */
 function sbServerFields(){const c=sbCfg();
  return `<details class="sm mut" style="margin-top:12px"><summary>Server (advanced)</summary><div class="fld" style="margin-top:10px"><label>Supabase URL</label><input id="sb_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co" autocapitalize="off" autocorrect="off" spellcheck="false"></div><div class="fld"><label>Anon key (public)</label><input id="sb_key" value="${esc(c.anonKey)}" placeholder="public anon key" autocapitalize="off" autocorrect="off" spellcheck="false"></div><button class="btn ghost sm" data-act="sbCfgSave">Save server</button><div class="xs mut" style="margin-top:6px">Only the public anon key goes here. Never paste a service role key.</div></details>`}
@@ -4377,6 +4387,10 @@ function sbSignInBox(){
  <div id="sb_msg" class="sm" style="color:var(--badtx);min-height:20px;margin:-4px 0 6px">${esc(SBS.msg)}</div>
  <button class="btn full" data-act="sbSend" ${SBS.busy?'disabled':''}>${SBS.busy?'Sending...':'Email me a sign-in link'}</button>`}
 function acctSheet(){
+ if(SBS.srv&&!SBS.srvExp)return `<h2>Account</h2><div class="card" style="margin:0 0 12px"><div class="sm"><b>${esc(SBS.srv.email||'')}</b></div><div class="xs mut" style="margin-top:2px">${FormaCopy.sync.acctSheet}</div></div>
+ <button class="btn ghost full" data-act="exportGo">Export my data</button>
+ <button class="btn ghost full" style="margin-top:10px" data-act="sbOut">Sign out</button>`;
+ if(SBS.srv)return `<h2>Sign in again</h2><div class="mut sm" style="margin-bottom:12px">${FormaCopy.sync.expired}</div>${sbSignInBox()}`;
  if(SBS.user)return `<h2>Account</h2><div class="card" style="margin:0 0 12px"><div class="sm"><b>${esc(SBS.user.email||'')}</b></div><div class="xs mut" style="margin-top:2px">Signed in. Your food, workouts, photos and plan are saved in your Pulzo account.</div></div>
  <button class="btn ghost full" data-act="exportGo">Export my data</button>
  <button class="btn ghost full" style="margin-top:10px" data-act="sbOut">Sign out</button>`;
@@ -4393,7 +4407,29 @@ function sbSwitch(u){
  Object.keys(PHOTOS).forEach(k=>delete PHOTOS[k]);Object.keys(PHLOAD).forEach(k=>delete PHLOAD[k]);
  SBS.used=null;try{HIST.warm=false}catch(e){}
  return true}
-function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setTimeout(()=>{
+/* Server mode (handoff 068). After any email sign-in, gh-sync is asked once whether this account owns the synced data
+   (PULZO_OWNERS). Yes: remembered in forma.srv, and every read and write goes through the server with no GitHub token.
+   No (403): remembered in forma.srvNo, and the account works as before. Unsure (offline): asked again next time. */
+const srvMine=u=>{const r=LS.get('forma.srv',null);return !!(u&&r&&r.id===u.id)};
+async function srvProbe(u){
+ if(DEMO||!u||!sbOn())return false;if(srvMine(u))return true;if(LS.get('forma.srvNo','')===u.id)return false;
+ try{const r=await withTO(SRV.who(),10000);if(r&&r.ok){LS.set('forma.srv',{id:u.id,email:u.email||r.email||''});return true}}
+ catch(e){if(e&&e.status===403)LS.set('forma.srvNo',u.id)}
+ return false}
+/* Switch to server mode. The GitHub cache and its waiting changes stay; the next sync replays them through the server. */
+function srvEnter(u,quiet){
+ const was=SBS.srv&&SBS.srv.id===u.id&&!SBS.srvExp;
+ if(SBS.user){SBS.user=null;DB=LS.get('forma.db',{files:{},pend:{},tree:{}});if(!DB.files)DB={files:{},pend:{},tree:{}};DB.photos=DB.photos||{};Object.keys(PHOTOS).forEach(k=>delete PHOTOS[k]);Object.keys(PHLOAD).forEach(k=>delete PHLOAD[k]);try{HIST.warm=false}catch(e){}}
+ SBS.srv={id:u.id,email:u.email||''};SBS.ai=SBS.srv;SBS.srvExp=false;SBS.sent='';SBS.msg='';SBS.aiSent='';SBS.aiMsg='';LS.del('forma.aiOnly');useBackend();
+ if(was||quiet)return;
+ if(UI.sheet&&UI.sheetFn===acctSheet)closeSheet();aiReopenSettings();
+ render();refresh(true).then(()=>{if(pendCount())flushSoon(200);sbUsage()});
+}
+/* After the first full sync through the server, the old GitHub token is not needed on this phone any more: remove it. */
+function srvSynced(){SBS.srvExp=false;if(cfg.token&&!pendCount()){cfg={token:'',repo:cfg.repo};LS.set('forma.cfg',cfg)}}
+function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setTimeout(async()=>{
+  if(u&&(srvMine(u)||await srvProbe(u))){srvEnter(u);return}
+  if(!u&&SBS.srv){if(!SBS.srvExp){SBS.srvExp=true;softRender()}return}
   if(LS.get('forma.aiOnly',0)===1){if(!aiOnlyOn())return;const was=SBS.ai&&SBS.ai.id;SBS.ai=u?{id:u.id,email:u.email}:null;
    if(u){SBS.aiSent='';SBS.aiMsg=''}if(was!==(SBS.ai&&SBS.ai.id)){aiReopenSettings();if(!UI.sheet)softRender();if(u)sbUsage()}return}
   if(!sbSwitch(u)||!SBS.booted)return;
@@ -4401,15 +4437,29 @@ function sbWire(){if(SBS.wired)return;SBS.wired=true;SB.auth.onChange((u)=>{setT
   if(u){if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);sbEnter()}else render()},0)})}
 async function sbEnter(){render();await refresh(true);if(pendCount())flushSoon(200);tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
 function sbHint(){try{if(/[#&?](access_token|error_description)=|[?&]code=/.test(location.hash+location.search))return true;for(let i=0;i<localStorage.length;i++){if(/^sb-.+-auth-token$/.test(localStorage.key(i)))return true}}catch(e){}return false}
+/* The signed-in user as supabase-js saved it on this phone, read straight from storage: no library, no network. */
+function sbPeek(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!/^sb-.+-auth-token$/.test(k))continue;const v=JSON.parse(localStorage.getItem(k)||'null'),u=v&&(v.user||(v.currentSession&&v.currentSession.user));if(u&&u.id)return {id:u.id,email:u.email||''}}}catch(e){}return null}
+/* Boot, part 1 (instant, before the first screen): pick the mode from what this phone remembers. */
+function sbFast(){
+ if(DEMO||!sbOn())return;const u=sbPeek();if(!u)return;
+ if(srvMine(u)){srvEnter(u,true);return}
+ if(LS.get('forma.aiOnly',0)===1){if(aiOnlyOn())SBS.ai=u;return}
+ sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}
+/* Boot, part 2 (in the background, after the first screen): load the sign-in library, check the session with a time limit,
+   ask gh-sync once whether this account owns the synced data, and correct the mode if anything changed. */
 async function sbInit(){
  if(!sbOn()||!sbHint()){SBS.booted=true;return}
  try{
   const m=/error_description=([^&]+)/.exec(location.hash+'&'+location.search);if(m){SBS.msg=decodeURIComponent(m[1].replace(/\+/g,' '));try{history.replaceState(null,'',location.pathname)}catch(e){}}
-  sbWire();let u=await SB.auth.user();
+  sbWire();let u=await withTO(SB.auth.user(),10000);
+  if(u&&(srvMine(u)||await srvProbe(u))){srvEnter(u);SBS.booted=true;return}
+  if(!u&&SBS.srv){SBS.srvExp=true;SBS.booted=true;softRender();return}
   /* AI-only session (GitHub mode): keep the data in GitHub, only remember the account for AI calls. Without a GitHub token the flag is stale: drop that session. */
   if(u&&LS.get('forma.aiOnly',0)===1){if(aiOnlyOn()){SBS.ai={id:u.id,email:u.email};sbUsage()}else if(!DEMO){try{await SB.auth.signOut()}catch(e){}LS.del('forma.aiOnly')}u=null}
-  if(u){sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}
- }catch(e){SBS.msg=e instanceof TypeError?'No connection to sign in right now.':String(e&&e.message||'Could not sign in.')}
+  const before=SBS.user&&SBS.user.id;
+  if(u){sbSwitch(u);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1)}else if(SBS.user)sbSwitch(null);
+  if((SBS.user&&SBS.user.id)!==before){SBS.booted=true;if(SBS.user)sbEnter();else{render();if(hasAcct())refresh(true)}return}
+ }catch(e){if(!(e instanceof TypeError))SBS.msg=String(e&&e.message||'Could not sign in.')}
  SBS.booted=true}
 async function sbSend(){
  const el=$('#sb_email'),email=el?el.value.trim():SBS.email;SBS.email=email;
@@ -4430,7 +4480,8 @@ function sbOut(){
  if(pendCount()){askConfirm({title:'Sign out?',body:'Some changes have not synced yet and will be lost.',yes:'Sign out anyway',no:'Stay signed in'},sbOutGo);return}
  sbOutGo()}
 async function sbOutGo(){
- const k=dbKey();try{await SB.auth.signOut()}catch(e){}
+ const k=dbKey(),srv=!!SBS.srv;try{await SB.auth.signOut()}catch(e){}
+ if(srv){LS.del('forma.srv');LS.del('forma.db');SBS.srv=null;SBS.ai=null;SBS.srvExp=false;SBS.used=null;SBS.coUsed=null;useBackend();DB={files:{},pend:{},tree:{},photos:{}};SBS.sent='';SBS.msg='';closeSheet();render();toast0(FormaCopy.sync.signedOut);if(hasAcct())refresh(true);return}
  LS.del(k);sbSwitch(null);SBS.sent='';SBS.msg='';closeSheet();render();if(hasAcct())refresh(true)}
 function sbCfgSave(){
  const u=($('#sb_url')||{value:''}).value.trim().replace(/\/+$/,''),k=($('#sb_key')||{value:''}).value.trim();
@@ -4699,7 +4750,7 @@ const aiConnected=()=>{const k=aiKey();return !!k&&LS.get('forma.aiOk','')===k.s
 const aiErr=e=>e&&e.name==='AIError'?e.message:'Something went wrong. Try again.';
 /* Server AI: signed in (account), or signed in for AI only from GitHub mode. Otherwise the personal key on this phone. */
 const aiOnlyOn=()=>!DEMO&&!!cfg.token&&LS.get('forma.aiOnly',0)===1;
-const aiServer=()=>(!!SBS.user&&B.kind==='supabase')||(!!SBS.ai&&sbOn()&&aiOnlyOn());
+const aiServer=()=>(!!SBS.user&&B.kind==='supabase')||(!!SBS.srv&&sbOn())||(!!SBS.ai&&sbOn()&&aiOnlyOn());
 const aiFn=name=>(b,sig)=>SB.callFn(name,b,sig);
 /* One line for "AI is off": what is missing and how to turn it on. */
 function aiOffLine(){
@@ -4734,13 +4785,13 @@ function aiSettings(){
  if(aiServer()){const u=aiLeft(),L=SBS.limit,cu=SBS.coUsed!=null&&SBS.coDay===mDay()?SBS.coUsed:null,CL=SBS.coLimit;
   const st=AI.testing?['Testing...','var(--mut)']:AI.err?[AI.err,'var(--badtx)']:AI.msg?[AI.msg,'var(--ok)']:['',''];
   return `<div class="fld"><label>AI</label><div class="card" style="margin:0;padding:12px 14px" id="ai_srv">
- <div class="sm">${SBS.user?'Snap a meal, Ask AI and Coach are included with your account. No key needed.':'Signed in for AI as <b>'+esc(SBS.ai.email||'')+'</b>. Your data stays in GitHub. No key needed.'}</div>
+ <div class="sm">${SBS.user?'Snap a meal, Ask AI and Coach are included with your account. No key needed.':SBS.srv?FormaCopy.sync.aiLine:'Signed in for AI as <b>'+esc(SBS.ai.email||'')+'</b>. Your data stays in GitHub. No key needed.'}</div>
  <div class="sm" style="margin-top:8px"><b>${u==null?L+' meal reads a day':u+' of '+L+' AI meal reads used today'}</b></div>
  <div class="sm" style="margin-top:2px"><b>${cu==null?CL+' Coach questions a day':cu+' of '+CL+' Coach questions used today'}</b></div>
  <div class="xs mut" style="margin-top:4px">The counts reset every day at midnight in the Philippines. Everything else in Pulzo is unlimited.</div>
  <button class="btn ghost full" style="margin-top:12px" data-act="aiTestServer" ${AI.testing?'disabled':''}>${AI.testing?'Testing...':'Test AI'}</button>
  <div class="s15" id="ai_st" role="status" style="margin-top:8px;color:${st[1]};word-break:break-word">${esc(st[0])}</div>
- ${SBS.user?'':'<button class="lnk" data-act="aiOut">Sign out of AI</button>'}</div></div>`}
+ ${SBS.user||SBS.srv?'':'<button class="lnk" data-act="aiOut">Sign out of AI</button>'}</div></div>`}
  const k=aiKey(),m=aiModel(),c=FormaCopy.key;
  const st=AI.testing?[c.testing,'var(--mut)']:AI.err?[AI.err,'var(--badtx)']:!k?[c.none,'var(--mut)']:aiBad()?[c.bad,'var(--badtx)']:aiConnected()?[c.works,'var(--ok)']:[c.untested,'var(--mut)'];
  return `<div class="fld"><label>Claude key</label><div class="card" style="margin:0;padding:12px 14px">
@@ -5456,12 +5507,16 @@ if(window.visualViewport){const kb=()=>{const v=visualViewport;document.document
 (async function boot(){
  if(/[?&]tab=workout/.test(location.search))UI.tab='workout';
  history.replaceState({tab:'today'},'');if(UI.tab!=='today')history.pushState({tab:UI.tab},'');
- await sbInit();
+ /* The first screen never waits on a server (ask 186): the mode comes from what this phone remembers (sbFast), the cached
+    data draws at once, and the sign-in library, session check and owner check run in the background with time limits. */
+ sbFast();const sbP=sbInit();
  if(DEMO){if(/[?&]tour=1/.test(location.search))LS.set('forma.tourPending',1);
   try{await DEMOB.init()}catch(e){const u=new URL(location.href);u.searchParams.delete('demo');root.innerHTML=`<div class="wrap" style="padding:48px 16px;text-align:center"><h1 style="margin-bottom:8px">Sample data did not load</h1><div class="mut sm" style="margin-bottom:16px">Check your connection and try again.</div><a class="btn full" href="${esc(location.href)}">Try again</a><a class="btn ghost full" style="margin-top:10px" href="${esc(u.toString())}">Back</a></div>`;splashOff();console.warn(e&&e.message);return}
   render();await refresh(true);programParam();if(/[?&]intake=1/.test(location.search))intakeOpen();else tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()});return}
  render();
  checkVersion();
+ /* Signed in for AI from GitHub mode: the owner check may move this phone to server mode, so sync after it, not with the old token. */
+ if(SBS.ai&&!SBS.srv&&LS.get('forma.srvNo','')!==SBS.ai.id)await sbP;
  if(hasAcct()){await refresh();if(pendCount())flushSoon(200);await programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}
 })();
 </script>

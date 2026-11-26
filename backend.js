@@ -9,6 +9,8 @@
  *   kind 'supabase' cfg = { url, anonKey, client?, fetch?, libBase?, sdkUrls?, redirectTo? }. Live since v0.9.0: the same
  *                   methods over the tables in supabase/schema.sql, one logical JSON file per day mapped to rows, photos in
  *                   the private 'photos' bucket. Details above the supabase() function. Plan: docs/specs/backend.md.
+ *   kind 'server'   cfg = { url, anonKey, token: async () => access token, fetch? }. Since v0.20.0 (handoff 068): the GitHub
+ *                   files through the gh-sync Edge Function, so no GitHub token is on the phone. Same results as 'github'.
  *
  * Methods (same names, arguments and results as the GH object in app/index.html, so it can be dropped in as
  * `const B = DEMO ? DEMOB : FormaBackend.create('github', () => cfg)`). All return Promises.
@@ -681,6 +683,8 @@
 
       /* AI meal reads used today (the server counts per Manila day) */
       async aiUsage() { return (await rows('ai_usage?kind=eq.meal&day=eq.' + manilaDay() + '&select=id')).length; },
+      /* the signed-in user's access token (HttpErr 401 when signed out). The server backend borrows it for gh-sync. */
+      async accessToken() { return (await need()).access_token; },
       /* POST to an Edge Function with the user's token. Resolves { status, data }; a network failure is the browser's TypeError. */
       async callFn(name, body, signal) {
         var c = C(), f = c.fetch || fetch, s = await need();
@@ -724,13 +728,51 @@
     return B;
   }
 
+  /* ---------- Server (handoff 068): his GitHub data through the gh-sync Edge Function, no GitHub token on the phone ----------
+   * cfg = { url, anonKey, token: async () => user access token (throws HttpErr 401 when signed out), fetch? }
+   * The GitHub adapter above runs unchanged; only its transport is swapped: each GitHub API call becomes a POST to
+   * <url>/functions/v1/gh-sync with { method, path, body, raw }, and the function answers with GitHub's own status and body.
+   * So tree, raw, meta, put (409/422 on conflict), putBin, delBin and blobURL behave exactly like GitHub mode.
+   * A network failure stays the browser's TypeError; a missing sign-in is HttpErr 401 before any request.
+   * B.who() -> { ok, email } for an owner, HttpErr 403 for anyone else. */
+  var GH_BASE = 'https://api.github.com/repos/server';
+  function server(cfgIn) {
+    var C = function () { return (typeof cfgIn === 'function' ? cfgIn() : cfgIn) || {}; };
+    var fnUrl = function () { return String(C().url || '').replace(/\/+$/, '') + '/functions/v1/gh-sync'; };
+    async function post(payload, keepalive) {
+      var c = C(), f = c.fetch || (typeof fetch !== 'undefined' ? fetch : null);
+      if (!f) throw new TypeError('fetch is not available');
+      if (!c.url || !c.anonKey || !c.token) throw new HttpErr(401);
+      var tok = await c.token();
+      return f(fnUrl(), {
+        method: 'POST', cache: 'no-store', keepalive: !!keepalive,
+        headers: { apikey: c.anonKey, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    function proxyFetch(url, o) {
+      var path = String(url).slice(GH_BASE.length), h = (o && o.headers) || {};
+      return post({ method: (o && o.method) || 'GET', path: path, body: o && o.body ? JSON.parse(o.body) : undefined,
+        raw: /raw/.test(h.Accept || '') }, o && o.keepalive);
+    }
+    var B = github(function () { return { repo: 'server', token: 'server', branch: 'main', fetch: proxyFetch }; });
+    B.kind = 'server';
+    B.who = async function () {
+      var r = await post({ op: 'who' });
+      if (!r.ok) throw new HttpErr(r.status);
+      return r.json();
+    };
+    return B;
+  }
+
   var FormaBackend = {
-    version: 2,
+    version: 3,
     HttpErr: HttpErr,
     b64enc: b64enc, b64dec: b64dec, encPath: encPath,
     create: function (kind, cfg) {
       if (kind === 'github') return github(cfg);
       if (kind === 'supabase') return supabase(cfg);
+      if (kind === 'server') return server(cfg);
       throw new Error('Unknown backend kind: ' + kind);
     }
   };

@@ -586,7 +586,28 @@
     private: 'The key stays on this phone and goes only to Anthropic.',
   };
 
+  /* Sync words (handoff 068): plain, no error codes, no GitHub or token words outside Advanced. Shown only when he can act
+     or when changes are waiting. */
+  const sync = {
+    offline: 'No connection. Your changes are saved on this phone and will sync when you are back online.',
+    cantReach: "Can't reach Pulzo right now. Your changes are saved and will sync.",
+    signIn: 'Please sign in again. Your changes are saved on this phone.',
+    signInFirst: 'Please sign in with your email in Settings. Your changes are saved on this phone.',
+    retry: 'A change did not save yet. Pulzo will try again.',
+    keyStopped: 'Your GitHub key stopped working. Open Settings, Advanced to add a new one.',
+    noRepo: 'Your GitHub key cannot open your data. Open Settings, Advanced to add a new one.',
+    stripOff: 'Offline. {n} waiting.',
+    stripOffNone: 'Offline. Changes stay on this phone.',
+    stripErr: 'Not synced yet. {n} waiting.',
+    stripSignIn: 'Please sign in again. {n} waiting.',
+    acctLine: 'Signed in. Your data syncs through your Pulzo account.',
+    acctSheet: 'Signed in. Your food, workouts, photos and plan sync through Pulzo. Nothing to paste.',
+    expired: 'Your sign-in ended. Sign in again with your email and everything syncs as before.',
+    aiLine: 'Snap a meal, Ask AI and Coach are included. No key needed.',
+    signedOut: 'Signed out. Your data is safe in your Pulzo account.',
+  };
+
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? v[k] : m));
-  root.FormaCopy = { intake, bfScale, simple, add, snap, coach, key, fill };
+  root.FormaCopy = { intake, bfScale, simple, add, snap, coach, key, sync, fill };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.FormaCopy;
 })(typeof window !== 'undefined' ? window : globalThis);
