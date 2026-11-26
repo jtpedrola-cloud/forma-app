@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='080cb82897200203235643aa025e3af57a96b9ea';let verChecked=0;
+const BUILD='b948e4a6b64fce5f354e7965811a76188cbeba2a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1768,7 +1768,7 @@ function errText(e){
  if(isNet(e))return 'No connection. Your changes are saved on this phone and will sync when you are back online.';
  if(B.kind==='supabase'){if(e.status===401||e.status===403)return 'Your sign-in ended. Open Settings and sign in again.';if(e.status!==409&&e.status!==422)return 'The server said no ('+(e.status||e.message)+'). Tap the dot to retry.'}
  if(e.status===401||e.status===403)return 'GitHub rejected the token. Open settings and paste a new one.';
- if(e.status===404)return 'GitHub could not find the repo or branch. Check the repo name in settings.';
+ if(e.status===404)return cfg.repo==='lazy-zee/pulzo'?'Your GitHub key cannot see lazy-zee/pulzo (the repo moved on November 26, 2026). Open Settings and make a new key.':'GitHub could not find the repo, or your key cannot see it. Open Settings and make a new key.';
  if(e.status===409||e.status===422)return 'Could not merge a change after 3 tries. Tap the dot to retry.';
  return 'GitHub said no ('+(e.status||e.message)+'). Tap the dot to retry.';
 }
@@ -3982,7 +3982,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.3${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.4${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
