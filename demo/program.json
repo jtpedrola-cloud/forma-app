@@ -1,0 +1,201 @@
+{
+  "name": "Upper / Lower, 4 days",
+  "summary": "A sample four-day plan: two lower days and two upper days, every muscle twice a week.",
+  "weekdays": {
+    "0": "rest",
+    "1": "la",
+    "2": "ua",
+    "3": "rest",
+    "4": "lb",
+    "5": "ub",
+    "6": "rest"
+  },
+  "sports": {
+    "3": [
+      {
+        "kind": "volleyball",
+        "min": 90
+      }
+    ],
+    "6": [
+      {
+        "kind": "jiujitsu",
+        "time": "10:00",
+        "min": 90
+      }
+    ]
+  },
+  "days": [
+    {
+      "id": "la",
+      "name": "Lower A",
+      "focus": "Quads, hamstrings, glutes, calves.",
+      "exercises": [
+        {
+          "ex": "squat",
+          "sets": 3,
+          "reps": "6-8",
+          "rest": 150
+        },
+        {
+          "ex": "romanian_deadlift",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 120
+        },
+        {
+          "ex": "leg_press",
+          "sets": 2,
+          "reps": "10-12",
+          "rest": 120
+        },
+        {
+          "ex": "seated_leg_curl",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": 90
+        },
+        {
+          "ex": "standing_calf_raise",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": 60
+        },
+        {
+          "ex": "leg_extension",
+          "sets": 2,
+          "reps": "12-15",
+          "rest": 60
+        },
+        {
+          "ex": "cable_crunch",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": 60
+        }
+      ]
+    },
+    {
+      "id": "ua",
+      "name": "Upper A",
+      "focus": "Chest, shoulders, triceps, plus rows.",
+      "exercises": [
+        {
+          "ex": "bench_press",
+          "sets": 3,
+          "reps": "6-8",
+          "rest": 150
+        },
+        {
+          "ex": "machine_row",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 120
+        },
+        {
+          "ex": "seated_db_shoulder_press",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 90
+        },
+        {
+          "ex": "lateral_raise",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": 60
+        },
+        {
+          "ex": "rope_pushdown",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": 60
+        }
+      ]
+    },
+    {
+      "id": "lb",
+      "name": "Lower B",
+      "focus": "Glutes, hamstrings, light quads, abs.",
+      "exercises": [
+        {
+          "ex": "hip_thrust",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 120
+        },
+        {
+          "ex": "leg_extension",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": 90
+        },
+        {
+          "ex": "seated_leg_curl",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": 90
+        },
+        {
+          "ex": "standing_calf_raise",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": 60
+        },
+        {
+          "ex": "hanging_leg_raise",
+          "sets": 3,
+          "reps": "10-12",
+          "rest": 60
+        }
+      ]
+    },
+    {
+      "id": "ub",
+      "name": "Upper B",
+      "focus": "Back, biceps, rear delts, upper chest.",
+      "exercises": [
+        {
+          "ex": "lat_pulldown",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 120
+        },
+        {
+          "ex": "barbell_row",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 120
+        },
+        {
+          "ex": "incline_db_press",
+          "sets": 3,
+          "reps": "8-10",
+          "rest": 90
+        },
+        {
+          "ex": "face_pull",
+          "sets": 3,
+          "reps": "12-15",
+          "rest": 60
+        },
+        {
+          "ex": "preacher_curl",
+          "sets": 2,
+          "reps": "10-12",
+          "rest": 60
+        },
+        {
+          "ex": "hammer_curl",
+          "sets": 2,
+          "reps": "10-12",
+          "rest": 60
+        }
+      ]
+    }
+  ],
+  "rules": [
+    "Warm up 5 minutes, then 2 light sets of the first lift.",
+    "Stop each set 1 to 2 reps before failure.",
+    "Hit the top of the rep range on every set, then add weight next time."
+  ]
+}

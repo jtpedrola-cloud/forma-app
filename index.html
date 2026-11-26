@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='7eff65d67bc7b6b72c0ac3d03e6b15b0dd9d368f';let verChecked=0;
+const BUILD='080cb82897200203235643aa025e3af57a96b9ea';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -1694,12 +1694,18 @@ async function flushPhotos(){
  return err;
 }
 
-/* ---------- demo backend (in memory, seeded from ../data) ---------- */
+/* ---------- demo backend (in memory, seeded from demo/: an invented sample user, never real data) ----------
+   Profile and program come from demo/. The shared library (exercises, foods, lessons) comes from lib/ on the
+   published site, ../data/ in a local checkout, and demo/exercises.json (a small subset) as the last resort.
+   A missing file never blanks the page: init throws DemoMissing and boot shows a short message. */
 let DEMOFILES=null,demoN=1;
+const demoGet=async urls=>{for(const u of urls){try{const r=await fetch(u);if(!r.ok)continue;const t=await r.text();JSON.parse(t);return t}catch(e){}}return null};
 const DEMOB={
  async init(){
-  const F={},sha={};
-  await Promise.all(['profile','program','exercises','foods','lessons'].map(async n=>{F['data/'+n+'.json']=await (await fetch('../data/'+n+'.json')).text()}));
+  const F={},sha={},miss=[];
+  const src={profile:['demo/profile.json'],program:['demo/program.json'],exercises:['lib/exercises.json','../data/exercises.json','demo/exercises.json'],foods:['lib/foods.json','../data/foods.json'],lessons:['lib/lessons.json','../data/lessons.json']};
+  await Promise.all(Object.keys(src).map(async n=>{const t=await demoGet(src[n]);if(t!=null)F['data/'+n+'.json']=t;else if(n==='foods')F['data/foods.json']='{"foods":[]}\n';else if(n!=='lessons')miss.push(n)}));
+  if(miss.length){const e=new Error('demo files missing: '+miss.join(', '));e.demoMissing=true;throw e}
   const prog=JSON.parse(F[P_PROG]),T=today();let seed=7;const rn=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
   const meals=[['breakfast','Oatmeal with banana','1 bowl',380,14,62,8],['breakfast','Eggs and toast','3 eggs, 2 toast',420,26,30,22],['lunch','Chicken adobo with rice','1 cup rice',650,42,70,20],['lunch','Tuna sandwich','1',430,32,40,14],['dinner','Grilled chicken, veg','200 g',520,48,20,18],['dinner','Beef and broccoli','1 plate',610,40,45,25],['snacks','Whey shake','1 scoop',130,25,3,2],['snacks','Banana','1',100,1,26,0]];
   for(let i=0;i<=10;i++){
@@ -3976,7 +3982,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.1${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.19.3${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4376,7 +4382,7 @@ function acctSheet(){
  <button class="btn ghost full" style="margin-top:10px" data-act="sbOut">Sign out</button>`;
  return `<h2>Sign in</h2><div class="mut sm" style="margin-bottom:12px">Sign in with your email. We send you a link, no password. Your data lives in your own Pulzo account, with 5 AI meal reads a day.</div>
  ${sbSignInBox()}${sbServerFields()}
- <div class="xs mut" style="margin-top:12px">Not signed in, Pulzo keeps using ${acctKind()==='demo'?'the demo data in this tab':'your GitHub repo ('+esc(cfg.repo)+')'}.</div>
+ ${acctKind()==='demo'?'<div class="xs mut" style="margin-top:12px">Not signed in, Pulzo keeps using the demo data in this tab.</div>':(cfg.token&&cfg.repo?'<div class="xs mut" style="margin-top:12px">Not signed in, Pulzo keeps using your GitHub repo ('+esc(cfg.repo)+').</div>':'')}
  <button class="btn ghost full" style="margin-top:12px" data-act="exportGo">Export my data first</button>`}
 const sbRedraw=()=>{if(UI.sheet&&UI.sheetFn===acctSheet)openSheet(acctSheet(),acctSheet);else if(!hasAcct())render()};
 /* Switch the whole app to a user (or back to personal mode / demo). Returns true when something changed. */
@@ -5451,7 +5457,9 @@ if(window.visualViewport){const kb=()=>{const v=visualViewport;document.document
  if(/[?&]tab=workout/.test(location.search))UI.tab='workout';
  history.replaceState({tab:'today'},'');if(UI.tab!=='today')history.pushState({tab:UI.tab},'');
  await sbInit();
- if(DEMO){if(/[?&]tour=1/.test(location.search))LS.set('forma.tourPending',1);await DEMOB.init();render();await refresh(true);programParam();if(/[?&]intake=1/.test(location.search))intakeOpen();else tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()});return}
+ if(DEMO){if(/[?&]tour=1/.test(location.search))LS.set('forma.tourPending',1);
+  try{await DEMOB.init()}catch(e){const u=new URL(location.href);u.searchParams.delete('demo');root.innerHTML=`<div class="wrap" style="padding:48px 16px;text-align:center"><h1 style="margin-bottom:8px">Sample data did not load</h1><div class="mut sm" style="margin-bottom:16px">Check your connection and try again.</div><a class="btn full" href="${esc(location.href)}">Try again</a><a class="btn ghost full" style="margin-top:10px" href="${esc(u.toString())}">Back</a></div>`;splashOff();console.warn(e&&e.message);return}
+  render();await refresh(true);programParam();if(/[?&]intake=1/.test(location.search))intakeOpen();else tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()});return}
  render();
  checkVersion();
  if(hasAcct()){await refresh();if(pendCount())flushSoon(200);await programParam();tourMaybe();lessonsLoad().then(()=>{if(UI.tab==='progress'&&!document.getElementById('learn'))softRender()})}

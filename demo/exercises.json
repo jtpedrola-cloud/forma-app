@@ -1,0 +1,1165 @@
+{
+ "muscles": {
+  "chest": {
+   "name": "Chest",
+   "anat": "Pectoralis major",
+   "does": "Pushes your arms forward and across your body. The upper fibers make the shelf under the collarbone that shows in a tank top."
+  },
+  "delts_front": {
+   "name": "Front shoulder",
+   "anat": "Anterior deltoid",
+   "does": "Lifts your arm forward. Works in every press, so it rarely needs much extra."
+  },
+  "delts_side": {
+   "name": "Side shoulder",
+   "anat": "Lateral deltoid",
+   "does": "Lifts your arm out to the side. This is the muscle that makes shoulders look wide and capped."
+  },
+  "delts_rear": {
+   "name": "Rear shoulder",
+   "anat": "Posterior deltoid",
+   "does": "Pulls your arm back. Rounds the shoulder from behind and keeps you from slouching."
+  },
+  "biceps": {
+   "name": "Biceps",
+   "anat": "Biceps brachii, brachialis",
+   "does": "Bends the elbow and turns the palm up. The brachialis underneath pushes the biceps up for a taller peak."
+  },
+  "triceps": {
+   "name": "Triceps",
+   "anat": "Triceps brachii",
+   "does": "Straightens the elbow. About two thirds of upper-arm size."
+  },
+  "forearms": {
+   "name": "Forearms and grip",
+   "anat": "Wrist flexors and extensors, brachioradialis",
+   "does": "Close your hand and hold the bar. Climbing strength lives here."
+  },
+  "abs": {
+   "name": "Abs",
+   "anat": "Rectus abdominis",
+   "does": "Curls your ribs toward your hips. The six-pack muscle. It shows when body fat is low and it is thick."
+  },
+  "obliques": {
+   "name": "Obliques",
+   "anat": "External and internal obliques",
+   "does": "Twist and side-bend your trunk. They frame the abs and tighten the waist."
+  },
+  "hip_flexors": {
+   "name": "Hip flexors",
+   "anat": "Iliopsoas, rectus femoris",
+   "does": "Lift your knee toward your chest. Work hard in leg raises and sprinting."
+  },
+  "traps": {
+   "name": "Traps",
+   "anat": "Trapezius",
+   "does": "Shrug and hold your shoulders back. The upper part shows beside the neck in a tank top."
+  },
+  "upper_back": {
+   "name": "Upper back",
+   "anat": "Rhomboids, middle trapezius",
+   "does": "Pull your shoulder blades together. Posture and a thick back."
+  },
+  "lats": {
+   "name": "Lats",
+   "anat": "Latissimus dorsi",
+   "does": "Pull your arms down and back. Width of the back. The pull-up muscle."
+  },
+  "lower_back": {
+   "name": "Lower back",
+   "anat": "Erector spinae",
+   "does": "Keep your spine straight under load."
+  },
+  "glutes": {
+   "name": "Glutes",
+   "anat": "Gluteus maximus and medius",
+   "does": "Drive your hips forward. The main engine for jumping and sprinting."
+  },
+  "quads": {
+   "name": "Quads",
+   "anat": "Quadriceps",
+   "does": "Straighten the knee. They push the floor away when you jump."
+  },
+  "hamstrings": {
+   "name": "Hamstrings",
+   "anat": "Biceps femoris, semitendinosus, semimembranosus",
+   "does": "Bend the knee and extend the hip. Protect the knee when you land."
+  },
+  "adductors": {
+   "name": "Inner thigh",
+   "anat": "Adductors",
+   "does": "Pull the legs together and help in deep squats."
+  },
+  "calves": {
+   "name": "Calves",
+   "anat": "Gastrocnemius, soleus",
+   "does": "Point the foot. The last push off the ground in a jump."
+  }
+ },
+ "exercises": {
+  "squat": {
+   "n": "Back squat",
+   "eq": "Barbell, rack",
+   "big": true,
+   "p": [
+    "quads",
+    "glutes"
+   ],
+   "s": [
+    "adductors",
+    "lower_back",
+    "abs"
+   ],
+   "c": [
+    "Bar on the upper back, big breath, brace like someone is about to punch your stomach.",
+    "Sit down between your heels, knees track over the toes.",
+    "Depth: thighs at least parallel. Drive up through the whole foot."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 60,
+     "f": 20,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "bar",
+       104,
+       33,
+       150
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      100,
+      132
+     ],
+     "t": 20,
+     "u": 60,
+     "f": 20,
+     "th": 120,
+     "sh": 190,
+     "p": [
+      [
+       "bar",
+       112,
+       58,
+       160
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Squat/1.jpg"
+   ],
+   "art": true
+  },
+  "romanian_deadlift": {
+   "n": "Romanian deadlift",
+   "eq": "Barbell",
+   "big": true,
+   "p": [
+    "hamstrings",
+    "glutes"
+   ],
+   "s": [
+    "lower_back",
+    "forearms",
+    "traps"
+   ],
+   "c": [
+    "Start standing. Push the hips back, bar slides down the thighs.",
+    "Soft knees, back flat, stop when the hamstrings are fully stretched, around mid-shin.",
+    "Drive the hips forward to stand. Bar stays close to the legs."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 178,
+     "sh": 182,
+     "p": [
+      [
+       "bar",
+       70,
+       112,
+       130
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      84,
+      110
+     ],
+     "t": 100,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "bar",
+       112,
+       164,
+       142
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"
+   ],
+   "art": true
+  },
+  "leg_press": {
+   "n": "Leg press",
+   "eq": "Machine",
+   "big": true,
+   "p": [
+    "quads",
+    "glutes"
+   ],
+   "s": [
+    "adductors"
+   ],
+   "c": [
+    "Feet mid-platform, shoulder width.",
+    "Lower until the knees are at 90 degrees or a bit deeper, lower back stays on the pad.",
+    "Press without locking the knees out."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      80,
+      140
+     ],
+     "t": 315,
+     "u": 40,
+     "f": 20,
+     "th": 60,
+     "sh": 131,
+     "p": [
+      [
+       "line",
+       92,
+       152,
+       40,
+       104
+      ],
+      [
+       "line",
+       124,
+       150,
+       182,
+       146
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      80,
+      140
+     ],
+     "t": 315,
+     "u": 40,
+     "f": 20,
+     "th": 40,
+     "sh": 85,
+     "p": [
+      [
+       "line",
+       92,
+       152,
+       40,
+       104
+      ],
+      [
+       "line",
+       124,
+       150,
+       182,
+       146
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/1.jpg"
+   ],
+   "art": true
+  },
+  "seated_leg_curl": {
+   "n": "Seated leg curl",
+   "eq": "Machine",
+   "p": [
+    "hamstrings"
+   ],
+   "s": [],
+   "c": [
+    "Pad above the heels, thigh pad locked down.",
+    "Curl all the way, pause, lower slow. Bigger stretch than the lying version."
+   ],
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/1.jpg"
+   ],
+   "art": true
+  },
+  "standing_calf_raise": {
+   "n": "Standing calf raise",
+   "eq": "Machine or step with dumbbell",
+   "p": [
+    "calves"
+   ],
+   "s": [],
+   "c": [
+    "Full stretch at the bottom, heel below the step.",
+    "Rise as high as possible, pause at the top.",
+    "Two seconds down. Calves respond to the stretch."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180
+    },
+    "b": {
+     "r": [
+      100,
+      104
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/1.jpg"
+   ],
+   "art": true
+  },
+  "cable_crunch": {
+   "n": "Cable crunch",
+   "eq": "Cable, rope",
+   "p": [
+    "abs"
+   ],
+   "s": [
+    "obliques"
+   ],
+   "c": [
+    "Kneel, rope behind your head, hips still.",
+    "Curl your ribs toward your hips. Think shortening the abs, not bowing forward.",
+    "Hold the bottom for a second. Progress the weight like any other lift."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      140
+     ],
+     "t": 0,
+     "u": 10,
+     "f": 0,
+     "th": 180,
+     "sh": 90
+    },
+    "b": {
+     "r": [
+      100,
+      140
+     ],
+     "t": 40,
+     "u": 10,
+     "f": 0,
+     "th": 180,
+     "sh": 90
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crunch/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Cable_Crunch/1.jpg"
+   ],
+   "art": true
+  },
+  "bench_press": {
+   "n": "Barbell bench press",
+   "eq": "Barbell, bench",
+   "big": true,
+   "p": [
+    "chest"
+   ],
+   "s": [
+    "delts_front",
+    "triceps"
+   ],
+   "c": [
+    "Shoulder blades pulled back and down, pinned to the bench.",
+    "Bar touches the lower chest, elbows about 45 degrees from the body.",
+    "Feet flat, drive them into the floor as you press."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      130,
+      118
+     ],
+     "t": 270,
+     "u": 110,
+     "f": 333,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "bench",
+       56,
+       126,
+       96
+      ],
+      [
+       "bar",
+       56,
+       107,
+       130
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      130,
+      118
+     ],
+     "t": 270,
+     "u": 0,
+     "f": 0,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "bench",
+       56,
+       126,
+       96
+      ],
+      [
+       "bar",
+       56,
+       72,
+       118
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/1.jpg"
+   ],
+   "art": true
+  },
+  "machine_row": {
+   "n": "Machine row",
+   "eq": "Machine",
+   "big": true,
+   "p": [
+    "upper_back",
+    "lats"
+   ],
+   "s": [
+    "biceps",
+    "delts_rear"
+   ],
+   "c": [
+    "Chest on the pad, pull to the stomach.",
+    "Squeeze the shoulder blades at the back."
+   ],
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Iso_Row/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leverage_Iso_Row/1.jpg"
+   ],
+   "art": true
+  },
+  "seated_db_shoulder_press": {
+   "n": "Seated dumbbell shoulder press",
+   "eq": "Dumbbells, upright bench",
+   "big": true,
+   "p": [
+    "delts_front",
+    "delts_side"
+   ],
+   "s": [
+    "triceps",
+    "traps"
+   ],
+   "c": [
+    "Start with the dumbbells at ear height, palms forward.",
+    "Press up until the arms are straight, do not lock out hard.",
+    "Ribs down, no arching to cheat the weight up."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      96,
+      130
+     ],
+     "t": 0,
+     "u": 190,
+     "f": 10,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "bench",
+       70,
+       134,
+       52
+      ],
+      [
+       "line",
+       72,
+       132,
+       70,
+       60
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      96,
+      130
+     ],
+     "t": 0,
+     "u": 10,
+     "f": 0,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "bench",
+       70,
+       134,
+       52
+      ],
+      [
+       "line",
+       72,
+       132,
+       70,
+       60
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Press/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Press/1.jpg"
+   ],
+   "art": true
+  },
+  "lateral_raise": {
+   "n": "Dumbbell lateral raise",
+   "eq": "Dumbbells",
+   "p": [
+    "delts_side"
+   ],
+   "s": [
+    "traps"
+   ],
+   "c": [
+    "Lean forward a few degrees, elbows slightly bent.",
+    "Raise to shoulder height, lead with the elbows, pinkies a touch higher.",
+    "Lower slowly. Light weight, full control. This is the exercise for wide shoulders."
+   ],
+   "pose": {
+    "a": {
+     "v": "f",
+     "ua": 12,
+     "fa": 12
+    },
+    "b": {
+     "v": "f",
+     "ua": 90,
+     "fa": 90
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Lateral_Raise/1.jpg"
+   ],
+   "art": true
+  },
+  "rope_pushdown": {
+   "n": "Rope triceps pushdown",
+   "eq": "Cable, rope",
+   "p": [
+    "triceps"
+   ],
+   "s": [],
+   "c": [
+    "Elbows pinned to your sides, only the forearms move.",
+    "Push down and spread the rope apart at the bottom.",
+    "Control the way up, do not let the weight pull your elbows forward."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 60,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       134,
+       8,
+       119,
+       79
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       134,
+       8,
+       100,
+       112
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown_-_Rope_Attachment/1.jpg"
+   ],
+   "art": true
+  },
+  "lat_pulldown": {
+   "n": "Lat pulldown",
+   "eq": "Cable",
+   "big": true,
+   "p": [
+    "lats"
+   ],
+   "s": [
+    "biceps",
+    "upper_back"
+   ],
+   "c": [
+    "Slight lean back, pull the bar to the upper chest.",
+    "Elbows down and back, full stretch at the top."
+   ],
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/1.jpg"
+   ],
+   "art": true
+  },
+  "barbell_row": {
+   "n": "Barbell row",
+   "eq": "Barbell",
+   "big": true,
+   "p": [
+    "lats",
+    "upper_back"
+   ],
+   "s": [
+    "biceps",
+    "lower_back",
+    "delts_rear"
+   ],
+   "c": [
+    "Hinge to about 45 degrees, back flat, knees soft.",
+    "Pull the bar to the lower stomach, elbows past the body.",
+    "No jerking with the hips. Keep every rep strict."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      84,
+      108
+     ],
+     "t": 110,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "bar",
+       112,
+       169,
+       142
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      84,
+      108
+     ],
+     "t": 110,
+     "u": 250,
+     "f": 190,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "bar",
+       82,
+       153,
+       118
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/1.jpg"
+   ],
+   "art": true
+  },
+  "face_pull": {
+   "n": "Face pull",
+   "eq": "Cable, rope",
+   "p": [
+    "delts_rear",
+    "upper_back"
+   ],
+   "s": [
+    "traps"
+   ],
+   "c": [
+    "Cable at face height. Pull the rope toward your eyes.",
+    "Finish with hands beside the ears, elbows high, like a double biceps pose.",
+    "Light weight. This is a posture and shoulder-health move."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 90,
+     "f": 90,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       164,
+       66,
+       124,
+       66
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 90,
+     "f": 315,
+     "th": 180,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       164,
+       66,
+       108,
+       50
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/1.jpg"
+   ],
+   "art": true
+  },
+  "preacher_curl": {
+   "n": "Preacher curl",
+   "eq": "Preacher bench",
+   "p": [
+    "biceps"
+   ],
+   "s": [],
+   "c": [
+    "Armpits over the top of the pad.",
+    "Lower all the way, do not bounce at the bottom."
+   ],
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/1.jpg"
+   ],
+   "art": true
+  },
+  "hip_thrust": {
+   "n": "Barbell hip thrust",
+   "eq": "Barbell, bench",
+   "big": true,
+   "p": [
+    "glutes"
+   ],
+   "s": [
+    "hamstrings",
+    "quads"
+   ],
+   "c": [
+    "Upper back on the bench, bar over the hips with a pad.",
+    "Drive the hips up until the body is flat, chin tucked, ribs down.",
+    "Squeeze at the top for a second. Shins vertical at the top."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      84,
+      140
+     ],
+     "t": 325,
+     "u": 180,
+     "f": 180,
+     "th": 80,
+     "sh": 180,
+     "p": [
+      [
+       "bench",
+       46,
+       100,
+       64
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      104,
+      104
+     ],
+     "t": 278,
+     "u": 180,
+     "f": 180,
+     "th": 110,
+     "sh": 170,
+     "p": [
+      [
+       "bench",
+       46,
+       100,
+       64
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/1.jpg"
+   ],
+   "art": true
+  },
+  "leg_extension": {
+   "n": "Leg extension",
+   "eq": "Machine",
+   "p": [
+    "quads"
+   ],
+   "s": [],
+   "c": [
+    "Pad on the shins just above the ankles, knee lined up with the pivot.",
+    "Extend fully and pause a second at the top.",
+    "Lower slowly, do not let the stack slam."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      84,
+      126
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 90,
+     "sh": 200,
+     "p": [
+      [
+       "bench",
+       66,
+       128,
+       44
+      ],
+      [
+       "line",
+       70,
+       128,
+       66,
+       80
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      84,
+      126
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 90,
+     "sh": 95,
+     "p": [
+      [
+       "bench",
+       66,
+       128,
+       44
+      ],
+      [
+       "line",
+       70,
+       128,
+       66,
+       80
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/1.jpg"
+   ],
+   "art": true
+  },
+  "hanging_leg_raise": {
+   "n": "Hanging leg raise",
+   "eq": "Bar",
+   "p": [
+    "abs",
+    "hip_flexors"
+   ],
+   "s": [
+    "forearms",
+    "obliques"
+   ],
+   "c": [
+    "Hang from the bar, legs straight or knees bent if needed.",
+    "Curl the pelvis up as the legs rise. The curl is the ab part, the lift is the hip flexors.",
+    "Lower slow, no swinging. Bonus grip work from the hang."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 0,
+     "f": 0,
+     "th": 182,
+     "sh": 178,
+     "g": 0,
+     "p": [
+      [
+       "bar",
+       50,
+       20,
+       150
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 0,
+     "f": 0,
+     "th": 90,
+     "sh": 180,
+     "g": 0,
+     "p": [
+      [
+       "bar",
+       50,
+       20,
+       150
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/1.jpg"
+   ],
+   "art": true
+  },
+  "incline_db_press": {
+   "n": "Incline dumbbell press",
+   "eq": "Dumbbells, incline bench",
+   "big": true,
+   "p": [
+    "chest"
+   ],
+   "s": [
+    "delts_front",
+    "triceps"
+   ],
+   "c": [
+    "Bench at 30 degrees. Steeper turns it into a shoulder press.",
+    "Lower until the dumbbells are level with your chest, elbows under wrists.",
+    "Press up and slightly in, do not clank the weights."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      132,
+      132
+     ],
+     "t": 315,
+     "u": 170,
+     "f": 350,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       142,
+       140,
+       76,
+       98
+      ]
+     ]
+    },
+    "b": {
+     "r": [
+      132,
+      132
+     ],
+     "t": 315,
+     "u": 5,
+     "f": 0,
+     "th": 90,
+     "sh": 180,
+     "p": [
+      [
+       "line",
+       142,
+       140,
+       76,
+       98
+      ]
+     ]
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Dumbbell_Press/1.jpg"
+   ],
+   "art": true
+  },
+  "hammer_curl": {
+   "n": "Hammer curl",
+   "eq": "Dumbbells",
+   "p": [
+    "biceps",
+    "forearms"
+   ],
+   "s": [],
+   "c": [
+    "Palms facing in like holding a hammer.",
+    "Curl to shoulder height, no swinging.",
+    "Lower slow. Hits the brachialis and the top of the forearm."
+   ],
+   "pose": {
+    "a": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 180,
+     "th": 180,
+     "sh": 180
+    },
+    "b": {
+     "r": [
+      100,
+      110
+     ],
+     "t": 0,
+     "u": 180,
+     "f": 35,
+     "th": 180,
+     "sh": 180
+    }
+   },
+   "a": [],
+   "img": [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/1.jpg"
+   ],
+   "art": true
+  }
+ }
+}

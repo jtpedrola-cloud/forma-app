@@ -1,0 +1,22 @@
+{
+  "name": "Alex",
+  "goal": "Lose about 0.5 kg a week while keeping strength.",
+  "units": "kg",
+  "startWeight": 85.9,
+  "startDate": "2026-01-01",
+  "targets": {
+    "kcal": 1810,
+    "protein": 155,
+    "carbs": 180,
+    "fat": 52
+  },
+  "stepGoal": 8000,
+  "weekStart": 0,
+  "goalRate": 0.5,
+  "body": {
+    "sex": "male",
+    "age": 34,
+    "heightCm": 180,
+    "assumed": true
+  }
+}
