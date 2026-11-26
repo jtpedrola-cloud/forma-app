@@ -1476,7 +1476,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='b948e4a6b64fce5f354e7965811a76188cbeba2a';let verChecked=0;
+const BUILD='f7e704578374f79439668e43bad83f303771d01a';let verChecked=0;
 async function checkVersion(){
  if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
  if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
@@ -3884,7 +3884,7 @@ function setupView(){
  const acct=sbOn();
  const adv=`<details id="s_adv" class="sm mut" style="margin-top:28px"><summary style="min-height:44px;display:flex;align-items:center">Advanced: use your own GitHub repo</summary><div style="margin-top:6px"><div class="card"><h3>Step 1: make your key</h3>
  <a class="btn full" style="text-decoration:none;margin:10px 0 14px" href="${keyUrl}" target="_blank" rel="noopener">Create my key on GitHub</a>
- <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>forma</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
+ <ol class="sm"><li>GitHub opens with the name and permissions already filled in.</li><li>Find <b>Repository access</b>. Tap <b>Only select repositories</b>, then pick <b>${esc((cfg.repo||'lazy-zee/pulzo').split('/')[1])}</b> from the list. This is the only thing you choose.</li><li>Scroll to the bottom and tap <b>Generate token</b>, then confirm.</li><li>Copy the long code that starts with <b>github_pat_</b>.</li></ol></div>
  <div class="card"><h3>Step 2: paste it here</h3>
  <div class="fld" style="margin-top:10px"><input id="s_tok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" autocorrect="off"></div>
  <div id="s_err" class="sm" style="color:var(--badtx);min-height:20px;margin-bottom:8px"></div><button class="btn full" data-act="setupSave">Connect</button></div>
@@ -3904,7 +3904,7 @@ async function setupSave(){
  try{const r=await gh('GET','/contents/'+P_PROFILE+'?ref=main');
   if(r.status===401){throw new Error('GitHub says this key is wrong or expired. Copy it again, or make a new one.')}
   if(r.status===403){throw new Error('This key is missing the "Contents: read and write" permission. Make a new one with the button above.')}
-  if(r.status===404)throw new Error('This key cannot see the forma repo. Make a new one and pick forma under Repository access.');
+  if(r.status===404)throw new Error('This key cannot see the '+repo.split('/')[1]+' repo. Make a new one and pick '+repo.split('/')[1]+' under Repository access.');
   if(!r.ok)throw new Error('GitHub answered '+r.status+'.');
  }catch(e){cfg=old;err.textContent=e instanceof TypeError?'No connection. Try again when you are online.':e.message;return}
  LS.set('forma.cfg',cfg);if(!LS.get('forma.tourSeen',0))LS.set('forma.tourPending',1);render();refresh(true).then(()=>setTimeout(tourMaybe,300));
