@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101114">
-<script>/* The app version: one place. The splash and Settings show it (ask 220). Bump it with CHANGELOG.md. */var APP_VER='0.20.5';</script>
+<script>/* The app version: one place. The splash and Settings show it (ask 220). Bump it with CHANGELOG.md. */var APP_VER='0.20.6';</script>
 <script>/* Pick the look before first paint so the page background and the splash follow it. applyTheme repeats this later. */(function(){try{var q=new URLSearchParams(location.search),g=function(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}},id=q.get("theme")||g("forma.look")||({daylight:"ivory",midnight:"midnight"})[g("forma.theme")]||"lime",md=q.get("mode")||g("forma.mode")||"dark",r=document.documentElement;if(["lime","ember","midnight","ivory"].indexOf(id)<0)id="lime";r.dataset.theme=id;r.dataset.mode=id==="ivory"||md==="light"?"light":"dark";var m=document.querySelector('meta[name="theme-color"]'),B={lime:["#101114","#f6f6f2"],ember:["#0b0b0d","#fbf6f3"],midnight:["#0c1020","#f3f5fb"],ivory:["#f6f5f0","#f6f5f0"]};if(m)m.setAttribute("content",B[id][r.dataset.mode==="light"?1:0])}catch(e){}})()</script>
 <style>
 /* Splash (0.17.1): the mark on the look's own background from the first paint, no fetch. Fades out once Today has drawn. */
@@ -375,7 +375,8 @@ details.ngym{margin-top:12px;border-top:1.5px solid var(--line)}details.ngym sum
 .pch{display:flex;gap:8px}.pch button{flex:1;min-height:52px;border-radius:12px;background:var(--card2);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px}
 .pch button b{font-size:14px;font-weight:600;color:var(--txt)}.pch button span{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}.pch button.on{border-color:var(--acc)}
 .psl{display:flex;align-items:center;gap:12px;margin-top:8px}.psl .prg{flex:1;height:44px}
-.pqb{display:flex;align-items:baseline;gap:4px;flex:none}.pqb .pq{width:64px;min-height:44px;padding:0 8px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}.pqb span{color:var(--mut);font-size:14px}
+.pqb{display:flex;align-items:center;gap:4px;flex:none;min-height:46px;padding:0 12px 0 0;background:var(--inset);border:1.5px solid var(--line);border-radius:12px;cursor:text}.pqb:focus-within{border-color:var(--acct)}
+.pqb .pq,#sheet .pqb .pq,#sheet .pqb .pq:focus{width:64px;min-height:44px;padding:0 2px 0 8px;border:0;border-radius:0;background:none;box-shadow:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}#sheet .pqb{background:var(--card2);border-color:transparent}#sheet .pqb:focus-within{border-color:var(--acct)}.pqb span{color:var(--mut);font-size:14px;white-space:nowrap}
 .sdish>.srt .n{font-weight:700}.sparts{margin:4px 0 0 12px;padding-left:12px;border-left:2px solid var(--line)}.sparts .srw{padding:8px 0}
 .fpt{display:flex;align-items:center;gap:4px;width:100%;min-height:44px;margin-top:-8px;padding:0;color:var(--mut);font-size:13px;text-align:left;background:none}
 .fpt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fpt,.fpl{padding-left:48px}.fpt.tl,.fpl.tl{padding-left:116px}.fpt[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -891,10 +892,10 @@ body.live:has(#rest:not([hidden])) .wrap{padding-bottom:calc(var(--tabh,58px) + 
 .v1 .vs .rw.sp0{align-items:center}
 /* Progress v3 (handoff 033, DECISIONS October 26, 2026): Overview is a home (hero line, 2 by 2 icon tiles); Photos is hero photo, thumbnail row, two tiles. No round button. */
 .v1 .pvh{margin-top:24px}
-.v1 .pvh .rw{align-items:flex-start}
+.v1 .pvh .rw{align-items:flex-start}.v1 .pvh .rw>.lnk.go{align-self:flex-end;min-height:48px;padding-top:0;padding-bottom:0}
 .v1 .pvh .lbl{margin:0 0 4px}
 .v1 .pvh .hv{font-size:40px;font-weight:600;letter-spacing:-.5px;line-height:48px;font-variant-numeric:tabular-nums}
-.v1 .pvh .hv small{font-size:15px;font-weight:400;color:var(--mut);margin-left:6px;letter-spacing:0}
+.v1 .pvh .hv small{font-size:15px;font-weight:400;color:var(--mut);margin-left:6px;letter-spacing:0;line-height:1}
 .v1 .lnk.go{color:var(--acct);text-decoration:none;font-weight:600;min-height:44px;padding:12px 0 12px 12px;flex:none}
 .v1 .pvh .stl{margin:4px 0 0}
 .v1 .pvh .wl{display:block;width:100%;height:auto;margin-top:16px}
@@ -1498,7 +1499,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='e470db559ba7c59cda0a686ea99810b5a54081f5';let verChecked=0;
+const BUILD='bb24ff72ecb7dbafcdf678689dde74b260891cf6';let verChecked=0;
 /* Ask 220: the check runs on open, on focus and on coming back to the foreground, even with a sheet open. A new version found
    while he is mid-edit (a sheet open, the rest timer running, the camera, or the cursor in a text box) waits as UPD and the
    one quiet reload happens the moment the screen is idle again (sheet closed, or every 3 seconds checked), so typed input is never lost.
@@ -2305,11 +2306,13 @@ function ckApply(){
 /* Food-group glyph for a row without a photo: the earliest food word in the name picks the group (ties go to the first group listed). No match, no tile. */
 const FOOD_GLYPHS=[['egg',/\b(?:egg|omelet|omelette|itlog|tortang|scrambled)/],['gMeat',/\b(?:chicken|chickenjoy|pork|beef|corned|adobo|sisig|lechon|bacon|sausage|longganisa|tocino|hotdog|ham|steak|meat|turkey|lamb|burger|liempo|tapa|bbq|barbecue|ribs|wings|nugget|patty|meatball)/],['gFish',/\b(?:fish|tuna|salmon|bangus|tilapia|sardine|shrimp|hipon|squid|crab|seafood|tinapa|galunggong|sushi)/],['gDrink',/\b(?:coffee|tea|milk tea|juice|soda|cola|coke|water|shake|smoothie|beer|wine|latte|cappuccino|milo|gatorade|pocari|sprite|iced|drink|kape|whey)/],['gDairy',/\b(?:milk|cheese|yogurt|yoghurt|cream|butter)/],['gSweet',/\b(?:cake|cookie|chocolate|candy|ice cream|donut|doughnut|brownie|dessert|pie|halo-halo|halo halo|flan|biscuit|cupcake|muffin|pastry|sugar)/],['gFruit',/\b(?:banana|apple|mango|orange|grape|berry|berries|papaya|pineapple|watermelon|melon|fruit|avocado|kiwi|pear|peach|lemon|calamansi)/],['gVeg',/\b(?:salad|vegetable|veggie|broccoli|spinach|kangkong|cabbage|carrot|lettuce|cucumber|tomato|ampalaya|pinakbet|chopsuey|chop suey|eggplant|talong|beans|okra|squash|kalabasa|pechay|greens)/],['gBowl',/\b(?:rice|kanin|sinangag|bread|toast|pandesal|oat|noodle|pasta|spaghetti|pancit|sandwich|wrap|tortilla|cereal|granola|cracker|bun|bagel|congee|lugaw|champorado|waffle|pancake|fries|potato|corn)/]];
 function foodGlyph(name){const n=String(name||'').toLowerCase();let best=null,at=1e9;for(const[g,re]of FOOD_GLYPHS){const m=re.exec(n);if(m&&m.index<at){at=m.index;best=g}}return best}
-function foodTile(i){if(i.photo)return `<span class="th3">${pimg(i.photo,`alt=""`)}</span>`;const g=foodGlyph(i.name);return g?`<span class="th3">${ic(g,26)}</span>`:''}
+/* A dish with parts takes its own name's glyph, else its first part's, else the bowl (ask 222). */
+function itemGlyph(i){const g=foodGlyph(i.name);if(g||!Array.isArray(i.parts)||!i.parts.length)return g;for(const p of i.parts){const q=foodGlyph(p.name);if(q)return q}return 'gBowl'}
+function foodTile(i){if(i.photo)return `<span class="th3">${pimg(i.photo,`alt=""`)}</span>`;const g=itemGlyph(i);return g?`<span class="th3">${ic(g,26)}</span>`:''}
 /* A food row in the log. A dish with parts (handoff 070) shows once, with a line under it that opens its parts. */
 const PARTS_OPEN={};
 function fiRow(i,tl){const pts=Array.isArray(i.parts)&&i.parts.length?i.parts:null,op=pts&&PARTS_OPEN[i.id];
- return `<button class="item fi${tl&&!i.photo&&!foodGlyph(i.name)?' nt':''}${pts?' hp':''}" data-act="foodEdit" data-id="${esc(i.id)}">${foodTile(i)}<span class="sp"><span class="n">${esc(i.name)}</span></span><span class="r">${fmtN(num(i.kcal))}</span></button>`
+ return `<button class="item fi${tl&&!i.photo&&!itemGlyph(i)?' nt':''}${pts?' hp':''}" data-act="foodEdit" data-id="${esc(i.id)}">${foodTile(i)}<span class="sp"><span class="n">${esc(i.name)}</span></span><span class="r">${fmtN(num(i.kcal))}</span></button>`
  +(pts?`<button class="fpt${tl?' tl':''}" data-act="partsTog" data-id="${esc(i.id)}" aria-expanded="${!!op}"><span>${op?'Hide parts':pts.map(p=>p.name).join(', ')}</span>${ic('down',14)}</button>${op?`<div class="fpl${tl?' tl':''}">${pts.map(p=>`<div class="fpr"><span class="sp">${esc(p.name)}<small>${esc(p.amount||'')}</small></span><span class="r">${fmtN(num(p.kcal))}</span></div>`).join('')}</div>`:''}`:'')}
 function foodView(){
  if(isSimple())return eatView();
@@ -2556,7 +2559,7 @@ function foodSheet(item,keep){
  <div class="fld"><label>Meal</label><div class="seg" style="margin:0" id="fm">${ms.map(k=>`<button data-act="pickMeal" data-m="${k}" class="${cur===k?'on':''}">${k}</button>`).join('')}</div></div>
  ${i.photo?`<div class="fld"><label>Photo</label><img id="f_phimg" class="phbig" data-p="${esc(i.photo)}" src="${esc(photoURL(i.photo))}" alt="" data-act="phView"><div class="row"><button class="btn ghost sm" id="f_phrm" data-act="phRemove">Remove photo</button></div></div>`:''}
  <div class="fld"><label for="f_name">Name</label><input id="f_name" value="${esc(FE.name!=null?FE.name:i.name)}" placeholder="Chicken adobo"></div>
- ${dish?`<div class="fld"><label>Parts</label>${R.parts.map((p,j)=>pRowHTML('e.'+j,p,'feDrop')).join('')}<div class="xs mut" id="fe_tot" style="margin-top:8px">${esc(feTot(R))}</div></div>`:`<div class="fld"><label for="f_amount">Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice">${R?pPicker('e',R):''}</div>
+ ${dish?`<div class="fld"><label>Parts</label>${R.parts.map((p,j)=>pRowHTML('e.'+j,p,'feDrop')).join('')}<div class="xs mut" id="fe_tot" style="margin-top:8px">${esc(feTot(R))}</div></div>`:`<div class="fld">${R?`<label>Amount</label>${pPicker('e',R)}`:`<label for="f_amount">Amount</label><input id="f_amount" value="${esc(i.amount)}" placeholder="1 cup rice">`}</div>
  <div class="g2"><div class="fld"><label for="f_kcal">Calories</label><input id="f_kcal" inputmode="decimal" value="${esc(i.kcal)}"></div><div class="fld"><label for="f_protein">Protein (g)</label><input id="f_protein" inputmode="decimal" value="${esc(i.protein)}"></div>
  <div class="fld"><label for="f_carbs">Carbs (g)</label><input id="f_carbs" inputmode="decimal" value="${esc(i.carbs)}"></div><div class="fld"><label for="f_fat">Fat (g)</label><input id="f_fat" inputmode="decimal" value="${esc(i.fat)}"></div></div>`}
  <div class="row" style="margin-top:6px"><button class="btn red" data-act="foodDel" data-id="${esc(i.id)}">Delete</button><button class="btn sp" data-act="foodSave" data-id="${esc(i.id)}">Save</button></div>`}
@@ -4947,12 +4950,16 @@ function pAmt(a){a=String(a||'').trim();const x=/^(\d+(?:[.,]\d+)?)\s*(.*)$/.exe
  if(x)return {q:num(x[1].replace(',','.')),u:(x[2]||'serving').trim()};return {q:1,u:a.replace(/^(a|an|one)\s+/i,'')||'serving'}}
 function pRow(it){const pa=num(it.qty)>0&&it.unit?{q:num(it.qty),u:String(it.unit)}:pAmt(it.amount),q=pa.q>0?pa.q:1;
  const r={name:it.name,amt:it.amount||'',u:pa.u,q,b:{q,kcal:num(it.kcal),protein:num(it.protein),carbs:num(it.carbs),fat:num(it.fat)},sizes:it.sizes||null};
- if(Array.isArray(it.parts)&&it.parts.length)r.parts=it.parts.map(pRow);return r}
+ if(Array.isArray(it.parts)&&it.parts.length){r.parts=it.parts.map(pRow);r.sig=pSig(r)}return r}
+/* A dish's amount (ask 222): its own text while the parts are untouched; once a part is resized or removed, the total weight when every part is in the same g or ml, else "1 serving". */
+const pSig=r=>r.parts.map(p=>p.parts?'['+pSig(p)+']':p.q+p.u).join('|');
+function pDishAmt(r){if(r.sig===pSig(r)&&r.amt)return r.amt;const u=r.parts[0].u;
+ if(r.parts.every(p=>!p.parts&&pW(p)&&p.u.toLowerCase()===u.toLowerCase()))return rnd(r.parts.reduce((a,p)=>a+p.q,0))+' '+u;return '1 serving'}
 const pW=r=>/^(g|ml)$/i.test(r.u);
 const pV=(r,k)=>r.parts?r.parts.reduce((a,p)=>a+pV(p,k),0):rnd(r.b[k]*r.q/r.b.q);
 const pFq=(r,q)=>pW(r)?String(rnd(q)):fq(q);
 const pUn=(r,q)=>pW(r)||/^(pc|pcs)$/i.test(r.u)?r.u:plural(q,r.u);
-const pAmtOut=r=>r.parts?(r.amt||''):r.q===r.b.q&&r.amt?r.amt:pFq(r,r.q)+' '+pUn(r,r.q);
+const pAmtOut=r=>r.parts?pDishAmt(r):r.q===r.b.q&&r.amt?r.amt:pFq(r,r.q)+' '+pUn(r,r.q);
 const pTot=rows=>rows.reduce((a,r)=>{a.k+=pV(r,'kcal');a.p+=pV(r,'protein');a.c+=pV(r,'carbs');a.f+=pV(r,'fat');return a},{k:0,p:0,c:0,f:0});
 const pItem=r=>({name:r.name,amount:pAmtOut(r),kcal:pV(r,'kcal'),protein:pV(r,'protein'),carbs:pV(r,'carbs'),fat:pV(r,'fat')});
 /* A saved item from a row: a dish keeps its parts, its own numbers are their sum. */
@@ -5460,12 +5467,12 @@ document.addEventListener('click',async e=>{
    document.querySelectorAll('#sheet .ferr').forEach(e=>e.remove());
    const name=$('#f_name').value.trim();if(!name){ferr('f_name','Give the food a name first.');return}
    const old0=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
-   if(old0&&FE.row&&FE.row.parts&&FE.id===D.id){const item=Object.assign({},old0,pSave(FE.row),{name,amount:old0.amount||''});if(foodPhoto==='remove')delete item.photo;foodPhoto=null;FE.row=null;mutate(foodP(UI.date),{k:'foodUpd',item});closeSheet();break}
+   if(old0&&FE.row&&FE.row.parts&&FE.id===D.id){const item=Object.assign({},old0,pSave(FE.row),{name});if(foodPhoto==='remove')delete item.photo;foodPhoto=null;FE.row=null;mutate(foodP(UI.date),{k:'foodUpd',item});closeSheet();break}
    const g=id=>Math.round(num($('#f_'+id).value));
    for(const [id,l] of [['kcal','Calories'],['protein','Protein'],['carbs','Carbs'],['fat','Fat']]){const x=num($('#f_'+id).value),mx=id==='kcal'?5000:500;if(x<0){ferr('f_'+id,l+' cannot be below 0.');return}if(x>mx){ferr('f_'+id,l+' is at most '+fmtN(mx)+(id==='kcal'?' per item.':' g per item.'));return}}
    const old=D.id?food(UI.date).items.find(i=>i.id===D.id):null;
    const id=D.id||uid();
-   const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount').value.trim(),kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
+   const item=Object.assign({},old||{},{id,meal:foodMeal,name,amount:$('#f_amount')?$('#f_amount').value.trim():FE.row&&FE.id===D.id?pAmtOut(FE.row):(old&&old.amount)||'',kcal:g('kcal'),protein:g('protein'),carbs:g('carbs'),fat:g('fat'),by:old?old.by:'app',t:old?old.t:new Date().toISOString()});
    if(foodPhoto==='remove')delete item.photo;
    foodPhoto=null;mutate(foodP(UI.date),{k:old?'foodUpd':'foodAdd',item});closeSheet();break}
   case 'foodDel':{const dd=UI.date,it=food(dd).items.find(i=>i.id===D.id),keep=it&&clone(it);mutate(foodP(dd),{k:'foodDel',id:D.id});closeSheet();if(keep)toastUndo('Deleted '+keep.name+'.',()=>{mutate(foodP(dd),{k:'foodAdd',item:keep})});break}
