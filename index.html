@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101114">
+<script>/* The app version: one place. The splash and Settings show it (ask 220). Bump it with CHANGELOG.md. */var APP_VER='0.20.4';</script>
 <script>/* Pick the look before first paint so the page background and the splash follow it. applyTheme repeats this later. */(function(){try{var q=new URLSearchParams(location.search),g=function(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}},id=q.get("theme")||g("forma.look")||({daylight:"ivory",midnight:"midnight"})[g("forma.theme")]||"lime",md=q.get("mode")||g("forma.mode")||"dark",r=document.documentElement;if(["lime","ember","midnight","ivory"].indexOf(id)<0)id="lime";r.dataset.theme=id;r.dataset.mode=id==="ivory"||md==="light"?"light":"dark";var m=document.querySelector('meta[name="theme-color"]'),B={lime:["#101114","#f6f6f2"],ember:["#0b0b0d","#fbf6f3"],midnight:["#0c1020","#f3f5fb"],ivory:["#f6f5f0","#f6f5f0"]};if(m)m.setAttribute("content",B[id][r.dataset.mode==="light"?1:0])}catch(e){}})()</script>
 <style>
 /* Splash (0.17.1): the mark on the look's own background from the first paint, no fetch. Fades out once Today has drawn. */
 #splash{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;opacity:1;transition:opacity .2s ease-out}
 #splash svg{width:96px;height:96px;display:block}
 #splash.out{opacity:0;pointer-events:none}
+#splash .sver{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font:12px/1 system-ui,sans-serif;color:var(--faint);letter-spacing:.02em}
 @media (prefers-reduced-motion:reduce){#splash{transition:none}}
 </style>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -581,6 +583,14 @@ details.more{position:relative}details.more>summary{list-style:none;cursor:point
 html:has(.fab){scroll-padding-bottom:calc(var(--tabh,58px) + 16px + var(--fab,56px) + 24px)}
 @media (min-width:700px){.wrap:has(.fab){padding-bottom:calc(var(--tabh,calc(57px + env(safe-area-inset-bottom))) + 56px + 16px + 96px)}}
 body:has(#ov,#cam,#lib,#ped,#gym,#hist,#svm,#tpl,#learn,#intake,#rover) .fab{display:none}
+.fab svg{transition:transform .15s ease-out}.fab.open svg{transform:rotate(45deg)}
+#fabbk{position:fixed;inset:0;z-index:25}
+#fabm{position:fixed;z-index:27;min-width:208px;padding:8px;border-radius:20px;background:var(--card2);border:1.5px solid var(--line);box-shadow:0 16px 40px -12px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:4px;transform-origin:bottom right;animation:fabin .14s ease-out}
+#fabm button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px 0 12px;border-radius:12px;background:none;color:var(--txt);font-size:16px;font-weight:600;text-align:left}
+#fabm button svg{color:var(--acct);flex:none}#fabm button:active{background:var(--inset)}
+#fabm .fmore{min-height:44px;margin-top:4px;padding-left:12px;border-top:1.5px solid var(--line);border-radius:0 0 12px 12px;font-size:14px;font-weight:500;color:var(--mut)}
+@keyframes fabin{from{opacity:0;transform:scale(.96) translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#fabm{animation:none}.fab svg{transition:none}}
 .lsh .cmdbar{margin:6px 0 0;gap:0;background:var(--inset);border:1.5px solid var(--line);border-radius:28px;padding:3px 3px 3px 18px}
 .lsh .cmdbar:focus-within{border-color:var(--acct)}
 #sheet .lsh .cmdbar input,#sheet .lsh .cmdbar input:focus{border:0;outline:none;box-shadow:none;background:none}
@@ -1453,7 +1463,7 @@ body{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
-<div id="splash" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(0 -.5)"><path d="M18.16 16.63A7.79 7.79 0 1 1 18.16 8.37" fill="none" style="stroke:var(--acl);opacity:.55" stroke-width="1.56" stroke-linecap="round"/><path d="M6.25 12.50L7.66 12.50C8.45 9.70 9.51 9.70 10.31 12.50L11.40 12.50L12.56 7.20L14.12 15.46L15.21 12.50L20.28 12.50" fill="none" style="stroke:var(--acl)" stroke-width="1.48" stroke-linecap="round" stroke-linejoin="round"/></g></svg></div>
+<div id="splash" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(0 -.5)"><path d="M18.16 16.63A7.79 7.79 0 1 1 18.16 8.37" fill="none" style="stroke:var(--acl);opacity:.55" stroke-width="1.56" stroke-linecap="round"/><path d="M6.25 12.50L7.66 12.50C8.45 9.70 9.51 9.70 10.31 12.50L11.40 12.50L12.56 7.20L14.12 15.46L15.21 12.50L20.28 12.50" fill="none" style="stroke:var(--acl)" stroke-width="1.48" stroke-linecap="round" stroke-linejoin="round"/></g></svg><span class="sver" id="sver"></span></div><script>try{document.getElementById("sver").textContent="v"+APP_VER}catch(e){}</script>
 <main class="wrap" id="root"></main>
 <div id="rest" hidden role="region" aria-label="Rest timer"></div>
 <script src="smart.js"></script>
@@ -1488,12 +1498,22 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='fea1e8884894de48ecd75a970e27f31f30a78f18';let verChecked=0;
+const BUILD='e4fca4c7f42024bd4b79cf8dd3151641ee60d754';let verChecked=0;
+/* Ask 220: the check runs on open, on focus and on coming back to the foreground, even with a sheet open. A new version found
+   while he is mid-edit (a sheet open, the rest timer running, the camera, or the cursor in a text box) waits as UPD and the
+   one quiet reload happens the moment the screen is idle again (sheet closed, or every 3 seconds checked), so typed input is never lost.
+   The service worker fetches the page under the same ?v= address, which skips GitHub Pages' 10 minute cache. */
+const UPD={v:''};
+function updIdle(){if(typeof UI!=='undefined'&&(UI.sheet||UI.rest))return false;if(document.getElementById('cam'))return false;
+ const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=='range')return false;return true}
+function updGo(){if(!UPD.v||!updIdle())return;const u=new URL(location.href);if(u.searchParams.get('v')===UPD.v.slice(0,7)){UPD.v='';return}
+ u.searchParams.set('v',UPD.v.slice(0,7));UPD.v='';location.replace(u.toString())}
+setInterval(()=>{if(UPD.v&&!document.hidden)updGo()},3000);
 async function checkVersion(){
- if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;
- if((typeof UI!=='undefined'&&(UI.sheet||UI.rest))||document.getElementById('cam'))return;verChecked=Date.now();
+ if(BUILD.startsWith('__')||DEMO||Date.now()-verChecked<20000)return;verChecked=Date.now();
+ try{if(typeof swReg!=='undefined'&&swReg)swReg.update().catch(()=>{})}catch(e){}
  try{const r=await fetch('version.txt?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
-  if(v&&v!==BUILD){const u=new URL(location.href);if(u.searchParams.get('v')===v.slice(0,7))return;u.searchParams.set('v',v.slice(0,7));location.replace(u.toString())}}catch(e){}
+  if(v&&v!==BUILD){UPD.v=v;updGo()}}catch(e){}
 }
 /* Looks (0.15.0): id, name, one-line description, daylight only. The look is saved as forma.look and the light/dark choice as forma.mode; ?theme=ember&mode=light opens one for a screenshot without saving it. forma.theme is the 0.14 key (ember was lime, daylight was light). */
 const THEMES=[['lime','Lime','Charcoal and lime',false],['ember','Ember','Black and coral',false],['midnight','Midnight','Navy and blue',false],['ivory','Ivory','Paper and forest',true]];
@@ -1533,7 +1553,7 @@ const IC={
  glove:'<path d="M7 11V7.5a4 4 0 0 1 8 0V9h2a3 3 0 0 1 3 3v2.5a6 6 0 0 1-6 6H9.5A2.5 2.5 0 0 1 7 18z"/><path d="M7 16h10"/>',
  belt:'<path d="M2.5 10.5h6.5l3 3 3-3h6.5v3.5h-6.5l-3 3-3-3H2.5z"/><path d="M10 17l-2.5 4M14 17l2.5 4"/>',
  bolt:'<path d="M13 2.5L5.5 13.5h5.5L10 21.5l8-11h-5.5z"/>',
- plate:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>',
+ plate:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
  scale:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9.5a5.5 4.5 0 0 1 8 0M12 10l1.8-1.7"/>',
  grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1.1.9-1.1 1.7M12 17.2h.01"/>',
@@ -1893,7 +1913,17 @@ function headerV1(title,items,sub=''){
  const syn={synced:'Synced',syncing:'Syncing',offline:'Offline, tap to retry',error:'Sync failed, tap to retry'}[UI.sync]||'Sync status';
  return `<header class="hv1 hv2${sub?' hwrap':''}">${MARK(20)}${title?`<h1>${title}</h1>`:'<h1 class="sro">Pulzo</h1><span class="sp0"></span>'}<details class="more"><summary class="ib" aria-label="More">${ic('more',20)}</summary><div class="mpanel">${items.map(mi).join('')}${profile()&&!isSimple()?mi(['coachOpen','Coach']):''}${mi(['learnOpen','Learn'])}${mi(['refresh','Refresh'])}${mi(['settings','Settings'])}<button class="mi syn" data-act="retry"><span class="dot ${UI.sync}" id="sd"></span>${syn}</button></div></details>${profile()?`<button class="ib" data-act="help" aria-label="Help for this screen">${ic('help',20)}</button>`:''}${sub}</header>`;
 }
-const logFab=()=>`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
+/* Ask 221: on Today and Food (counting mode) the + opens a small menu right above it: Snap, Search, Quick add, and the old
+   log sheet as a quieter last row (weight, steps, the typed line). Nothing in this flow focuses a text box, so the keyboard
+   only opens when he taps one. Tap outside or + again closes it. Simple mode and no food module keep the log sheet. */
+const fabMenuOn=()=>modOn('food')&&!isSimple();
+const logFab=plain=>fabMenuOn()&&!plain?`<button class="fab" data-act="fabMenu" aria-haspopup="menu" aria-expanded="false" aria-label="Log food">${ic('plus',28)}</button>`:`<button class="fab" data-act="logOpen" aria-label="Log food, weight or steps">${ic('plus',28)}</button>`;
+function fabClose(){const m=document.getElementById('fabm'),b=document.getElementById('fabbk');if(m)m.remove();if(b)b.remove();document.querySelectorAll('.fab[data-act=fabMenu]').forEach(f=>{f.setAttribute('aria-expanded','false');f.classList.remove('open')})}
+function fabOpen(){fabClose();const f=document.querySelector('.fab[data-act=fabMenu]');if(!f)return;
+ const nm=nextMealNo(UI.date),row=(act,icn,l,x='')=>`<button role="menuitem" data-act="${act}"${x}>${ic(icn,20)}<span>${l}</span></button>`;
+ document.body.insertAdjacentHTML('beforeend',`<div id="fabbk" data-act="fabClose"></div><div id="fabm" role="menu" aria-label="Log food">${row('fabSnap','camera','Snap')}${row('fabSearch','search','Search',` data-m="${nm}"`)}${row('fabQuick','plate','Quick add',` data-m="${nm}"`)}<button role="menuitem" class="fmore" data-act="logOpen">Weight, steps and more</button></div>`);
+ const r=f.getBoundingClientRect(),m=document.getElementById('fabm');m.style.right=Math.max(16,innerWidth-r.right)+'px';m.style.bottom=(innerHeight-r.top+12)+'px';
+ f.setAttribute('aria-expanded','true');f.classList.add('open')}
 document.addEventListener('click',e=>{document.querySelectorAll('details.more[open]').forEach(d=>{if(!d.contains(e.target)||e.target.closest('.mi'))d.open=false})});
 /* Modules: Food, Workout and Activity can be switched off in Settings (profile.modules). Today and Progress always stay.
    Every tab has the same shape: a segmented control under the header (remembered per tab in forma.sub), main action on top. */
@@ -2433,7 +2463,7 @@ function adDrawMore(){const el=$('#ad_more');if(!el)return;const A=AC(),m=AD.man
    <div class="g3"><div class="fld"><label for="am_p">Protein g</label><input id="am_p" inputmode="decimal" placeholder="0"></div><div class="fld"><label for="am_c">Carbs g</label><input id="am_c" inputmode="decimal" placeholder="0"></div><div class="fld"><label for="am_f">Fat g</label><input id="am_f" inputmode="decimal" placeholder="0"></div></div>
    <button class="btn ghost full" data-act="adManAdd">Add to list</button></div>`:row('adMan','grid',A.man[0],A.man[1]))
   +row('snapPick','camera',A.snap[0],ai?A.snapOn:A.snapNo,'mut');
- if(m){const n=$('#am_name');if(n&&!m.name)n.focus()}}
+ if(m){const n=$('#am_name');if(n&&!m.name&&!m.nofocus)n.focus()}}
 function adDraw(){if(AD.v==='cook'){adDrawList();$('#ad_bk').innerHTML=RC.items.map(adRow).join('');rcDrawSrv();adDrawTot();return}
  adDrawList();$('#ad_bk').innerHTML=(AD.basket.length?`<div class="adl">${AC().yourMeal}</div>`:'')+AD.basket.map(adRow).join('')+(AD.photo?`<div class="adph"><img src="${esc(AD.photo)}" alt=""><span class="sm sp">Photo goes with this meal</span><button class="lnk" data-act="adPhotoOff">Remove</button></div>`:'');
  adDrawMeal();adDrawMore();adDrawTot()}
@@ -2444,7 +2474,7 @@ function adShell(){
  if(AD.v==='mine')return adMineShell();
  if(AD.v==='manage')return adManageShell();
  return `<h2 class="hh">${AC().title}${hqBtn('addfood')}</h2><div id="ad_sub" style="margin:-8px 0 8px"></div><div id="ad_meal"></div>
-  <div class="fld"><label for="ad_q" class="sro">Search foods</label><input id="ad_q" data-af type="search" enterkeyhint="search" placeholder="${esc(AC().searchPh)}" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(AD.q)}"></div>
+  <div class="fld"><label for="ad_q" class="sro">Search foods</label><input id="ad_q" type="search" enterkeyhint="search" placeholder="${esc(AC().searchPh)}" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(AD.q)}"></div>
   <div id="ad_list"></div><div id="ad_bk"></div><div class="adtot" id="ad_tot"></div><div id="ad_more"></div><div id="ad_cta"></div>`}
 function adView(v){AD.v=v;openSheet(adShell());if(v==='main'||v==='cook')adDraw();if(v==='cook')rcDrawSrv()}
 function addOpen(meal,o={}){
@@ -3649,7 +3679,7 @@ function stepsHero(d){
  return `<section class="hero h3 s3" data-tour="steps">${RING_DEFS}<div class="lbl">${d===today()?'Today':fmtShort(d)}</div><button class="hk" data-act="stepsEdit" aria-label="Steps today, ${st==null?'none logged':fm(st)} of ${fm(sg)}, tap to edit">${sring(st||0,sg,168,4,`<b class="big">${st==null?'-':fm(st)}</b><span class="of">of ${fm(sg)}</span>`)}</button><div class="s15 mut stl">${line}</div><button class="lnk" data-act="stepsEdit">Log steps</button></section>`}
 function activityView(){
  const pr=profile(),T=today(),fm=n=>n.toLocaleString('en-US');
- const sub=subOf('activity',ACT_SUBS),hdr=headerV1('Activity',[],subSeg('activity',ACT_SUBS)),W=(x,fab)=>hdr+`<div class="v1">${x}</div>`+(fab||logFab());
+ const sub=subOf('activity',ACT_SUBS),hdr=headerV1('Activity',[],subSeg('activity',ACT_SUBS)),W=(x,fab)=>hdr+`<div class="v1">${x}</div>`+(fab||logFab(true));
  if(sub==='calendar')return W(stepsCalCard());
  if(sub==='sport')return W(sportCard(),`<button class="fab" data-act="actNew" aria-label="Log sport">${ic('plus',28)}</button>`);
  const sv=[],sl=[],sdt=[];for(let i=13;i>=0;i--){const d=addDays(T,-i);sv.push(logOf(d).steps);sl.push(parseD(d).getDate());sdt.push(d)}
@@ -4038,7 +4068,7 @@ function settingsSheet(){
  return `<h2 class="hh">Settings<button class="ib s hq" data-act="helpSettings" aria-label="Help for Settings">${ic('help',18)}</button></h2>
  <div class="sstk"><nav class="sanc" aria-label="Jump to a section">${anc.map(([k,l])=>`<button data-act="setGo" data-s="${k}">${l}</button>`).join('')}</nav></div>
  ${sec('profile','Profile',profileG)}${sec('look','Appearance',look)}${sec('data','Targets and data',data)}${sec('reminders','Reminders',rem)}${sec('units','Units',units)}${sec('track','What you track',trackG)}${sec('learn','Learn and tour',learnG)}${sec('account','Account and backups',account)}${adv?sec('advanced','Advanced',advanced):''}
- <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v0.20.3${DEMO?' (demo mode)':''}</div>`;
+ <div class="xs mut" style="margin-top:16px;text-align:center">Pulzo v${APP_VER}${DEMO?' (demo mode)':''}</div>`;
 }
 /* ---------- Program sharing: a program becomes a code (base64url of its JSON, gzip when the browser has CompressionStream) ----------
    Code format: "fp1z." + base64url(gzip(json)) or "fp1p." + base64url(json). Link: <app url>?program=<code>. Payload { v:1, name, author, weekdays, days, ex:{ id:{ n, eq, p, s } } }. */
@@ -4619,7 +4649,7 @@ window.addEventListener('popstate',e=>{
  const t=(e.state&&e.state.tab)||'today';if(t!==UI.tab){UI.tab=t;LS.set('forma.ui',{tab:UI.tab,mode:UI.mode});window.scrollTo(0,0);render()}
 });
 function openSheet(html,fn){if(!UI.sheet)navPush({l:'sheet'});UI.sheet=html;UI.sheetFn=fn||null;renderSheet()}
-function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop()}
+function closeSheet(fromPop){if(!UI.sheet)return;UI.sheet=null;UI.sheetFn=null;renderSheet();if(fromPop!==true)navPop();if(UPD.v)setTimeout(updGo,400)}
 /* One themed confirm sheet (0.12.2): replaces every native confirm(). Cancel or Back returns to the sheet underneath. */
 let CONF=null;
 function askConfirm(o,fn){const prev={h:UI.sheet,f:UI.sheetFn};CONF={fn,prev};
@@ -5168,6 +5198,7 @@ let foodMeal=1,foodPhoto=null;
 document.addEventListener('click',async e=>{
  const t=e.target.closest('[data-act]');if(!t)return;
  const a=t.dataset.act,D=t.dataset;
+ if(a!=='fabMenu'&&document.getElementById('fabm'))fabClose();
  if(a==='mealSave')e.preventDefault();
  if(a==='foodAdd'){e.preventDefault();e.stopPropagation();foodMeal=+D.m;foodPhoto=null;addOpen(+D.m);return}
  const T=today();
@@ -5244,6 +5275,11 @@ document.addEventListener('click',async e=>{
   case 'aiRemove':aiKeySet('');LS.del('forma.aiOk');LS.del('forma.aiBad');AI.err='';AI.msg='';aiReopenSettings();toast0('Key removed from this phone.');break;
   case 'aiModel':LS.set('forma.aiModel',D.m==='sonnet'?'sonnet':'haiku');aiReopenSettings();break;
   case 'snapPick':openSheet(snapChoiceSheet());break;
+  case 'fabMenu':if(t.classList.contains('open'))fabClose();else fabOpen();break;
+  case 'fabClose':break;
+  case 'fabSnap':openSheet(snapChoiceSheet());break;
+  case 'fabSearch':foodMeal=+D.m;foodPhoto=null;addOpen(+D.m);break;
+  case 'fabQuick':{foodMeal=+D.m;foodPhoto=null;addOpen(+D.m);AD.man={name:'',nofocus:true};adDrawMore();const n=$('#ad_more');if(n)n.scrollIntoView({block:'start'});break}
   case 'snapCam':case 'snapGal':{LS.set('forma.snapPref',a==='snapCam'?'cam':'gal');const el=$(a==='snapCam'?'#snap_cam':'#snap_in');closeSheet();if(el)el.click();break}
   case 'calcOpen':openSheet(calcSheet());break;
   case 'ckOpen':openSheet(ckSheet());break;

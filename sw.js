@@ -31,9 +31,10 @@ async function precache(){
   }catch(e){}
 }
 async function shellCache(){const v=await curVer();return v?caches.open(PREFIX+v):null}
-async function page(){
+/* The page is fetched at the address asked for (with its ?v=), so a self-update reload skips the CDN's cached copy (ask 220). */
+async function page(url){
   try{
-    const res=await fetch(PAGE,{cache:'no-cache'});
+    const res=await fetch(url&&/[?&]v=/.test(url)?url:PAGE,{cache:'no-cache',credentials:'same-origin'});
     if(res.ok){try{await learn(res)}catch(x){}return res}
   }catch(x){}
   const c=await shellCache(),hit=c&&await c.match(PAGE);
@@ -53,7 +54,7 @@ self.addEventListener('fetch',e=>{
   const r=e.request;if(r.method!=='GET')return;
   const u=new URL(r.url);if(!u.href.startsWith(self.registration.scope))return;
   if(u.pathname.endsWith('/version.txt')||u.pathname.endsWith('/sw.js')||r.headers.has('range'))return;
-  e.respondWith(r.mode==='navigate'?page():asset(r));
+  e.respondWith(r.mode==='navigate'?page(r.url):asset(r));
 });
 let timer=null,stopRest=null,ftimer=null,fstop=null;
 function clearFin(){if(ftimer){clearTimeout(ftimer);ftimer=null}if(fstop){const f=fstop;fstop=null;f()}}
