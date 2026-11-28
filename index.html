@@ -1499,7 +1499,7 @@ const DEMO=/[?&]demo=1/.test(location.search);
 /* App updates: publish-app.sh stamps BUILD and writes version.txt. GitHub Pages lets browsers cache index.html
    for 10 minutes, so on open, refresh and focus the app asks for version.txt (no cache) and, if it changed,
    reloads under a new ?v= URL, which skips the stale cached copy. */
-const BUILD='bb24ff72ecb7dbafcdf678689dde74b260891cf6';let verChecked=0;
+const BUILD='88278e44e2314a543ee6b88d149707726f370419';let verChecked=0;
 /* Ask 220: the check runs on open, on focus and on coming back to the foreground, even with a sheet open. A new version found
    while he is mid-edit (a sheet open, the rest timer running, the camera, or the cursor in a text box) waits as UPD and the
    one quiet reload happens the moment the screen is idle again (sheet closed, or every 3 seconds checked), so typed input is never lost.
@@ -1809,7 +1809,7 @@ function errText(e){
  const S=FormaCopy.sync,k=errKind(e);
  if(k==='net')return S.offline;
  if(k==='conflict')return S.retry;
- if(B.kind==='github'){if(k==='auth')return sbOn()?S.signInFirst:(e.status===404?S.noRepo:S.keyStopped);return S.cantReach}
+ if(B.kind==='github'){if(k==='auth')return (sbOn()&&!cfg.token)?S.signInFirst:(e.status===404?S.noRepo:S.keyStopped);return S.cantReach}
  return k==='auth'?S.signIn:S.cantReach;
 }
 /* Only a sign-in problem interrupts with a toast; everything else waits quietly in the strip and syncs later. */
